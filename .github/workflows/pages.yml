@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy web app to GitHub Pages
 
 on:
   push:
@@ -22,13 +22,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Collect site files
-        run: |
-          mkdir _site
-          cp -r index.html styles.css app.js sw.js manifest.webmanifest icons fonts _site/
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: app
       - id: deployment
         uses: actions/deploy-pages@v4
