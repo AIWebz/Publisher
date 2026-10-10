@@ -1,0 +1,68 @@
+{
+  "name": "folio-publisher",
+  "productName": "Folio Publisher",
+  "version": "1.0.0",
+  "description": "An elegant desktop publishing studio for flyers, newsletters, cards and posters.",
+  "author": "Folio Publisher",
+  "private": true,
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64 --publish never",
+    "dist:dir": "electron-builder --win dir --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.folio.publisher",
+    "productName": "Folio Publisher",
+    "copyright": "Folio Publisher",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "fonts/**/*",
+      "icons/**/*",
+      "desktop/**/*",
+      "package.json"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "folio",
+        "name": "Folio Publication",
+        "description": "Folio Publisher publication",
+        "icon": "build/icon.ico",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.ico",
+      "artifactName": "Folio-Publisher-Setup-${version}.${ext}",
+      "legalTrademarks": "Folio Publisher"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Folio Publisher",
+      "uninstallDisplayName": "Folio Publisher",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

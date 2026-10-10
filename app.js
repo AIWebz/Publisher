@@ -69,8 +69,11 @@ let pickMode = 'insert';
 let popTarget = null;
 let modalResolve = null;
 let installEvt = null;
+const desktop = window.folioDesktop || null;   // present when running as the Windows desktop app
+let filePath = null;                           // desktop: file this publication was opened from / saved to
+let savedHash = null;                          // fingerprint of the document as last written to that file
 const hist = { stack: [], index: -1 };
-const view = Object.assign({ margins: true, grid: false, snap: true }, readJSON(VIEW_KEY));
+const view = Object.assign({ margins: true, grid: false, snap: true, theme: 'system' }, readJSON(VIEW_KEY));
 
 function readJSON(key) { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; } }
 
@@ -369,7 +372,17 @@ function applyZoom() {
   $('#zoom-label').textContent = Math.round(zoom * 100) + '%';
 }
 
+const darkQuery = matchMedia('(prefers-color-scheme: dark)');
+function applyTheme() {
+  const dark = view.theme === 'dark' || (view.theme === 'system' && darkQuery.matches);
+  document.documentElement.classList.toggle('dark', dark);
+  $$('[data-theme-set]').forEach((b) => b.classList.toggle('on', b.dataset.themeSet === view.theme));
+}
+darkQuery.addEventListener('change', applyTheme);
+
 function applyView() {
+  if (desktop) desktop.setTheme(view.theme);
+  applyTheme();
   pageEl.classList.toggle('show-margins', view.margins);
   pageEl.classList.toggle('show-grid', view.grid);
   $$('[data-view]').forEach((b) => b.classList.toggle('on', !!view[b.dataset.view]));
@@ -392,7 +405,7 @@ function renderAll() {
   syncUI();
   updateStatus();
   $('#doc-title').value = doc.title;
-  document.title = `${doc.title} — Folio`;
+  updateDocState();
 }
 
 function updateSel() {
@@ -486,6 +499,7 @@ function commit() {
   queueThumb();
   syncUI();
   updateStatus();
+  updateDocState();
 }
 
 function restore(s) {
@@ -505,31 +519,74 @@ function updateUndo() {
   $('#btn-redo').disabled = hist.index >= hist.stack.length - 1;
 }
 
+function hashStr(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(36) + ':' + str.length;
+}
+const docHash = () => hashStr(JSON.stringify(doc));
+const fileName = () => (filePath ? filePath.split(/[\\/]/).pop() : '');
+const hasWork = () => doc.pages.length > 1 || doc.pages.some((p) => p.elements.length);
+const isDirty = () => !!filePath && docHash() !== savedHash;
+
+function savedLabel() {
+  if (filePath) return isDirty() ? 'Unsaved changes' : `Saved to ${fileName()}`;
+  return desktop ? 'Kept automatically' : 'All changes saved';
+}
+function updateDocState() {
+  if (!doc) return;
+  const dirty = isDirty();
+  document.title = `${dirty ? '• ' : ''}${filePath ? fileName() : doc.title} — Folio Publisher`;
+  if (desktop) desktop.setDocState(dirty, filePath ? fileName() : doc.title);
+  $('#save-state').textContent = savedLabel();
+}
+
 let saveTimer = 0;
 function scheduleSave() {
-  $('#save-state').textContent = 'Saving…';
+  if (!filePath) $('#save-state').textContent = 'Saving…';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveLocal, 500);
 }
 function saveLocal() {
   clearTimeout(saveTimer);
+  const data = JSON.stringify({ doc, pageIndex, filePath, savedHash });
+  if (desktop) {
+    desktop.autosave(data)
+      .then(() => { $('#save-state').textContent = savedLabel(); })
+      .catch(() => { $('#save-state').textContent = 'Autosave failed — use Save'; });
+    return;
+  }
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({ doc, pageIndex }));
-    $('#save-state').textContent = 'All changes saved';
+    localStorage.setItem(STORE_KEY, data);
+    $('#save-state').textContent = savedLabel();
   } catch {
     $('#save-state').textContent = 'Too large to autosave — use Save a Copy';
   }
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && doc) saveLocal(); });
+window.addEventListener('beforeunload', () => { if (doc) saveLocal(); });
 
-function loadDoc(d, keepPage = false) {
+function loadDoc(d, { keepPage = false, path = null, hash } = {}) {
   doc = normalize(d);
   if (!keepPage) pageIndex = 0;
   pageIndex = clamp(pageIndex, 0, doc.pages.length - 1);
+  filePath = path || null;
+  savedHash = hash !== undefined ? hash : (filePath ? docHash() : null);
   selId = null; editingId = null; fitMode = true;
   renderAll();
   resetHistory();
   scheduleSave();
+}
+
+// Ask before throwing away work that only lives in this window.
+async function confirmReplace() {
+  if (isDirty()) {
+    return confirmModal('Discard unsaved changes?', `Changes to “${esc(fileName())}” have not been saved to the file.`, 'Discard changes');
+  }
+  if (!filePath && hasWork()) {
+    return confirmModal('Replace this publication?', `“${esc(doc.title)}” has not been saved to a file. Use <em>Save</em> first if you would like to keep it.`, 'Replace');
+  }
+  return true;
 }
 
 // ---------- Inspector / ribbon sync ----------
@@ -677,7 +734,6 @@ document.addEventListener('change', (e) => {
   if (t.id === 'doc-title') {
     doc.title = t.value.trim() || 'Untitled publication';
     t.value = doc.title;
-    document.title = `${doc.title} — Folio`;
     commit();
   }
 });
@@ -885,9 +941,11 @@ const commands = {
   undo, redo,
   backstage: openBackstage,
   'close-backstage': closeBackstage,
-  'open-file': () => $('#file-open').click(),
-  'save-file': saveFile,
+  'open-file': () => openFromDisk(),
+  'save-file': () => saveFile(),
+  'save-as': () => saveFile(true),
   print: printDoc,
+  'export-pdf': () => exportPDF(),
   install: installApp,
   'close-modal': () => closeModal(false),
 
@@ -1076,6 +1134,8 @@ async function insertImageFile(file, at) {
 
 stage.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
 stage.addEventListener('drop', (e) => {
+  const pub = [...e.dataTransfer.files].find((x) => /\.(folio|json)$/i.test(x.name));
+  if (pub) { e.preventDefault(); openFileObject(pub); return; }
   const f = [...e.dataTransfer.files].find((x) => x.type.startsWith('image/'));
   if (!f) return;
   e.preventDefault();
@@ -1175,6 +1235,8 @@ document.addEventListener('click', (e) => {
     $$('.panel').forEach((p) => p.classList.toggle('active', p.dataset.panel === tab.dataset.tab));
     return;
   }
+  const th = e.target.closest('[data-theme-set]');
+  if (th) { view.theme = th.dataset.themeSet; applyView(); return; }
   const vb = e.target.closest('[data-view]');
   if (vb) { view[vb.dataset.view] = !view[vb.dataset.view]; applyView(); return; }
   const sc = e.target.closest('[data-scheme]');
@@ -1202,9 +1264,10 @@ const isField = (t) => t && (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.
 
 document.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
-  if (mod && k === 's') { e.preventDefault(); saveFile(); return; }
+  if (mod && k === 's') { e.preventDefault(); saveFile(e.shiftKey); return; }
   if (mod && k === 'p') { e.preventDefault(); printDoc(); return; }
-  if (mod && k === 'o') { e.preventDefault(); $('#file-open').click(); return; }
+  if (mod && k === 'o') { e.preventDefault(); openFromDisk(); return; }
+  if (mod && k === 'n') { e.preventDefault(); openBackstage(); return; }
   if (e.key === 'Escape') {
     if (!$('#modal').hidden) return closeModal(false);
     if (!pop.hidden || !ctx.hidden) return hideMenus();
@@ -1264,9 +1327,25 @@ $('#zoom-range').addEventListener('input', (e) => setZoom(e.target.value / 100))
 window.addEventListener('resize', () => { if (fitMode) applyZoom(); hideMenus(); });
 
 // ---------- Files, print ----------
-function saveFile() {
+async function saveFile(saveAs = false) {
   stopEditing();
-  const blob = new Blob([JSON.stringify({ app: 'folio', version: 1, ...doc })], { type: 'application/json' });
+  const data = JSON.stringify({ app: 'folio', version: 1, ...doc });
+  if (desktop) {
+    try {
+      const r = await desktop.saveFile({ path: filePath, data, suggestedName: doc.title, saveAs: saveAs === true });
+      if (!r) return false;
+      filePath = r.path;
+      savedHash = docHash();
+      updateDocState();
+      saveLocal();
+      toast(`Saved to ${r.name}`);
+      return true;
+    } catch (err) {
+      toast(`Could not save — ${err.message || err}`);
+      return false;
+    }
+  }
+  const blob = new Blob([data], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = (doc.title.replace(/[^\w\- ]+/g, '').trim() || 'publication') + '.folio';
@@ -1275,19 +1354,46 @@ function saveFile() {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('Saved a copy to your downloads');
+  return true;
+}
+
+function openText(text, path) {
+  let d;
+  try {
+    d = JSON.parse(text);
+    if (!d || !Array.isArray(d.pages)) throw new Error('not a publication');
+  } catch {
+    toast('That file is not a Folio publication');
+    return false;
+  }
+  loadDoc(d, { path });
+  closeBackstage();
+  toast(`Opened “${doc.title}”`);
+  return true;
 }
 
 async function openFileObject(f) {
+  if (!(await confirmReplace())) return;
+  if (desktop) {
+    try {
+      const r = await desktop.openDropped(f);
+      if (r) { openText(r.text, r.path); return; }
+    } catch {}
+  }
+  openText(await f.text(), null);
+}
+
+async function openFromDisk() {
+  if (!desktop) { $('#file-open').click(); return; }
+  if (!(await confirmReplace())) return;
   try {
-    const d = JSON.parse(await f.text());
-    if (!Array.isArray(d.pages)) throw new Error('not a publication');
-    loadDoc(d);
-    closeBackstage();
-    toast(`Opened “${doc.title}”`);
-  } catch {
-    toast('That file is not a Folio publication');
+    const r = await desktop.openFile();
+    if (r) openText(r.text, r.path);
+  } catch (err) {
+    toast(`Could not open that file — ${err.message || err}`);
   }
 }
+
 $('#file-open').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) openFileObject(f); });
 if ('launchQueue' in window) {
   window.launchQueue.setConsumer(async (params) => {
@@ -1296,23 +1402,39 @@ if ('launchQueue' in window) {
   });
 }
 
-function printDoc() {
+function preparePrint() {
   stopEditing();
   const root = $('#print-root');
   root.replaceChildren(...doc.pages.map((p) => { const pc = document.createElement('div'); pc.className = 'page-content'; renderPageInto(pc, p); return pc; }));
   let st = $('#print-page-style');
   if (!st) { st = document.createElement('style'); st.id = 'print-page-style'; document.head.appendChild(st); }
   st.textContent = `@page { size: ${doc.w / 96}in ${doc.h / 96}in; margin: 0; } .print-root .placeholder { visibility: hidden; }`;
+}
+
+function printDoc() {
+  preparePrint();
   document.fonts.ready.then(() => setTimeout(() => window.print(), 60));
+}
+
+async function exportPDF() {
+  if (!desktop) { printDoc(); return; }
+  preparePrint();
+  await document.fonts.ready;
+  try {
+    const r = await desktop.exportPDF({ suggestedName: doc.title, width: doc.w, height: doc.h });
+    if (r) toast(`Exported ${r.name}`, { label: 'Show in folder', run: () => desktop.showExport() });
+  } catch (err) {
+    toast(`PDF export failed — ${err.message || err}`);
+  }
 }
 
 // ---------- Backstage ----------
 function openBackstage() {
   stopEditing();
   hideMenus();
-  const hasWork = doc.pages.length > 1 || doc.pages.some((p) => p.elements.length);
-  $('#bs-continue').innerHTML = hasWork
-    ? `<button class="continue-card" data-cmd="close-backstage"><svg><use href="#i-page"/></svg><div><strong>Continue “${esc(doc.title)}”</strong><span>${doc.pages.length} page${doc.pages.length > 1 ? 's' : ''} · saved in this browser</span></div></button>`
+  const where = filePath ? esc(fileName()) : desktop ? 'kept automatically' : 'saved in this browser';
+  $('#bs-continue').innerHTML = hasWork() || filePath
+    ? `<button class="continue-card" data-cmd="close-backstage"><svg><use href="#i-page"/></svg><div><strong>Continue “${esc(doc.title)}”</strong><span>${doc.pages.length} page${doc.pages.length > 1 ? 's' : ''} · ${where}</span></div></button>`
     : '';
   const box = $('#templates');
   if (!box.childElementCount) {
@@ -1337,8 +1459,7 @@ function openBackstage() {
 function closeBackstage() { $('#backstage').hidden = true; if (fitMode) applyZoom(); }
 
 async function useTemplate(key) {
-  const hasWork = doc.pages.length > 1 || doc.pages.some((p) => p.elements.length);
-  if (hasWork && !(await confirmModal('Start a new publication?', `“${esc(doc.title)}” will be replaced. Use <em>Save a Copy</em> first if you would like to keep it.`, 'Start fresh'))) return;
+  if (!(await confirmReplace())) return;
   loadDoc(buildTemplate(key));
   closeBackstage();
   toast(`${TEMPLATES[key].name} ready — double-click any text to edit`);
@@ -1355,22 +1476,30 @@ function confirmModal(title, text, ok) {
 }
 
 let toastTimer = 0;
-function toast(msg) {
+function toast(msg, action) {
   const t = $('#toast');
   t.textContent = msg;
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'toast-action';
+    b.textContent = action.label;
+    b.addEventListener('click', () => { t.hidden = true; action.run(); });
+    t.appendChild(b);
+  }
   t.hidden = false;
   t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+  toastTimer = setTimeout(() => { t.hidden = true; }, action ? 6000 : 2600);
 }
 
 // ---------- Install (PWA) ----------
-const isStandalone = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true;
+const isStandalone = () => !!desktop || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true;
 if (!isStandalone()) $('#btn-install').hidden = false;
 $$('.bs-install').forEach((b) => { b.hidden = isStandalone(); });
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
+  if (desktop) return;
   installEvt = e;
   $('#btn-install').hidden = false;
 });
@@ -1408,20 +1537,29 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
 }
 
 // ---------- Boot ----------
-(function boot() {
+(async function boot() {
+  if (desktop) {
+    document.documentElement.classList.add('is-desktop', 'platform-' + desktop.platform);
+    $$('[data-desktop-only]').forEach((x) => { x.hidden = false; });
+    $$('[data-web-only]').forEach((x) => { x.hidden = true; });
+  }
   applyView();
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem(STORE_KEY)); } catch {}
+  try { saved = JSON.parse(desktop ? await desktop.loadAutosave() : localStorage.getItem(STORE_KEY)); } catch {}
   if (saved && saved.doc && Array.isArray(saved.doc.pages)) {
     pageIndex = saved.pageIndex || 0;
-    loadDoc(saved.doc, true);
+    loadDoc(saved.doc, { keepPage: true, path: desktop ? saved.filePath : null, hash: desktop ? saved.savedHash : null });
   } else {
     loadDoc(buildTemplate('blank'));
     openBackstage();
   }
-  $('#save-state').textContent = 'All changes saved';
   // Re-measure once web fonts arrive so text metrics are right.
   document.fonts?.ready.then(() => { renderCanvas(); renderThumbs(); });
+  if (desktop) {
+    desktop.onOpenFile(async (f) => { if (await confirmReplace()) openText(f.text, f.path); });
+    desktop.onSaveAndClose(async () => { if (await saveFile()) desktop.closeNow(); });
+    desktop.ready();
+  }
 })();
 
 })();

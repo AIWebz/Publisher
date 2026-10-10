@@ -1,12 +1,12 @@
-/* Folio Publisher service worker: offline app shell + cached web fonts. */
-const VERSION = 'folio-v1';
-const FONT_CACHE = 'folio-fonts-v1';
+/* Folio Publisher service worker: offline app shell (fonts are bundled and cached on first use). */
+const VERSION = 'folio-v2';
 const SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './manifest.webmanifest',
+  './fonts/fonts.css',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -21,7 +21,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== FONT_CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -31,11 +31,6 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Google Fonts: stale-while-revalidate so typography works offline.
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(staleWhileRevalidate(req, FONT_CACHE));
-    return;
-  }
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
