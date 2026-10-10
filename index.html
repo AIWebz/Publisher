@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Folio Publisher</title>
+  <meta name="description" content="An elegant desktop publishing studio for flyers, newsletters, cards and posters. Installable and works offline.">
+  <meta name="theme-color" content="#1d3b39">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Folio">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..800;1,6..96,400..800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Serif+Display:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Icon sprite -->
+  <svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <defs>
+      <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+      <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+      <symbol id="i-text" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="2.5 2.5"/><path d="M8 9V8h8v1M12 8v8M10 16h4"/></symbol>
+      <symbol id="i-heading" viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 12h12"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></symbol>
+      <symbol id="i-rect" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/></symbol>
+      <symbol id="i-rounded" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="4.5"/></symbol>
+      <symbol id="i-ellipse" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/></symbol>
+      <symbol id="i-triangle" viewBox="0 0 24 24"><path d="M12 4 21 20H3z"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/></symbol>
+      <symbol id="i-line" viewBox="0 0 24 24"><path d="M4 12h16"/></symbol>
+      <symbol id="i-quote" viewBox="0 0 24 24"><path d="M10 7H6a2 2 0 0 0-2 2v3h5v5H4M20 7h-4a2 2 0 0 0-2 2v3h5v5h-5"/></symbol>
+      <symbol id="i-page-add" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 12v6M9 15h6"/></symbol>
+      <symbol id="i-page" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+      <symbol id="i-duplicate" viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="12" rx="2"/><rect x="9" y="9" width="12" height="12" rx="2"/></symbol>
+      <symbol id="i-paste" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+      <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></symbol>
+      <symbol id="i-al-left" viewBox="0 0 24 24"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></symbol>
+      <symbol id="i-al-center" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></symbol>
+      <symbol id="i-al-right" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></symbol>
+      <symbol id="i-al-justify" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></symbol>
+      <symbol id="i-va-top" viewBox="0 0 24 24"><path d="M4 4h16M8 9h8M8 13h8"/></symbol>
+      <symbol id="i-va-middle" viewBox="0 0 24 24"><path d="M8 10h8M8 14h8M4 4h16M4 20h16" /></symbol>
+      <symbol id="i-va-bottom" viewBox="0 0 24 24"><path d="M4 20h16M8 11h8M8 15h8"/></symbol>
+      <symbol id="i-front" viewBox="0 0 24 24"><rect x="3" y="3" width="11" height="11" rx="1.5" stroke-dasharray="2 2"/><rect x="10" y="10" width="11" height="11" rx="1.5" fill="currentColor" fill-opacity=".22"/></symbol>
+      <symbol id="i-forward" viewBox="0 0 24 24"><rect x="3" y="3" width="11" height="11" rx="1.5"/><rect x="10" y="10" width="11" height="11" rx="1.5" fill="currentColor" fill-opacity=".1"/></symbol>
+      <symbol id="i-backward" viewBox="0 0 24 24"><rect x="10" y="10" width="11" height="11" rx="1.5"/><rect x="3" y="3" width="11" height="11" rx="1.5" fill="currentColor" fill-opacity=".1"/></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><rect x="10" y="10" width="11" height="11" rx="1.5" stroke-dasharray="2 2"/><rect x="3" y="3" width="11" height="11" rx="1.5" fill="currentColor" fill-opacity=".22"/></symbol>
+      <symbol id="i-ob-left" viewBox="0 0 24 24"><path d="M4 3v18"/><rect x="7" y="6" width="12" height="4" rx="1"/><rect x="7" y="14" width="8" height="4" rx="1"/></symbol>
+      <symbol id="i-ob-center" viewBox="0 0 24 24"><path d="M12 3v18"/><rect x="5" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></symbol>
+      <symbol id="i-ob-right" viewBox="0 0 24 24"><path d="M20 3v18"/><rect x="5" y="6" width="12" height="4" rx="1"/><rect x="9" y="14" width="8" height="4" rx="1"/></symbol>
+      <symbol id="i-ob-top" viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="6" y="7" width="4" height="12" rx="1"/><rect x="14" y="7" width="4" height="8" rx="1"/></symbol>
+      <symbol id="i-ob-middle" viewBox="0 0 24 24"><path d="M3 12h18"/><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></symbol>
+      <symbol id="i-ob-bottom" viewBox="0 0 24 24"><path d="M3 20h18"/><rect x="6" y="5" width="4" height="12" rx="1"/><rect x="14" y="9" width="4" height="8" rx="1"/></symbol>
+      <symbol id="i-rot-left" viewBox="0 0 24 24"><path d="M3 4v5h5"/><path d="M3.5 9A9 9 0 1 1 6 18.4"/></symbol>
+      <symbol id="i-rot-right" viewBox="0 0 24 24"><path d="M21 4v5h-5"/><path d="M20.5 9A9 9 0 1 0 18 18.4"/></symbol>
+      <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6M11 8v6"/></symbol>
+      <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6"/></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+      <symbol id="i-actual" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 10v5M12 10.5v.01M12 14v.01M16 10v5"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
+      <symbol id="i-margins" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" stroke-dasharray="2 2"/></symbol>
+      <symbol id="i-magnet" viewBox="0 0 24 24"><path d="M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3zM6 7h4M14 7h4"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8M7 21v-7h10v7"/></symbol>
+      <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></symbol>
+      <symbol id="i-install" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M12 7v6m-3-3 3 3 3-3M8 21h8M12 16v5"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></symbol>
+      <symbol id="i-portrait" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="1.5"/></symbol>
+      <symbol id="i-landscape" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1.5"/></symbol>
+      <symbol id="i-grow" viewBox="0 0 24 24"><path d="M3 19 8 6l5 13M5 15h6M17 9V3m-3 3h6"/></symbol>
+      <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M3 19 8 6l5 13M5 15h6M14 6h6"/></symbol>
+      <symbol id="i-ornament" viewBox="0 0 24 24"><path d="M2 12h6M16 12h6"/><path d="m12 8 4 4-4 4-4-4z"/></symbol>
+    </defs>
+  </svg>
+
+  <div id="app">
+    <!-- Title bar -->
+    <header class="titlebar">
+      <div class="brand">
+        <img src="icons/icon.svg" alt="" width="26" height="26">
+        <span class="brand-name">Folio</span>
+      </div>
+      <div class="quick">
+        <button class="icon-btn" data-cmd="save-file" title="Save a copy (Ctrl+S)"><svg><use href="#i-save"/></svg></button>
+        <button class="icon-btn" data-cmd="undo" id="btn-undo" title="Undo (Ctrl+Z)"><svg><use href="#i-undo"/></svg></button>
+        <button class="icon-btn" data-cmd="redo" id="btn-redo" title="Redo (Ctrl+Y)"><svg><use href="#i-redo"/></svg></button>
+      </div>
+      <div class="doc-title">
+        <input id="doc-title" spellcheck="false" aria-label="Publication title">
+        <span id="save-state" class="save-state">Saved</span>
+      </div>
+      <div class="title-actions">
+        <button class="btn btn-ghost" data-cmd="print"><svg><use href="#i-print"/></svg><span>Export PDF</span></button>
+        <button class="btn btn-install" id="btn-install" data-cmd="install" hidden><svg><use href="#i-install"/></svg><span>Install app</span></button>
+      </div>
+    </header>
+
+    <!-- Ribbon tabs -->
+    <nav class="tabs" role="tablist">
+      <button class="tab tab-file" data-cmd="backstage">File</button>
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="insert">Insert</button>
+      <button class="tab" data-tab="design">Design</button>
+      <button class="tab" data-tab="arrange">Arrange</button>
+      <button class="tab" data-tab="view">View</button>
+    </nav>
+
+    <!-- Ribbon -->
+    <section class="ribbon">
+      <!-- HOME -->
+      <div class="panel active" data-panel="home">
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="paste"><svg><use href="#i-paste"/></svg><span>Paste</span></button>
+            <div class="stack">
+              <button class="rb sm" data-cmd="cut"><svg><use href="#i-cut"/></svg><span>Cut</span></button>
+              <button class="rb sm" data-cmd="copy"><svg><use href="#i-copy"/></svg><span>Copy</span></button>
+              <button class="rb sm" data-cmd="duplicate"><svg><use href="#i-duplicate"/></svg><span>Duplicate</span></button>
+            </div>
+          </div>
+          <div class="group-label">Clipboard</div>
+        </div>
+        <div class="group">
+          <div class="group-body col">
+            <div class="row">
+              <select class="field font-select" data-prop="font" title="Font"></select>
+              <input class="field num" type="number" min="4" max="400" step="1" data-prop="size" title="Font size (pt)">
+              <button class="rb ico" data-cmd="grow" title="Increase font size"><svg><use href="#i-grow"/></svg></button>
+              <button class="rb ico" data-cmd="shrink" title="Decrease font size"><svg><use href="#i-shrink"/></svg></button>
+            </div>
+            <div class="row">
+              <button class="rb ico glyph" data-toggle="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+              <button class="rb ico glyph" data-toggle="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+              <button class="rb ico glyph" data-toggle="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+              <button class="rb ico glyph caps" data-toggle="caps" title="All capitals">Aa</button>
+              <span class="sep"></span>
+              <button class="rb color-btn" data-color="color" title="Text colour"><span class="glyph-a">A</span><span class="chip"></span></button>
+              <button class="rb color-btn" data-color="fill" title="Fill colour"><svg><use href="#i-rect"/></svg><span class="chip"></span></button>
+            </div>
+          </div>
+          <div class="group-label">Font</div>
+        </div>
+        <div class="group">
+          <div class="group-body col">
+            <div class="row">
+              <button class="rb ico" data-set="align" data-value="left" title="Align left"><svg><use href="#i-al-left"/></svg></button>
+              <button class="rb ico" data-set="align" data-value="center" title="Centre"><svg><use href="#i-al-center"/></svg></button>
+              <button class="rb ico" data-set="align" data-value="right" title="Align right"><svg><use href="#i-al-right"/></svg></button>
+              <button class="rb ico" data-set="align" data-value="justify" title="Justify"><svg><use href="#i-al-justify"/></svg></button>
+            </div>
+            <div class="row">
+              <button class="rb ico" data-set="valign" data-value="top" title="Top"><svg><use href="#i-va-top"/></svg></button>
+              <button class="rb ico" data-set="valign" data-value="middle" title="Middle"><svg><use href="#i-va-middle"/></svg></button>
+              <button class="rb ico" data-set="valign" data-value="bottom" title="Bottom"><svg><use href="#i-va-bottom"/></svg></button>
+              <select class="field" data-prop="lineHeight" data-num title="Line spacing">
+                <option value="0.95">0.95</option><option value="1">1.0</option><option value="1.15">1.15</option>
+                <option value="1.35">1.35</option><option value="1.5">1.5</option><option value="1.6">1.6</option><option value="2">2.0</option>
+              </select>
+            </div>
+          </div>
+          <div class="group-label">Paragraph</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="add-text"><svg><use href="#i-text"/></svg><span>Text Box</span></button>
+            <button class="rb big" data-cmd="add-image"><svg><use href="#i-image"/></svg><span>Picture</span></button>
+          </div>
+          <div class="group-label">Objects</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <div class="stack">
+              <button class="rb sm" data-cmd="forward"><svg><use href="#i-forward"/></svg><span>Bring Forward</span></button>
+              <button class="rb sm" data-cmd="backward"><svg><use href="#i-backward"/></svg><span>Send Backward</span></button>
+              <button class="rb sm danger" data-cmd="delete"><svg><use href="#i-trash"/></svg><span>Delete</span></button>
+            </div>
+          </div>
+          <div class="group-label">Arrange</div>
+        </div>
+      </div>
+
+      <!-- INSERT -->
+      <div class="panel" data-panel="insert">
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="add-text"><svg><use href="#i-text"/></svg><span>Text Box</span></button>
+            <button class="rb big" data-cmd="add-heading"><svg><use href="#i-heading"/></svg><span>Heading</span></button>
+            <button class="rb big" data-cmd="add-quote"><svg><use href="#i-quote"/></svg><span>Pull Quote</span></button>
+          </div>
+          <div class="group-label">Text</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="add-image"><svg><use href="#i-image"/></svg><span>Picture</span></button>
+            <button class="rb big" data-cmd="add-placeholder"><svg><use href="#i-page"/></svg><span>Placeholder</span></button>
+          </div>
+          <div class="group-label">Illustrations</div>
+        </div>
+        <div class="group">
+          <div class="group-body shapes">
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="rect" title="Rectangle"><svg><use href="#i-rect"/></svg></button>
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="rounded" title="Rounded rectangle"><svg><use href="#i-rounded"/></svg></button>
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="ellipse" title="Ellipse"><svg><use href="#i-ellipse"/></svg></button>
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="triangle" title="Triangle"><svg><use href="#i-triangle"/></svg></button>
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="star" title="Star"><svg><use href="#i-star"/></svg></button>
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="line" title="Line"><svg><use href="#i-line"/></svg></button>
+            <button class="rb ico lg" data-cmd="add-shape" data-shape="ornament" title="Ornamental rule"><svg><use href="#i-ornament"/></svg></button>
+          </div>
+          <div class="group-label">Shapes</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="add-page"><svg><use href="#i-page-add"/></svg><span>New Page</span></button>
+            <button class="rb big" data-cmd="dup-page"><svg><use href="#i-duplicate"/></svg><span>Duplicate Page</span></button>
+          </div>
+          <div class="group-label">Pages</div>
+        </div>
+      </div>
+
+      <!-- DESIGN -->
+      <div class="panel" data-panel="design">
+        <div class="group">
+          <div class="group-body gallery" id="scheme-gallery"></div>
+          <div class="group-label">Colour Schemes</div>
+        </div>
+        <div class="group">
+          <div class="group-body gallery" id="font-gallery"></div>
+          <div class="group-label">Font Schemes</div>
+        </div>
+        <div class="group">
+          <div class="group-body col">
+            <div class="row">
+              <select class="field" id="page-size-ribbon" data-pagesize title="Page size"></select>
+            </div>
+            <div class="row">
+              <button class="rb sm" data-cmd="orient" data-value="portrait"><svg><use href="#i-portrait"/></svg><span>Portrait</span></button>
+              <button class="rb sm" data-cmd="orient" data-value="landscape"><svg><use href="#i-landscape"/></svg><span>Landscape</span></button>
+            </div>
+          </div>
+          <div class="group-label">Page Setup</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big color-btn tall" data-color="bg" data-scope="page"><span class="chip big-chip"></span><span>Page Colour</span></button>
+          </div>
+          <div class="group-label">Background</div>
+        </div>
+      </div>
+
+      <!-- ARRANGE -->
+      <div class="panel" data-panel="arrange">
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="front"><svg><use href="#i-front"/></svg><span>Bring to Front</span></button>
+            <button class="rb big" data-cmd="back"><svg><use href="#i-back"/></svg><span>Send to Back</span></button>
+            <div class="stack">
+              <button class="rb sm" data-cmd="forward"><svg><use href="#i-forward"/></svg><span>Forward</span></button>
+              <button class="rb sm" data-cmd="backward"><svg><use href="#i-backward"/></svg><span>Backward</span></button>
+            </div>
+          </div>
+          <div class="group-label">Order</div>
+        </div>
+        <div class="group">
+          <div class="group-body col">
+            <div class="row">
+              <button class="rb ico" data-cmd="align-page" data-value="left" title="Align left"><svg><use href="#i-ob-left"/></svg></button>
+              <button class="rb ico" data-cmd="align-page" data-value="center" title="Align centre"><svg><use href="#i-ob-center"/></svg></button>
+              <button class="rb ico" data-cmd="align-page" data-value="right" title="Align right"><svg><use href="#i-ob-right"/></svg></button>
+            </div>
+            <div class="row">
+              <button class="rb ico" data-cmd="align-page" data-value="top" title="Align top"><svg><use href="#i-ob-top"/></svg></button>
+              <button class="rb ico" data-cmd="align-page" data-value="middle" title="Align middle"><svg><use href="#i-ob-middle"/></svg></button>
+              <button class="rb ico" data-cmd="align-page" data-value="bottom" title="Align bottom"><svg><use href="#i-ob-bottom"/></svg></button>
+            </div>
+          </div>
+          <div class="group-label">Align to Page</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="rotate" data-value="-90"><svg><use href="#i-rot-left"/></svg><span>Rotate Left</span></button>
+            <button class="rb big" data-cmd="rotate" data-value="90"><svg><use href="#i-rot-right"/></svg><span>Rotate Right</span></button>
+          </div>
+          <div class="group-label">Rotate</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="duplicate"><svg><use href="#i-duplicate"/></svg><span>Duplicate</span></button>
+            <button class="rb big danger" data-cmd="delete"><svg><use href="#i-trash"/></svg><span>Delete</span></button>
+          </div>
+          <div class="group-label">Object</div>
+        </div>
+      </div>
+
+      <!-- VIEW -->
+      <div class="panel" data-panel="view">
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-cmd="zoom-in"><svg><use href="#i-zoom-in"/></svg><span>Zoom In</span></button>
+            <button class="rb big" data-cmd="zoom-out"><svg><use href="#i-zoom-out"/></svg><span>Zoom Out</span></button>
+            <button class="rb big" data-cmd="zoom-fit"><svg><use href="#i-fit"/></svg><span>Whole Page</span></button>
+            <button class="rb big" data-cmd="zoom-100"><svg><use href="#i-actual"/></svg><span>100%</span></button>
+          </div>
+          <div class="group-label">Zoom</div>
+        </div>
+        <div class="group">
+          <div class="group-body">
+            <button class="rb big" data-view="margins"><svg><use href="#i-margins"/></svg><span>Margins</span></button>
+            <button class="rb big" data-view="grid"><svg><use href="#i-grid"/></svg><span>Grid</span></button>
+            <button class="rb big" data-view="snap"><svg><use href="#i-magnet"/></svg><span>Snap</span></button>
+          </div>
+          <div class="group-label">Guides</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace -->
+    <main class="workspace">
+      <aside class="pages-pane">
+        <div class="pane-head">
+          <span>Pages</span>
+          <button class="icon-btn sm" data-cmd="add-page" title="Add page"><svg><use href="#i-plus"/></svg></button>
+        </div>
+        <ol id="thumbs" class="thumbs"></ol>
+      </aside>
+
+      <section id="stage" class="stage">
+        <div id="sizer" class="sizer">
+          <div id="page" class="page">
+            <div id="page-content" class="page-content"></div>
+            <div id="overlay" class="overlay">
+              <div class="margin-guide"></div>
+              <div class="grid-guide"></div>
+              <div id="snap-v" class="snap-line v" hidden></div>
+              <div id="snap-h" class="snap-line h" hidden></div>
+            </div>
+            <div id="sel" class="sel" hidden>
+              <div class="h" data-dir="nw"></div><div class="h" data-dir="n"></div><div class="h" data-dir="ne"></div>
+              <div class="h" data-dir="e"></div><div class="h" data-dir="se"></div><div class="h" data-dir="s"></div>
+              <div class="h" data-dir="sw"></div><div class="h" data-dir="w"></div>
+              <div class="h rot" data-dir="rot"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside id="inspector" class="inspector">
+        <div class="pane-head"><span id="insp-title">Page</span></div>
+        <div class="insp-scroll">
+          <!-- Page properties -->
+          <section class="insp-sec" data-show="none">
+            <h3>Page Setup</h3>
+            <label class="fld"><span>Size</span><select class="field" data-pagesize></select></label>
+            <div class="fld"><span>Orientation</span>
+              <div class="seg">
+                <button data-cmd="orient" data-value="portrait"><svg><use href="#i-portrait"/></svg>Portrait</button>
+                <button data-cmd="orient" data-value="landscape"><svg><use href="#i-landscape"/></svg>Landscape</button>
+              </div>
+            </div>
+            <div class="fld"><span>Background</span><button class="swatch-field color-btn" data-color="bg" data-scope="page"><span class="chip"></span><em class="chip-label"></em></button></div>
+          </section>
+          <section class="insp-sec" data-show="none">
+            <h3>Publication</h3>
+            <p class="hint">Double-click any text to edit it. Drag to move, use the handles to resize and rotate. Hold <kbd>Shift</kbd> to keep proportions, <kbd>Alt</kbd> to disable snapping.</p>
+            <dl class="stats">
+              <dt>Pages</dt><dd id="stat-pages">1</dd>
+              <dt>Objects</dt><dd id="stat-objects">0</dd>
+              <dt>Scheme</dt><dd id="stat-scheme">—</dd>
+            </dl>
+          </section>
+
+          <!-- Element properties -->
+          <section class="insp-sec" data-show="el">
+            <h3>Position &amp; Size</h3>
+            <div class="grid2">
+              <label class="fld mini"><span>X</span><input class="field" type="number" step="0.05" data-prop="x" data-unit="in"><i>in</i></label>
+              <label class="fld mini"><span>Y</span><input class="field" type="number" step="0.05" data-prop="y" data-unit="in"><i>in</i></label>
+              <label class="fld mini"><span>W</span><input class="field" type="number" step="0.05" min="0.05" data-prop="w" data-unit="in"><i>in</i></label>
+              <label class="fld mini" data-show="text image shape"><span>H</span><input class="field" type="number" step="0.05" min="0.05" data-prop="h" data-unit="in"><i>in</i></label>
+              <label class="fld mini"><span>Angle</span><input class="field" type="number" step="1" data-prop="rot"><i>°</i></label>
+            </div>
+          </section>
+
+          <section class="insp-sec" data-show="text">
+            <h3>Typography</h3>
+            <label class="fld"><span>Font</span><select class="field font-select" data-prop="font"></select></label>
+            <div class="grid2">
+              <label class="fld mini"><span>Size</span><input class="field" type="number" min="4" max="400" step="0.5" data-prop="size"><i>pt</i></label>
+              <label class="fld mini"><span>Tracking</span><input class="field" type="number" min="-5" max="40" step="0.5" data-prop="letterSpacing"><i>px</i></label>
+              <label class="fld mini"><span>Leading</span><input class="field" type="number" min="0.6" max="4" step="0.05" data-prop="lineHeight"><i>×</i></label>
+              <label class="fld mini"><span>Inset</span><input class="field" type="number" min="0" max="200" step="1" data-prop="padding"><i>px</i></label>
+            </div>
+            <div class="fld"><span>Colour</span><button class="swatch-field color-btn" data-color="color"><span class="chip"></span><em class="chip-label"></em></button></div>
+            <div class="fld"><span>Style</span>
+              <div class="seg">
+                <button data-toggle="bold"><b>B</b></button>
+                <button data-toggle="italic"><i>I</i></button>
+                <button data-toggle="underline"><u>U</u></button>
+                <button data-toggle="caps" class="caps">Aa</button>
+              </div>
+            </div>
+            <div class="fld"><span>Align</span>
+              <div class="seg">
+                <button data-set="align" data-value="left"><svg><use href="#i-al-left"/></svg></button>
+                <button data-set="align" data-value="center"><svg><use href="#i-al-center"/></svg></button>
+                <button data-set="align" data-value="right"><svg><use href="#i-al-right"/></svg></button>
+                <button data-set="align" data-value="justify"><svg><use href="#i-al-justify"/></svg></button>
+              </div>
+            </div>
+            <div class="fld"><span>Vertical</span>
+              <div class="seg">
+                <button data-set="valign" data-value="top"><svg><use href="#i-va-top"/></svg></button>
+                <button data-set="valign" data-value="middle"><svg><use href="#i-va-middle"/></svg></button>
+                <button data-set="valign" data-value="bottom"><svg><use href="#i-va-bottom"/></svg></button>
+              </div>
+            </div>
+          </section>
+
+          <section class="insp-sec" data-show="image">
+            <h3>Picture</h3>
+            <div class="fld"><span>Fit</span>
+              <div class="seg">
+                <button data-set="fit" data-value="cover">Fill</button>
+                <button data-set="fit" data-value="contain">Fit</button>
+                <button data-set="fit" data-value="fill">Stretch</button>
+              </div>
+            </div>
+            <button class="btn btn-outline wide" data-cmd="replace-image"><svg><use href="#i-image"/></svg><span>Change picture…</span></button>
+          </section>
+
+          <section class="insp-sec" data-show="el">
+            <h3>Fill &amp; Line</h3>
+            <div class="fld" data-show="text image shape"><span>Fill</span><button class="swatch-field color-btn" data-color="fill"><span class="chip"></span><em class="chip-label"></em></button></div>
+            <div class="fld"><span>Line</span><button class="swatch-field color-btn" data-color="stroke"><span class="chip"></span><em class="chip-label"></em></button></div>
+            <div class="grid2">
+              <label class="fld mini"><span>Weight</span><input class="field" type="number" min="0" max="60" step="0.25" data-prop="strokeWidth"><i>px</i></label>
+              <label class="fld mini" data-show="rounded"><span>Corners</span><input class="field" type="number" min="0" max="999" step="1" data-prop="radius"><i>px</i></label>
+            </div>
+            <label class="fld"><span>Opacity</span><input class="range" type="range" min="0" max="100" step="1" data-prop="opacity" data-unit="pct"></label>
+          </section>
+
+          <section class="insp-sec" data-show="el">
+            <h3>Object</h3>
+            <div class="action-row">
+              <button class="icon-btn" data-cmd="front" title="Bring to front"><svg><use href="#i-front"/></svg></button>
+              <button class="icon-btn" data-cmd="forward" title="Bring forward"><svg><use href="#i-forward"/></svg></button>
+              <button class="icon-btn" data-cmd="backward" title="Send backward"><svg><use href="#i-backward"/></svg></button>
+              <button class="icon-btn" data-cmd="back" title="Send to back"><svg><use href="#i-back"/></svg></button>
+              <button class="icon-btn" data-cmd="duplicate" title="Duplicate"><svg><use href="#i-duplicate"/></svg></button>
+              <button class="icon-btn danger" data-cmd="delete" title="Delete"><svg><use href="#i-trash"/></svg></button>
+            </div>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="statusbar">
+      <span id="status-page">Page 1 of 1</span>
+      <span class="dot">·</span>
+      <span id="status-size">Letter</span>
+      <span class="dot">·</span>
+      <span id="status-sel">No selection</span>
+      <span class="spacer"></span>
+      <button class="icon-btn sm" data-cmd="zoom-out" title="Zoom out"><svg><use href="#i-zoom-out"/></svg></button>
+      <input id="zoom-range" class="range zoom-range" type="range" min="10" max="400" step="1" aria-label="Zoom">
+      <button class="icon-btn sm" data-cmd="zoom-in" title="Zoom in"><svg><use href="#i-zoom-in"/></svg></button>
+      <button id="zoom-label" class="zoom-label" data-cmd="zoom-fit" title="Fit page">100%</button>
+    </footer>
+  </div>
+
+  <!-- Backstage (File) -->
+  <div id="backstage" class="backstage" hidden>
+    <nav class="bs-nav">
+      <button class="bs-back" data-cmd="close-backstage"><svg><use href="#i-arrow-left"/></svg></button>
+      <div class="bs-brand">
+        <img src="icons/icon.svg" alt="" width="40" height="40">
+        <div><strong>Folio</strong><span>Publisher</span></div>
+      </div>
+      <button class="bs-item active" data-bs="new"><svg><use href="#i-page"/></svg>New</button>
+      <button class="bs-item" data-cmd="open-file"><svg><use href="#i-folder"/></svg>Open…</button>
+      <button class="bs-item" data-cmd="save-file"><svg><use href="#i-save"/></svg>Save a Copy</button>
+      <button class="bs-item" data-cmd="print"><svg><use href="#i-print"/></svg>Print / Export PDF</button>
+      <div class="bs-spacer"></div>
+      <button class="bs-item bs-install" data-cmd="install"><svg><use href="#i-install"/></svg>Install App</button>
+      <p class="bs-foot">Your work is saved automatically in this browser.</p>
+    </nav>
+    <div class="bs-main">
+      <header class="bs-head">
+        <p class="eyebrow">A new publication</p>
+        <h1>What shall we make today?</h1>
+        <p class="lede">Begin with a considered template, or a blank sheet of paper.</p>
+      </header>
+      <div id="bs-continue"></div>
+      <div id="templates" class="templates"></div>
+    </div>
+  </div>
+
+  <!-- Colour popover -->
+  <div id="colorpop" class="popover" hidden>
+    <div class="pop-label">Scheme colours</div>
+    <div class="swatches" id="pop-scheme"></div>
+    <div class="pop-label">Standard</div>
+    <div class="swatches" id="pop-standard"></div>
+    <div class="pop-foot">
+      <button class="btn btn-ghost sm" data-pop-color="transparent"><span class="chip none"></span>No colour</button>
+      <label class="btn btn-ghost sm custom-color"><input type="color" id="pop-custom">More colours…</label>
+    </div>
+  </div>
+
+  <!-- Context menu -->
+  <div id="ctxmenu" class="ctxmenu" hidden>
+    <button data-cmd="cut"><svg><use href="#i-cut"/></svg>Cut<kbd>Ctrl X</kbd></button>
+    <button data-cmd="copy"><svg><use href="#i-copy"/></svg>Copy<kbd>Ctrl C</kbd></button>
+    <button data-cmd="paste"><svg><use href="#i-paste"/></svg>Paste<kbd>Ctrl V</kbd></button>
+    <button data-cmd="duplicate"><svg><use href="#i-duplicate"/></svg>Duplicate<kbd>Ctrl D</kbd></button>
+    <hr>
+    <button data-cmd="front"><svg><use href="#i-front"/></svg>Bring to Front</button>
+    <button data-cmd="back"><svg><use href="#i-back"/></svg>Send to Back</button>
+    <hr>
+    <button data-cmd="delete" class="danger"><svg><use href="#i-trash"/></svg>Delete<kbd>Del</kbd></button>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button class="icon-btn modal-x" data-cmd="close-modal"><svg><use href="#i-close"/></svg></button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <div id="print-root" class="print-root"></div>
+
+  <input type="file" id="file-image" accept="image/*" hidden>
+  <input type="file" id="file-open" accept=".folio,.json,application/json" hidden>
+
+  <script src="app.js"></script>
+</body>
+</html>
