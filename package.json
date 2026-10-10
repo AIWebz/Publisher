@@ -1,19 +1,25 @@
 {
   "name": "folio-publisher",
   "productName": "Folio Publisher",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "An elegant desktop publishing studio for flyers, newsletters, cards and posters.",
   "author": "Folio Publisher",
   "private": true,
   "main": "desktop/main.js",
   "scripts": {
-    "start": "electron .",
-    "dist": "electron-builder --win nsis --x64 --publish never",
-    "dist:dir": "electron-builder --win dir --x64 --publish never"
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "start": "node scripts/build.mjs --dev && electron .",
+    "test": "node --test tests/unit/",
+    "serve": "node scripts/build.mjs && python3 -m http.server 8765 --directory app",
+    "dist": "node scripts/build.mjs && electron-builder --win nsis --x64 --publish never",
+    "dist:win": "node scripts/build.mjs && electron-builder --win nsis --x64 --publish never",
+    "dist:mac": "node scripts/build.mjs && electron-builder --mac dmg zip --publish never"
   },
   "devDependencies": {
     "electron": "44.7.0",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "esbuild": "^0.28.2"
   },
   "build": {
     "appId": "com.folio.publisher",
@@ -24,11 +30,8 @@
       "buildResources": "build"
     },
     "files": [
-      "index.html",
-      "styles.css",
-      "app.js",
-      "fonts/**/*",
-      "icons/**/*",
+      "app/**/*",
+      "!app/build/*.map",
       "desktop/**/*",
       "package.json"
     ],
@@ -42,7 +45,14 @@
       }
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico",
       "artifactName": "Folio-Publisher-Setup-${version}.${ext}",
       "legalTrademarks": "Folio Publisher"
@@ -64,5 +74,9 @@
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": false
     }
+  },
+  "dependencies": {
+    "dictionary-en": "^4.0.0",
+    "nspell": "^2.1.5"
   }
 }

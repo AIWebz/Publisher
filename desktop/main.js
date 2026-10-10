@@ -75,7 +75,7 @@ function createWindow() {
     show: false,
     title: 'Folio Publisher',
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#161a19' : '#f4f0e8',
-    icon: path.join(ROOT, 'icons', 'icon-512.png'),
+    icon: path.join(ROOT, 'app', 'icons', 'icon-512.png'),
     titleBarStyle: 'hidden',
     titleBarOverlay: TITLEBAR,
     webPreferences: {
@@ -90,7 +90,7 @@ function createWindow() {
   if (st.maximized) win.maximize();
 
   win.once('ready-to-show', () => win.show());
-  win.loadFile(path.join(ROOT, 'index.html'));
+  win.loadFile(path.join(ROOT, 'app', 'index.html'));
 
   // Never navigate away from the app; open web links in the default browser.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -122,22 +122,12 @@ function createWindow() {
     Menu.buildFromTemplate(items).popup({ window: win });
   });
 
-  win.on('close', async (e) => {
+  win.on('close', (e) => {
     saveWindowState();
-    if (forceClose || !docState.dirty) return;
+    if (forceClose || !docState.dirty || !rendererReady) return;
+    // The renderer owns the per-document "Save changes?" flow (it knows every open document).
     e.preventDefault();
-    const { response } = await dialog.showMessageBox(win, {
-      type: 'question',
-      buttons: ['Save', 'Don’t Save', 'Cancel'],
-      defaultId: 0,
-      cancelId: 2,
-      noLink: true,
-      title: 'Folio Publisher',
-      message: `Do you want to save changes to “${docState.name || 'your publication'}”?`,
-      detail: 'Folio keeps your latest work automatically, but the file on disk will not include these changes unless you save.'
-    });
-    if (response === 0) win.webContents.send('app:save-and-close');
-    else if (response === 1) { forceClose = true; win.close(); }
+    win.webContents.send('app:close-request');
   });
   win.on('closed', () => { win = null; });
 }
@@ -173,7 +163,7 @@ ipcMain.on('app:theme', (_e, theme) => {
   nativeTheme.themeSource = ['light', 'dark'].includes(theme) ? theme : 'system';
 });
 
-ipcMain.on('doc:state', (_e, s) => {
+ipcMain.on('app:doc-state', (_e, s) => {
   docState = { dirty: !!s?.dirty, name: String(s?.name || '') };
 });
 
@@ -240,6 +230,15 @@ ipcMain.handle('file:export-pdf', async (_e, { suggestedName, width, height } = 
 });
 
 ipcMain.handle('file:show-export', () => { if (lastExport) shell.showItemInFolder(lastExport); });
+
+// Extra IPC modules (desktop/ipc-*.js) — each exports (ctx) => void.
+for (const f of fs.readdirSync(__dirname).filter((n) => /^ipc-.+\.js$/.test(n)).sort()) {
+  try {
+    require(path.join(__dirname, f))({ ipcMain, app, dialog, shell, BrowserWindow, getWindow: () => win, knownPaths, writeAtomic });
+  } catch (err) {
+    console.error(`Failed to load ${f}:`, err);
+  }
+}
 
 // Autosave lives in the user profile, so large publications with pictures are kept too.
 const autosavePath = () => path.join(app.getPath('userData'), 'autosave.folio.json');
