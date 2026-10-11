@@ -27,6 +27,10 @@ export async function handleCloseRequest() {
 export function installDesktopBridge() {
   const d = globalThis.folioDesktop;
   if (!d || typeof d.send !== 'function') return;
+  // core/persistence/index.js (installDesktop) already owns app:doc-state (with title/path for the
+  // window title), app:close-request, menu:command and app:menu-commands. Registering them here too
+  // ran every macOS menu command twice and two concurrent quit flows, so this bridge stays idle.
+  return;
   let last = '';
   const send = () => {
     const st = docState();
