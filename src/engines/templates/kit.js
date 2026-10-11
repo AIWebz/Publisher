@@ -177,7 +177,8 @@ export function splitSizes(total, weights) {
  * @param {number} w
  * @param {number} h
  * @param {Array<Array<string|object>>} data rows of cells (html strings or cell objects)
- * @param {object} [opts] { colWeights, rowHeights (px; must sum to h) | rowWeights, header, banded, style, border, fill, cellProps(r, c) }
+ * @param {object} [opts] { colWeights, rowHeights (px; must sum to h) | rowWeights, header, banded, style, border, fill,
+ *   headerFill (colour for row 0), headerColor (theme key for row 0 text, e.g. 'paper'), cellProps(r, c), name }
  * @returns {object} table element
  */
 export function table(x, y, w, h, data, opts = {}) {
@@ -185,8 +186,9 @@ export function table(x, y, w, h, data, opts = {}) {
   const cols = splitSizes(w, opts.colWeights || nCols);
   const rows = opts.rowHeights ? opts.rowHeights.map(r2) : splitSizes(h, opts.rowWeights || data.length);
   const cells = data.map((row, ri) => Array.from({ length: nCols }, (_, ci) => {
-    const v = row[ci];
-    const extra = opts.cellProps ? opts.cellProps(ri, ci) || {} : {};
+    let v = row[ci];
+    const extra = { ...(ri === 0 && opts.headerFill ? { fill: opts.headerFill } : {}), ...(opts.cellProps ? opts.cellProps(ri, ci) || {} : {}) };
+    if (ri === 0 && opts.headerColor && typeof v === 'string' && v) v = `<span style="color: var(--folio-${opts.headerColor})">${v}</span>`;
     if (v && typeof v === 'object') return { ...cell(v.html, extra), ...v, html: cell(v.html).html };
     return cell(v ?? '', extra);
   }));

@@ -12,9 +12,12 @@
     "start": "node scripts/build.mjs --dev && electron .",
     "test": "node --test tests/unit/",
     "serve": "node scripts/build.mjs && python3 -m http.server 8765 --directory app",
-    "dist": "node scripts/build.mjs && electron-builder --win nsis --x64 --publish never",
-    "dist:win": "node scripts/build.mjs && electron-builder --win nsis --x64 --publish never",
-    "dist:mac": "node scripts/build.mjs && electron-builder --mac dmg zip --publish never"
+    "dist": "node scripts/build.mjs && electron-builder --publish never",
+    "dist:win": "node scripts/build.mjs && electron-builder --win --x64 --publish never",
+    "dist:mac": "node scripts/build.mjs && electron-builder --mac --publish never",
+    "pack": "node scripts/build.mjs && electron-builder --dir --publish never",
+    "build:icons": "node build/tools/make-assets.mjs",
+    "test:desktop": "node tests/e2e/desktop-shell.mjs && node tests/e2e/desktop-package.mjs"
   },
   "devDependencies": {
     "electron": "44.7.0",
@@ -24,26 +27,110 @@
   "build": {
     "appId": "com.folio.publisher",
     "productName": "Folio Publisher",
-    "copyright": "Folio Publisher",
+    "copyright": "Copyright © 2026 Folio Publisher",
     "directories": {
       "output": "dist",
       "buildResources": "build"
     },
     "files": [
       "app/**/*",
-      "!app/build/*.map",
+      "!app/build/**/*.map",
+      "!**/*.{map,ts,md}",
       "desktop/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*"
     ],
-    "fileAssociations": [
-      {
-        "ext": "folio",
-        "name": "Folio Publication",
-        "description": "Folio Publisher publication",
-        "icon": "build/icon.ico",
-        "role": "Editor"
+    "asar": true,
+    "publish": null,
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.graphics-design",
+      "icon": "build/icon.icns",
+      "artifactName": "Folio-Publisher-${version}-mac-${arch}.${ext}",
+      "darkModeSupport": true,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": "-",
+      "extraResources": [
+        {
+          "from": "build/folio.icns",
+          "to": "folio.icns"
+        }
+      ],
+      "extendInfo": {
+        "NSHumanReadableCopyright": "Copyright © 2026 Folio Publisher",
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Folio Publication",
+            "CFBundleTypeRole": "Editor",
+            "LSHandlerRank": "Owner",
+            "LSItemContentTypes": [
+              "com.folio.publisher.publication"
+            ],
+            "CFBundleTypeExtensions": [
+              "folio"
+            ],
+            "CFBundleTypeIconFile": "folio.icns"
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "com.folio.publisher.publication",
+            "UTTypeDescription": "Folio Publication",
+            "UTTypeConformsTo": [
+              "public.data",
+              "public.content"
+            ],
+            "UTTypeIconFile": "folio.icns",
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "folio"
+              ],
+              "public.mime-type": [
+                "application/vnd.folio.publication+json"
+              ]
+            }
+          }
+        ]
       }
-    ],
+    },
+    "dmg": {
+      "title": "Folio Publisher ${version}",
+      "background": "build/background.png",
+      "iconSize": 96,
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 130,
+          "y": 200,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
     "win": {
       "target": [
         {
@@ -55,7 +142,16 @@
       ],
       "icon": "build/icon.ico",
       "artifactName": "Folio-Publisher-Setup-${version}.${ext}",
-      "legalTrademarks": "Folio Publisher"
+      "legalTrademarks": "Folio Publisher",
+      "fileAssociations": [
+        {
+          "ext": "folio",
+          "name": "Folio Publication",
+          "description": "Folio Publisher publication",
+          "icon": "build/folio.ico",
+          "role": "Editor"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -73,6 +169,14 @@
       "uninstallerSidebar": "build/installerSidebar.bmp",
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "category": "Graphics",
+      "icon": "build/icon.png",
+      "executableName": "folio-publisher"
     }
   },
   "dependencies": {

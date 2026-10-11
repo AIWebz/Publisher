@@ -275,3 +275,42 @@ Main → renderer (`folioDesktop.on`): `file:opened` `{ path, name, text }`, `ap
 Export channels are owned by `desktop/ipc-export.js`; core/platform.js calls `export:save-binary`
 `({ data, suggestedName, filters })`, `export:save-folder` `({ files: [{ name, data }] })`, `export:pdf`
 `({ widthIn, heightIn, suggestedName })` and `print:print` `({ copies, duplex, landscape, silent })`.
+
+### Persistence (src/core/persistence, src/core/platform.js, features/core-files.js, desktop shell)
+
+- Boot: `installPersistence({ app })` (core/persistence/index.js; idempotent — `features/core-files.js` calls it on import)
+  installs `app.platform` and `app.files`, autosave, desktop listeners and web lifecycle handlers. `startPersistence()`
+  (idempotent; also runs by itself ~120 ms after `load`) sends `app:ready` to the desktop shell and offers recovery copies.
+- `app.files` (FilesController): `newDocument(opts)`, `open()`, `openText(text, { path, name, handle })` (validates; invalid
+  or newer files get an error dialog and resolve null; a file already open is focused; replaces the current tab only when it
+  is an untouched blank document), `openRecent(entry)`, `recentList()`, `removeRecent(entry)`, `clearRecent()`,
+  `save(session?)`, `saveAs(session?)` → bool (runs `app.flush()`, hashes the exact snapshot before awaiting the platform, so
+  edits during a save stay dirty), `close(session?)`, `closeAll()`, `confirmSave(session)` → 'save'|'discard'|'cancel',
+  `prepareQuit()` (desktop close flow), `recoverable()`, `restore(entry)`, `discardRecovery(entry)`,
+  `offerRecovery({ force })`, `showProperties()`, `isUntouchedBlank(session)`.
+  A restored session has `session.restored = true`, keeps the recovery copy's id and is dirty.
+- Extra app events: `recent` (recent list changed), `recovery` (recovery copies changed); `saved` as documented above.
+- Backstage pages registered: `open` (20), `recent` (25), `save` (30, command), `saveAs` (32, command), `recover` (70),
+  `properties` (80, command `file.properties`), `close` (90, command). After opening a document from the File view they call
+  `app.closeBackstage()` (or `app.shell.closeBackstage()`; else emit `app.emit('backstage', false)`) — the shell should provide one.
+- Commands: `file.open` (Mod+O, global), `file.openRecent` (arg: recent entry, global), `file.save` (Mod+S), `file.saveAs`
+  (Mod+Shift+S), `file.close` (Mod+W), `file.closeAll`, `file.properties`, `file.recover` (global).
+- Platform additions: `platform.isMac`, `platform.hasFileHandles`, `platform.on(channel, fn)`, `platform.send(channel, …args)`,
+  `platform.invoke(channel, …args)`, `platform.info()`, `platform.pathForFile(file)`, `platform.readFile(file)`,
+  `platform.openRecentEntry(entry)`, `platform.printers()`, `platform.onBeforePrint(fn(root, doc))` (fills `#print-root` when the
+  user prints from the browser menu; without a registered preparer every page is rendered with `renderPage(mode:'export')`),
+  `platform.recent: { list(), add({ path?, handle?, name, title, pages }), remove(key), clear() }`
+  (entries `{ key, name, title, pages, openedAt, path?, handle?, missing }`). Web `printToPDF` opens the print dialog and resolves
+  `{ name, path: null, viaPrintDialog: true }`. `saveFilesToFolder` calls `export:save-files` (falls back to `export:save-folder`).
+  `savePublication` may resolve `{ name, downloaded: true }` on browsers without the File System Access API.
+- Root classes/vars set at boot: `html.is-desktop|is-web`, `os-<win32|darwin|linux|web>`, `is-mac`; CSS vars
+  `--caption-inset-right` (138px on Windows/Linux desktop: caption buttons overlay) and `--caption-inset-left` (80px on macOS:
+  traffic lights). The title bar and the File view must leave these areas free and keep a draggable strip
+  (`-webkit-app-region: drag`) at the top in desktop mode.
+- Desktop IPC additions: `file:save` accepts `{ path, text, suggestedName, saveAs }`; `recovery:save (id, text, { title, filePath,
+  fileName, pages })`; `recovery:list` entries also have `fileName`, `pages`; `store:recent-add (path, { title, pages })`;
+  `store:recent` entries `{ path, name, title, pages, openedAt, missing }`; `store:recent-clear`. Sends: `app:menu-commands`
+  (registered command ids; the macOS menu hides unknown ones), `app:titlebar` `({ color, symbolColor })` (Windows caption
+  colours), `app:doc-state` `({ dirty, names, title, path })`. ipc-*.js ctx also has `knownPaths` (persisted in
+  userData/known-paths.json), `writeAtomic(file, data, { coalesce })`, `removeFile(file)`, `userData()`. The env var
+  `FOLIO_USER_DATA` overrides the profile directory (tests).
