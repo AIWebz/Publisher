@@ -1,7 +1,7 @@
 # Folio Publisher
 
 Folio is a desktop-publishing app for flyers, newsletters, brochures, cards, calendars and posters, with
-a ribbon interface and serif typography throughout. It runs as a desktop app on **Windows 10/11** and
+a ribbon interface set in the Inter typeface. It runs as a desktop app on **Windows 10/11** and
 **macOS 13 or later**, and in the browser as an installable web app. Publications are saved as
 `.folio` files.
 
