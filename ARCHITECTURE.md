@@ -1,6 +1,6 @@
 # Folio Publisher — Architecture contract
 
-Folio is a desktop-publishing application (a Microsoft Publisher–style editor) that runs as an
+Folio is a desktop-publishing application that runs as an
 Electron desktop app on Windows 11 and macOS, and as a web app. **The structured document model is
 the single source of truth.** The canvas is a rendering of it; export and print re-render from it.
 

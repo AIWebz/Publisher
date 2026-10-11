@@ -120,7 +120,7 @@ export async function insertPictures(files, opts = {}) {
 
 /**
  * Put a picture file into an existing picture frame (replace picture / fill placeholder). The frame
- * keeps its size; the picture fills it (cropped), as a picture placeholder does in Publisher.
+ * keeps its size; the picture fills it (cropped).
  */
 export async function fillPicture(frameId, file) {
   const img = await prepareImage(file);

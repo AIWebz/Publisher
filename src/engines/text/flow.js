@@ -621,7 +621,7 @@ function layoutChainDOM(doc, chain, storyHtml, resolveFor, exclusions = []) {
     if (split) {
       const { block, index, P } = split;
       let start = index > 0 ? splitBlockAt(block, P[index]) : block;
-      // Nothing fits in the last frame: show the first block clipped (as Publisher does) and flag overflow.
+      // Nothing fits in the last frame: show the first block clipped and flag overflow.
       if (last && start === m.flow.firstElementChild) { clipped = true; start = start.nextElementSibling; }
       rest = start ? detachFrom(m.flow, start) : [];
     }

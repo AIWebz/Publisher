@@ -21,7 +21,7 @@ The site also lists SHA-256 checksums for each file.
 ### Windows
 
 1. Download **`Folio-Publisher-Setup-<version>.exe`** and run it.
-2. The installer is not code-signed, so Microsoft Defender SmartScreen may show *"Windows protected your PC"*.
+2. The installer is not code-signed, so Windows SmartScreen may show *"Windows protected your PC"*.
    Choose **More info → Run anyway**.
 3. Choose to install for yourself or for all users, and pick a folder. The installer adds Start menu and
    desktop shortcuts and makes Folio the app for `.folio` files (with its own document icon).
@@ -107,8 +107,7 @@ Folio uses the native Windows 11 caption buttons (including Snap layouts) over i
 
 ## What Folio does not do
 
-- It does not open or save Microsoft Publisher `.pub` files. Publications use Folio's own `.folio` format; share
-  finished work as PDF or images.
+- Publications use Folio's own `.folio` format; share finished work as PDF or images.
 - The interface itself is in English; the 85 languages are proofing (spelling) languages.
 - The installers are not code-signed (see the install notes above).
 - Tight wrapping follows the outline of ellipses; other shapes and pictures wrap by their rectangle, and wrap

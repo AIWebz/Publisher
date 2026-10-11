@@ -1,4 +1,4 @@
-// Text wrapping around objects (Publisher's Wrap Text): which objects push text out of a text
+// Text wrapping around objects (Wrap Text): which objects push text out of a text
 // frame, and where. Pure geometry, no DOM.
 //
 // el.wrap = { type, side, dist }:

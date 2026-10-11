@@ -163,7 +163,7 @@ function pressElement(cv, e, hit) {
     up: (ev) => {
       if (moving) { moving.end(true); return; }
       if (!toggle && wasSelected && app.selectionIds.length > 1) app.select([id]);
-      // like Publisher, a click on a text box puts the cursor in its text (drag still moves the box)
+      // a click on a text box puts the cursor in its text (drag still moves the box)
       const hitEl = !toggle && app.selectionIds.length === 1 ? findElement(app.doc, id) : null;
       if (hitEl && hitEl.el.type === 'text' && !hitEl.el.locked) app.textEdit.start(id, { caret: { x: ev.clientX, y: ev.clientY } });
     },
