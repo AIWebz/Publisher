@@ -17,7 +17,7 @@ const OUT = process.argv[2] ? path.resolve(process.argv[2]) : scratchDir('deskto
 fs.mkdirSync(OUT, { recursive: true });
 const profile = path.join(OUT, 'profile');
 fs.rmSync(profile, { recursive: true, force: true });
-const TITLEBAR_HEIGHT = 48;      // desktop/main.js TITLEBAR.height
+const TITLEBAR_HEIGHT = 40;      // desktop/main.js TITLEBAR.height (= #titlebar in app.css)
 const CAPTION_RIGHT = 138;       // reserved for the Windows caption buttons
 const TRAFFIC_LEFT = 80;         // reserved for the macOS traffic lights
 
@@ -87,7 +87,7 @@ try {
   const mac = await measure();
   check(mac.left >= TRAFFIC_LEFT - 1, `macOS: content starts after the traffic lights (${Math.round(mac.left)} ≥ ${TRAFFIC_LEFT})`);
   check(mac.right > mac.width - CAPTION_RIGHT, `macOS: no space reserved on the right (${Math.round(mac.right)} of ${mac.width})`);
-  check(mac.height === TITLEBAR_HEIGHT, 'macOS: title bar height unchanged (traffic lights centred at y=17)');
+  check(mac.height === TITLEBAR_HEIGHT, 'macOS: title bar height unchanged (traffic lights centred at y=13)');
   await page.screenshot({ path: path.join(OUT, 'titlebar-darwin.png'), clip: { x: 0, y: 0, width: mac.width, height: 60 } });
   await setPlatform('win32');
   const w32 = await measure();
