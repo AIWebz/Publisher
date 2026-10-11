@@ -88,3 +88,27 @@ export function finish(label) {
   console.log(failures ? `\n${label}: ${failures} check(s) FAILED` : `\n${label}: all checks passed`);
   process.exit(failures ? 1 : 0);
 }
+
+/**
+ * Writes a real .folio publication (built with the core model and serializer) containing one text frame.
+ * @returns {Promise<string>} the file path
+ */
+export async function writeSampleFolio(file, { title = 'Sample', text = 'Sample publication' } = {}) {
+  const model = await import(path.join(ROOT, 'src/core/model.js'));
+  const format = await import(path.join(ROOT, 'src/core/persistence/format.js'));
+  const doc = model.createDocument({ title, size: 'letter' });
+  const frame = model.createTextFrame(doc, { x: 96, y: 96, w: 480, h: 120, name: 'Sample text' }, `<p>${text}</p>`);
+  doc.pages[0].elements.push(frame);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, format.serializeForSave(doc));
+  return file;
+}
+
+/** Ends the app without the Save / Don't Save flow (test teardown). */
+export async function forceQuit(electronApp) {
+  const proc = electronApp.process();
+  const exited = new Promise((r) => { if (proc.exitCode !== null) r(); else proc.once('exit', r); });
+  await electronApp.evaluate(({ app }) => setTimeout(() => app.exit(0), 10)).catch(() => {});
+  await Promise.race([exited, new Promise((r) => setTimeout(r, 5000))]);
+  if (proc.exitCode === null) proc.kill('SIGKILL');
+}

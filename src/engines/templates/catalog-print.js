@@ -232,7 +232,7 @@ function pamphletBooklet() {
   const a4 = text(doc, X, 72, W, 220, '', bodyStyle, { name: 'Article (4 of 4)' });
   linkFrames(doc, [a1, a2, a3, a4]);
   const caption = (y, t) => text(doc, X, y, W, 18, p(t), { italic: true, size: 9, color: '@muted' }, { name: 'Caption' });
-  const notesLines = Array.from({ length: 8 }, (_, i) => hline(X, 520 + i * 28, W, '@light', 1, { name: `Notes line ${i + 1}` }));
+  const notesLines = Array.from({ length: 8 }, (_, i) => hline(X, 500 + i * 28, W, '@accent2', 0.75, { name: `Notes line ${i + 1}` }));
   return setPages(doc, [
     [[
       picture(48, 48, 432, 400, { name: 'Cover photo' }),
@@ -290,10 +290,11 @@ function pamphletBooklet() {
         { italic: true, size: 10, color: '@muted', lineHeight: 1.5 }, { name: 'Note' })
     ]],
     [[
-      text(doc, X, 72, W, 40, p('Notes'), { font: '@heading', size: 24, color: '@accent' }, { name: 'Notes heading' }),
-      text(doc, X, 124, W, 300, p('The Millbrook Historical Society cares for the grain mill, the trail and the town archive. We are run entirely by volunteers and funded by members and visitors like you.') +
+      text(doc, X, 72, W, 40, p('About the Society'), { font: '@heading', size: 24, color: '@accent' }, { name: 'About heading' }),
+      text(doc, X, 124, W, 280, p('The Millbrook Historical Society cares for the grain mill, the trail and the town archive. We are run entirely by volunteers and funded by members and visitors like you.') +
         p('<b>Visit</b> · The Mill, River Lane, Millbrook<br><b>Write</b> · hello@millbrookhistory.example<br><b>Call</b> · (555) 014 6610'),
         { size: 10.5, lineHeight: 1.55, spaceAfter: 8 }, { name: 'About the society' }),
+      text(doc, X, 432, W, 40, p('Notes'), { font: '@heading', size: 24, color: '@accent' }, { name: 'Notes heading' }),
       ...notesLines,
       text(doc, X, 748, W, 16, p('© Millbrook Historical Society · Printed on recycled paper'), { size: 8, color: '@muted', align: 'center' }, { name: 'Imprint' })
     ], { masterId: null }]
@@ -338,9 +339,9 @@ function newsletter4() {
   ], { colWeights: [5, 1], name: 'Table of contents', border: { color: '@muted', width: 0 }, style: { size: 9.5 },
     cellProps: (r, c) => ({ align: c === 1 ? 'right' : 'left', padding: 3, borders: { top: null, left: null, right: null, bottom: { color: '@muted', width: 0.5, dash: 'dot' } } }) });
   const recipe = (x, title, ingredients, method) => [
-    picture(x, 150, 340, 190, { name: `${title} photo` }),
-    text(doc, x, 352, 340, 30, p(title), { font: '@heading', size: 17 }, { name: `${title} title` }),
-    text(doc, x, 388, 340, 286, p(span('You will need', `${css.accent}; text-transform: uppercase; letter-spacing: 1.5px; font-size: 8.5pt`), 'margin-bottom: 2px') +
+    picture(x, 150, 340, 240, { name: `${title} photo` }),
+    text(doc, x, 402, 340, 30, p(title), { font: '@heading', size: 17 }, { name: `${title} title` }),
+    text(doc, x, 438, 340, 236, p(span('You will need', `${css.accent}; text-transform: uppercase; letter-spacing: 1.5px; font-size: 8.5pt`), 'margin-bottom: 2px') +
       `<ul>${ingredients.map((i) => `<li>${i}</li>`).join('')}</ul>` + p(method, 'margin-top: 6px'), { size: 9.5, lineHeight: 1.45 }, { name: `${title} recipe` })
   ];
   const diary = table(56, 104, 704, 300, [
@@ -448,7 +449,7 @@ function bulletin() {
     text(doc, 56, 500, 452, 300, p('What a wonderful first six weeks. Our new reading garden opened on schedule thanks to forty parent volunteers who gave up a rainy Saturday to lay paths and plant bulbs.') +
       p('This month we welcome Ms. Farah Qureshi to the fourth-grade team and say a fond farewell to Mr. Daniel Ortiz, who retires after twenty-six years of teaching science with unforgettable enthusiasm.') +
       p('Please remember that school photographs are on 21 October. Order forms went home in book bags last week; spare copies are at the front office.') +
-      p('— Dr. Helen Park, Principal'), { ...body, align: 'justify' }, { name: 'Principal letter', columns: 2, colGap: 18 }),
+      p('— Dr. Helen Park, Principal'), { ...body, size: 10.5 }, { name: 'Principal letter' }),
     hline(56, 820, 452, '@light', 1.5, { name: 'Rule' }),
     ...sec(56, 836, 452, 'Celebrating', 'Stars of the Month'),
     text(doc, 56, 894, 452, 120, p('Congratulations to <b>Maya R.</b> (kindness), <b>Leo T.</b> (perseverance), <b>Aisha K.</b> (curiosity) and <b>Sam W.</b> (teamwork), nominated by their classmates and teachers.'),

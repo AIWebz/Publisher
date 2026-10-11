@@ -12,7 +12,8 @@ installPersistence({ app });
 
 /** Leave the File view (if the shell shows it) after a document was opened. */
 function closeBackstage() {
-  if (typeof app.closeBackstage === 'function') app.closeBackstage();
+  if (app.ui.backstage && typeof app.ui.backstage.close === 'function') app.ui.backstage.close();
+  else if (typeof app.closeBackstage === 'function') app.closeBackstage();
   else if (app.shell && typeof app.shell.closeBackstage === 'function') app.shell.closeBackstage();
   else app.emit('backstage', false);
 }
@@ -92,37 +93,36 @@ function live(container, events, fn) {
 
 function recentItem(entry) {
   const where = entry.path ? entry.path : entry.name;
-  const open = h('button', { type: 'button', class: 'bs-item-open', title: where, onclick: () => app.exec('file.openRecent', entry) },
+  const open = h('button', { type: 'button', class: 'bsf-item-open', title: where, onclick: () => app.exec('file.openRecent', entry) },
     h('strong', { text: entry.title || entry.name }),
     h('span', { text: `${entry.missing ? 'Not found · ' : ''}${where}${entry.openedAt ? ` · ${formatWhen(entry.openedAt)}` : ''}` }));
   const remove = h('button', { type: 'button', class: 'danger', text: 'Remove', title: 'Remove from this list', onclick: () => files().removeRecent(entry) });
-  return h('div', { class: `bs-item${entry.missing ? ' missing' : ''}` }, icon('page'), open, h('div', { class: 'bs-item-tools' }, remove));
+  return h('div', { class: `bsf-item${entry.missing ? ' missing' : ''}` }, icon('page'), open, h('div', { class: 'bsf-item-tools' }, remove));
 }
 
 async function recentList(limit) {
   const list = await files().recentList();
   if (!list.length) {
-    return h('div', { class: 'bs-list' }, h('div', { class: 'bs-empty', text: app.platform.isDesktop || app.platform.hasFileHandles
+    return h('div', { class: 'bsf-list' }, h('div', { class: 'bsf-empty', text: app.platform.isDesktop || app.platform.hasFileHandles
       ? 'Publications you open or save appear here.'
       : 'This browser cannot reopen files by itself — use Browse to open a publication.' }));
   }
-  return h('div', { class: 'bs-list' }, list.slice(0, limit || list.length).map(recentItem));
+  return h('div', { class: 'bsf-list' }, list.slice(0, limit || list.length).map(recentItem));
 }
 
 registry.backstage({
   id: 'open', label: 'Open', icon: 'open', order: 20,
   render(container) {
-    container.classList.add('bs-files');
     return live(container, ['recent', 'recovery'], async () => {
       const recover = await files().recoverable();
-      return h('div', { class: 'bs-files' },
+      return h('div', { class: 'bsf-files' },
         h('h2', { text: 'Open' }),
-        h('div', { class: 'bs-actions' },
-          h('button', { type: 'button', class: 'bs-action', onclick: () => app.exec('file.open') },
+        h('div', { class: 'bsf-actions' },
+          h('button', { type: 'button', class: 'bsf-action', onclick: () => app.exec('file.open') },
             icon('open'), h('span', {}, h('strong', { text: 'Browse…' }), h('small', { text: 'Open a .folio publication' }))),
-          recover.length ? h('button', { type: 'button', class: 'bs-action', onclick: () => app.exec('file.recover') },
+          recover.length ? h('button', { type: 'button', class: 'bsf-action', onclick: () => app.exec('file.recover') },
             icon('recover'), h('span', {}, h('strong', { text: 'Recover unsaved' }), h('small', { text: `${recover.length} publication${recover.length === 1 ? '' : 's'} not saved` }))) : null),
-        h('p', { class: 'bs-sub', text: 'Recent publications' }),
+        h('p', { class: 'bsf-sub', text: 'Recent publications' }),
         await recentList(8));
     });
   }
@@ -133,11 +133,11 @@ registry.backstage({
   render(container) {
     return live(container, ['recent', 'saved'], async () => {
       const list = await files().recentList();
-      return h('div', { class: 'bs-files' },
+      return h('div', { class: 'bsf-files' },
         h('h2', { text: 'Recent' }),
-        h('p', { class: 'bs-sub', text: 'Publications you opened or saved recently.' }),
+        h('p', { class: 'bsf-sub', text: 'Publications you opened or saved recently.' }),
         await recentList(),
-        list.length ? h('button', { type: 'button', class: 'bs-link', text: 'Clear the recent list', onclick: async () => {
+        list.length ? h('button', { type: 'button', class: 'bsf-link', text: 'Clear the recent list', onclick: async () => {
           if (await app.ui.confirm('Clear recent publications?', '<p>The files themselves are not deleted.</p>', 'Clear')) files().clearRecent();
         } }) : null);
     });
@@ -152,19 +152,19 @@ registry.backstage({
   render(container) {
     return live(container, ['recovery', 'sessions'], async () => {
       const list = await files().recoverable();
-      const rows = list.map((e) => h('div', { class: 'bs-item' }, icon('recover'),
-        h('div', { class: 'bs-item-open' },
+      const rows = list.map((e) => h('div', { class: 'bsf-item' }, icon('recover'),
+        h('div', { class: 'bsf-item-open' },
           h('strong', { text: e.title || 'Untitled publication' }),
           h('span', { text: `${formatWhen(e.savedAt)} · ${e.pages || '?'} page${e.pages === 1 ? '' : 's'}${e.size ? ` · ${formatBytes(e.size)}` : ''}${e.filePath ? ` · ${e.filePath}` : ' · never saved'}` })),
-        h('div', { class: 'bs-item-tools' },
+        h('div', { class: 'bsf-item-tools' },
           h('button', { type: 'button', class: 'primary', text: 'Restore', onclick: async () => { if (await files().restore(e)) { app.emit('recovery', null); closeBackstage(); } } }),
           h('button', { type: 'button', class: 'danger', text: 'Discard', onclick: async () => {
             if (await app.ui.confirm('Discard recovery copy?', `<p>The unsaved changes in “${e.title}” will be lost.</p>`, 'Discard', { danger: true })) files().discardRecovery(e);
           } }))));
-      return h('div', { class: 'bs-files' },
+      return h('div', { class: 'bsf-files' },
         h('h2', { text: 'Recover' }),
-        h('p', { class: 'bs-sub', text: 'Recovery copies are kept for publications that were not saved when Folio Publisher closed.' }),
-        h('div', { class: 'bs-list' }, rows.length ? rows : h('div', { class: 'bs-empty', text: 'There are no unsaved publications to recover.' })));
+        h('p', { class: 'bsf-sub', text: 'Recovery copies are kept for publications that were not saved when Folio Publisher closed.' }),
+        h('div', { class: 'bsf-list' }, rows.length ? rows : h('div', { class: 'bsf-empty', text: 'There are no unsaved publications to recover.' })));
     });
   }
 });

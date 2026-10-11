@@ -156,12 +156,12 @@ function partyInvitation() {
     [[
       ...balloon(70, 60, 70, '@accent2', 1), ...balloon(330, 40, 84, '@light', 2), ...balloon(210, 96, 56, '@accent2', 3),
       text(doc, 40, 300, 400, 30, p('Come celebrate'), { caps: true, letterSpacing: 4, size: 11, align: 'center', color: '@accent2' }, { name: 'Lead-in' }),
-      text(doc, 40, 336, 400, 130, p('You’re<br>Invited'), { font: '@heading', size: 50, align: 'center', color: '@paper', lineHeight: 1.0 }, { name: 'Headline', valign: 'middle' }),
+      text(doc, 40, 334, 400, 142, p('You’re<br>Invited'), { font: '@heading', size: 50, align: 'center', color: '@paper', lineHeight: 1.0 }, { name: 'Headline', valign: 'middle' }),
       hline(200, 488, 80, '@accent2', 2, { name: 'Rule' }),
       text(doc, 40, 510, 400, 70, p('to Leo’s fortieth birthday party'), { italic: true, size: 17, align: 'center', color: '@paper' }, { name: 'Occasion' })
     ], { background: solidBg('@accent') }],
     [[
-      text(doc, 56, 72, 368, 44, p('The details'), { font: '@heading', size: 28, align: 'center', color: '@accent' }, { name: 'Heading' }),
+      text(doc, 56, 70, 368, 50, p('The details'), { font: '@heading', size: 28, align: 'center', color: '@accent' }, { name: 'Heading' }),
       ...ornamentDivider(180, 132, 120),
       text(doc, 56, 160, 368, 330,
         p(span('When', css.caps + '; font-size: 8.5pt; color: var(--folio-accent2)')) + p('Saturday 14 March, from 7 pm until late', 'margin-bottom: 16px') +

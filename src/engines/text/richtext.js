@@ -11,7 +11,7 @@
 import { filterStyle, normalizeColor, normalizeFontFamily, cleanHref, sanitizeHtml, LIST_INDENT } from './sanitize.js';
 import { fieldSpan } from './fields.js';
 
-const ZWSP = '​';
+const ZWSP = '\u200b';
 const BLOCK_RE = /^(P|LI|DIV|H[1-6]|BLOCKQUOTE|PRE)$/;
 const FORMAT_TAGS = {
   bold: ['B', 'STRONG'], italic: ['I', 'EM'], underline: ['U'], strike: ['S', 'STRIKE', 'DEL'], sub: ['SUB'], sup: ['SUP'], link: ['A']
@@ -77,12 +77,12 @@ function pointToOffset(root, container, offset) {
   return found ?? count;
 }
 
-function offsetToPoint(root, target) {
+function offsetToPoint(root, target, preferNext = false) {
   let count = 0, result = null;
   const visit = (node) => {
     if (node.nodeType === 3) {
       const len = node.data.length;
-      if (target <= count + len) { result = [node, target - count]; return true; }
+      if (preferNext ? target < count + len || (target === count + len && !nextTextInBlock(node, root)) : target <= count + len) { result = [node, target - count]; return true; }
       count += len;
       return false;
     }
@@ -104,13 +104,21 @@ function offsetToPoint(root, target) {
   return result || [root, root.childNodes.length];
 }
 
+function nextTextInBlock(node, root) {
+  const block = blockOf(node, root) || root;
+  const w = root.ownerDocument.createTreeWalker(block, 4);
+  w.currentNode = node;
+  for (let n = w.nextNode(); n; n = w.nextNode()) if (n.data.length) return n;
+  return null;
+}
+
 function saveSelection(root, range) {
   return { start: pointToOffset(root, range.startContainer, range.startOffset), end: pointToOffset(root, range.endContainer, range.endOffset) };
 }
 
 function restoreSelection(root, saved) {
   const r = root.ownerDocument.createRange();
-  const [sc, so] = offsetToPoint(root, saved.start);
+  const [sc, so] = offsetToPoint(root, saved.start, saved.start !== saved.end);
   const [ec, eo] = offsetToPoint(root, saved.end);
   r.setStart(sc, so);
   r.setEnd(ec, eo);
@@ -171,10 +179,7 @@ export function selectedBlocks(root, range = getEditorRange(root)) {
   // a range ending at the very start of a block does not select that block
   if (hit.length > 1) {
     const last = hit[hit.length - 1];
-    const r = root.ownerDocument.createRange();
-    r.selectNodeContents(last);
-    r.collapse(true);
-    if (range.compareBoundaryPoints(Range.END_TO_START, r) <= 0 && pointToOffset(root, range.endContainer, range.endOffset) === pointToOffset(root, last, 0)) hit.pop();
+    if (pointToOffset(root, range.endContainer, range.endOffset) === pointToOffset(root, last, 0)) hit.pop();
   }
   return hit;
 }
@@ -389,6 +394,20 @@ function textNodesIn(nodes) {
   return out;
 }
 
+/** Text nodes (and fields) with at least one selected character. */
+function selectedTextNodes(range) {
+  const c = range.commonAncestorContainer;
+  return textNodesIn([c]).filter((n) => {
+    if (!range.intersectsNode(n)) return false;
+    if (n.nodeType === 3) {
+      if (!/[^\u200b]/.test(n.data)) return false;
+      if (n === range.startContainer && range.startOffset >= n.data.length) return false;
+      if (n === range.endContainer && range.endOffset === 0) return false;
+    }
+    return true;
+  });
+}
+
 function styleOf(node) {
   const el = node.nodeType === 3 ? node.parentElement : node;
   return el.ownerDocument.defaultView.getComputedStyle(el);
@@ -432,7 +451,7 @@ function toggleFormat(root, key) {
   let nodes = [];
   if (range.collapsed) nodes = [range.startContainer];
   else {
-    const all = textNodesIn([range.commonAncestorContainer]).filter((n) => range.intersectsNode(n) && !(n.nodeType === 3 && !/[^​]/.test(n.data)));
+    const all = selectedTextNodes(range);
     nodes = all.length ? all : [range.startContainer];
   }
   const on = !nodes.every((n) => formatActive(n, root, key));
@@ -837,8 +856,7 @@ export function getSelectionState(root) {
     else if (isEl(n) && n.lastChild && range.startOffset > 0) n = n.childNodes[range.startOffset - 1];
     nodes = [n.nodeType === 3 || isEl(n) ? n : root];
   } else {
-    nodes = textNodesIn([range.commonAncestorContainer]).filter((n) => range.intersectsNode(n) && !(n.nodeType === 3 && !/[^​]/.test(n.data)));
-    if (range.commonAncestorContainer.nodeType === 3) nodes = [range.commonAncestorContainer];
+    nodes = selectedTextNodes(range);
     if (!nodes.length) nodes = [range.startContainer];
   }
   nodes = nodes.slice(0, 400).map((n) => (n.nodeType === 3 || isEl(n) ? n : root));

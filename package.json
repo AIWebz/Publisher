@@ -10,7 +10,7 @@
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",
     "start": "node scripts/build.mjs --dev && electron .",
-    "test": "node --test tests/unit/",
+    "test": "node --test \"tests/unit/*.test.js\"",
     "serve": "node scripts/build.mjs && python3 -m http.server 8765 --directory app",
     "dist": "node scripts/build.mjs && electron-builder --publish never",
     "dist:win": "node scripts/build.mjs && electron-builder --win --x64 --publish never",

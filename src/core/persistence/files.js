@@ -78,6 +78,7 @@ export class FilesController {
     const session = app.addSession(doc, { filePath: path || null, fileName, fileHandle: handle || null });
     if (blank && blank !== session) app.removeSession(blank);
     if (recent) this._addRecent(session);
+    this._showDocument();
     return session;
   }
 
@@ -284,6 +285,7 @@ export class FilesController {
     if (blank && blank !== session) app.removeSession(blank);
     app.notifyDirty(session);
     this.recovery.schedule(session);
+    this._showDocument();
     return session;
   }
 
@@ -347,6 +349,12 @@ export class FilesController {
   }
 
   // ---------------------------------------------------------------- helpers
+
+  /** Leave the File view (start screen) so a newly opened document is visible. */
+  _showDocument() {
+    const bs = this.ui.backstage;
+    if (bs && typeof bs.close === 'function') { try { bs.close(); } catch (err) { console.error(err); } }
+  }
 
   async _alert(title, html) {
     if (this.ui.alert) return this.ui.alert(title, `<p>${html}</p>`);

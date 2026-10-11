@@ -292,7 +292,7 @@ Export channels are owned by `desktop/ipc-export.js`; core/platform.js calls `ex
 - Extra app events: `recent` (recent list changed), `recovery` (recovery copies changed); `saved` as documented above.
 - Backstage pages registered: `open` (20), `recent` (25), `save` (30, command), `saveAs` (32, command), `recover` (70),
   `properties` (80, command `file.properties`), `close` (90, command). After opening a document from the File view they call
-  `app.closeBackstage()` (or `app.shell.closeBackstage()`; else emit `app.emit('backstage', false)`) — the shell should provide one.
+  `app.ui.backstage.close()` (else `app.closeBackstage()` / `app.shell.closeBackstage()`; else `app.emit('backstage', false)`).
 - Commands: `file.open` (Mod+O, global), `file.openRecent` (arg: recent entry, global), `file.save` (Mod+S), `file.saveAs`
   (Mod+Shift+S), `file.close` (Mod+W), `file.closeAll`, `file.properties`, `file.recover` (global).
 - Platform additions: `platform.isMac`, `platform.hasFileHandles`, `platform.on(channel, fn)`, `platform.send(channel, …args)`,

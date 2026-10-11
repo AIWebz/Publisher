@@ -10,6 +10,58 @@
 // restyle them.
 
 import { PRINT_TEMPLATES } from './catalog-print.js';
+import { CARD_TEMPLATES } from './catalog-cards.js';
+import { MAIL_TEMPLATES } from './catalog-mail.js';
+import { COMMERCE_TEMPLATES } from './catalog-commerce.js';
+import { buildWallCalendar, buildYearCalendar } from './calendar.js';
+import { IN, newDoc, text, p, hline } from './kit.js';
+
+function wallCalendar(opts = {}) {
+  const year = opts.year ?? new Date().getFullYear();
+  const doc = newDoc({ title: `${year} Wall Calendar`, size: 'letter', schemeId: opts.schemeId || 'lagoon', fontSchemeId: opts.fontSchemeId || 'modern',
+    margins: 0.5 * IN, category: 'calendars' });
+  doc.pages = [];
+  buildWallCalendar(doc, { year, weekStart: opts.weekStart ?? 0, locale: opts.locale || 'en-US' });
+  return doc;
+}
+
+function yearAtAGlance(opts = {}) {
+  const year = opts.year ?? new Date().getFullYear();
+  const doc = newDoc({ title: `${year} Year at a Glance`, size: 'letter', orientation: 'landscape', schemeId: opts.schemeId || 'plum',
+    fontSchemeId: opts.fontSchemeId || 'editorial', margins: 0.5 * IN, category: 'calendars' });
+  const page = doc.pages[0];
+  page.elements.push(
+    text(doc, 48, 40, 400, 64, p(String(year)), { font: '@heading', size: 44, color: '@accent', lineHeight: 1 }, { name: 'Year', valign: 'bottom' }),
+    text(doc, 608, 40, 400, 64, p('Year at a glance'), { size: 11, caps: true, letterSpacing: 4, color: '@muted', align: 'right' }, { name: 'Subtitle', valign: 'bottom' }),
+    hline(48, 116, 960, '@accent2', 1.5, { name: 'Title rule' })
+  );
+  buildYearCalendar(doc, { year, weekStart: opts.weekStart ?? 0, locale: opts.locale || 'en-US', page, x: 48, y: 136, w: 960, h: 632, cols: 4 });
+  return doc;
+}
+
+const BLANK_SIZES = [
+  ['blank-letter', 'Letter', { size: 'letter' }, '8.5 × 11 in'],
+  ['blank-a4', 'A4', { size: 'a4', units: 'mm' }, '210 × 297 mm'],
+  ['blank-a5', 'A5', { size: 'a5', units: 'mm' }, '148 × 210 mm'],
+  ['blank-tabloid', 'Tabloid', { size: 'tabloid' }, '11 × 17 in'],
+  ['blank-business-card', 'Business Card', { size: 'businessCard' }, '3.5 × 2 in'],
+  ['blank-postcard', 'Postcard', { size: 'postcard' }, '6 × 4 in'],
+  ['blank-greeting-card', 'Greeting Card', { size: 'card5x7', pages: 2 }, '5 × 7 in · 2 pages'],
+  ['blank-square', 'Square', { size: 'square8' }, '8 × 8 in'],
+  ['blank-banner', 'Banner', { width: 24 * IN, height: 6 * IN, margins: 0.5 * IN }, '24 × 6 in']
+];
+
+const BLANK_TEMPLATES = BLANK_SIZES.map(([id, name, opts, sizeLabel]) => ({
+  id, name, category: 'blank', description: `An empty ${name.toLowerCase()} publication.`, sizeLabel,
+  build: () => newDoc({ title: 'Untitled publication', ...opts, category: 'blank' })
+}));
+
+const CALENDAR_TEMPLATES = [
+  { id: 'wall-calendar', name: 'Monthly Wall Calendar', category: 'calendars', description: 'Twelve pages, one per month, each with a photo and a full month grid. Options: { year, weekStart }.',
+    sizeLabel: 'Letter · 12 pages', build: wallCalendar },
+  { id: 'year-at-a-glance', name: 'Year at a Glance', category: 'calendars', description: 'All twelve months on a single landscape page. Options: { year, weekStart }.',
+    sizeLabel: 'Letter landscape · 1 page', build: yearAtAGlance }
+];
 
 /** Template categories in display order. */
 export const CATEGORIES = [
@@ -31,10 +83,17 @@ export const CATEGORIES = [
   { id: 'blank', name: 'Blank Sizes', description: 'Empty publications in common sizes.' }
 ];
 
-/** @type {Array<{id: string, name: string, category: string, description: string, sizeLabel: string, build: Function}>} */
+const CATEGORY_ORDER = CATEGORIES.map((c) => c.id);
+
+/** @type {Array<{id: string, name: string, category: string, description: string, sizeLabel: string, build: (opts?: object) => object}>} */
 export const TEMPLATES = [
-  ...PRINT_TEMPLATES
-];
+  ...PRINT_TEMPLATES,
+  ...CARD_TEMPLATES,
+  ...MAIL_TEMPLATES,
+  ...CALENDAR_TEMPLATES,
+  ...COMMERCE_TEMPLATES,
+  ...BLANK_TEMPLATES
+].sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category));
 
 /**
  * Find a template by id.
