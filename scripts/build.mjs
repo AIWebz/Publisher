@@ -22,6 +22,7 @@ const options = {
   minify: !dev,
   legalComments: 'none',
   loader: { '.woff2': 'file', '.svg': 'text' },
+  external: ['../icons/*', '../fonts/*'],
   logLevel: 'info'
 };
 

@@ -1,2 +1,4 @@
 // Feature modules register ribbon tabs, inspector sections, dialogs and commands with the registry.
-// Each feature file is owned by one area; add new features here.
+import './core-tabs.js';
+import './core-edit.js';
+import './core-files.js';

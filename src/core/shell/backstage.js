@@ -42,7 +42,12 @@ export function buildBackstage(el) {
 
   function show(id) {
     const b = registry.backstageList().find((x) => x.id === id && x.render);
-    if (!b) return;
+    if (!b) {
+      const d = defaultPage();
+      if (d && d !== id) { show(d); return; }
+      renderNav();
+      return;
+    }
     current = id;
     renderNav();
     const page = h('div', { class: `bs-page bs-page-${id}` });
