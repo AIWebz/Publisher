@@ -102,7 +102,7 @@ addEventListener('scroll', setProgress, { passive: true });
 setProgress();
 
 // 3D extruded type: every [data-x3d] gets a face plus stacked depth layers (per letter with data-letters)
-const X3D_LAYERS = REDUCED_X3D() ? 0 : 12;
+const X3D_LAYERS = REDUCED_X3D() ? 0 : 7;
 function REDUCED_X3D() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
 const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function unit(text, k, letter, depth = X3D_LAYERS) {
@@ -110,7 +110,8 @@ function unit(text, k, letter, depth = X3D_LAYERS) {
   // deepest layer first and the face last, so the face is on top even where 3D gets flattened
   let layers = '';
   for (let z = depth; z >= 1; z--) layers += `<span class="x3d-layer" style="--z:${z}">${esc(text)}</span>`;
-  return `<span class="x3d${letter ? ' letter' : ''}" style="--k:${k}">${layers}<span class="x3d-face">${esc(text)}</span></span>`;
+  const rot = letter ? ((Math.sin(k * 12.9898) * 43758.5453) % 1) * 7 : 0;   // stable pseudo-random tilt, ±7°
+  return `<span class="x3d${letter ? ' letter' : ''}" style="--k:${k};--rot:${rot.toFixed(1)}deg">${layers}<span class="x3d-face">${esc(text)}</span></span>`;
 }
 let k3 = 0;
 for (const el of document.querySelectorAll('[data-x3d]')) {
