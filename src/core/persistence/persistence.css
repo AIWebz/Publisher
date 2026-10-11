@@ -2,7 +2,7 @@
 
 .recover-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; max-height: 300px; overflow: auto; }
 .recover-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--line, #e4ddcf); border-radius: 8px; background: var(--surface-2, #faf7f0); cursor: pointer; }
-.recover-row input { margin-top: 3px; accent-color: var(--accent, #1d4f4a); }
+.recover-row input { margin-top: 3px; accent-color: var(--accent, #2457d6); }
 .recover-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .recover-info strong { font-weight: 600; color: var(--ink, #1f2421); }
 .recover-meta { font-size: 12px; color: var(--ink-3, #8a8d86); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -17,7 +17,7 @@
 .bsf-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .bsf-action { display: flex; align-items: center; gap: 12px; min-width: 220px; padding: 14px 16px; border: 1px solid var(--line, #e4ddcf); border-radius: 10px; background: var(--surface, #fffdf8); color: var(--ink, #1f2421); cursor: pointer; text-align: left; font: inherit; }
 .bsf-action:hover, .bsf-action:focus-visible { border-color: var(--hover-line, #bfb49d); box-shadow: var(--shadow-sm, none); outline: none; }
-.bsf-action svg { width: 26px; height: 26px; color: var(--accent, #1d4f4a); flex: none; }
+.bsf-action svg { width: 26px; height: 26px; color: var(--accent, #2457d6); flex: none; }
 .bsf-action span { display: flex; flex-direction: column; gap: 2px; }
 .bsf-action small { color: var(--ink-3, #8a8d86); font-size: 12px; }
 .bsf-list { display: flex; flex-direction: column; border: 1px solid var(--line, #e4ddcf); border-radius: 10px; overflow: hidden; background: var(--surface, #fffdf8); }
@@ -27,12 +27,12 @@
 .bsf-item-open { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .bsf-item-open strong { font-weight: 600; color: var(--ink, #1f2421); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bsf-item-open span { font-size: 12px; color: var(--ink-3, #8a8d86); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bsf-item-open:hover strong, .bsf-item-open:focus-visible strong { color: var(--accent, #1d4f4a); text-decoration: underline; }
+.bsf-item-open:hover strong, .bsf-item-open:focus-visible strong { color: var(--accent, #2457d6); text-decoration: underline; }
 .bsf-item.missing .bsf-item-open strong { color: var(--ink-3, #8a8d86); text-decoration: line-through; }
 .bsf-item-tools { display: flex; gap: 6px; }
 .bsf-item-tools button { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--line, #e4ddcf); background: var(--surface-2, #faf7f0); color: var(--ink-2, #4f5550); font: inherit; font-size: 12px; cursor: pointer; }
 .bsf-item-tools button:hover { border-color: var(--hover-line, #bfb49d); color: var(--ink, #1f2421); }
-.bsf-item-tools button.primary { background: var(--accent, #1d4f4a); border-color: var(--accent, #1d4f4a); color: var(--on-accent, #fbf6ea); }
+.bsf-item-tools button.primary { background: var(--accent, #2457d6); border-color: var(--accent, #2457d6); color: var(--on-accent, #ffffff); }
 .bsf-item-tools button.danger:hover { color: var(--danger, #9b2c2c); border-color: var(--danger, #9b2c2c); }
 .bsf-empty { padding: 22px; text-align: center; color: var(--ink-3, #8a8d86); font-size: 13px; }
-.bsf-link { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--accent, #1d4f4a); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+.bsf-link { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--accent, #2457d6); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }

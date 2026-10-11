@@ -3,6 +3,8 @@
 import { app } from '../core/app.js';
 import { registry } from '../core/registry.js';
 import { prefs } from '../core/prefs.js';
+
+const uiThemePref = () => ({ light: 'white', dark: 'black' }[prefs.get('theme')] || prefs.get('theme'));
 import { formatUnit, parseLength } from '../core/units.js';
 
 const hasDoc = (ctx) => !!ctx.doc;
@@ -62,9 +64,12 @@ registry.command({
   checked: (ctx) => !!(ctx.doc && ctx.doc.setup.facing),
   run: () => app.transact('Two-Page Spread', (doc) => { doc.setup.facing = !doc.setup.facing; })
 });
-for (const [v, label, icon] of [['system', 'Follow System', 'theme-system'], ['light', 'Light', 'sun'], ['dark', 'Dark', 'moon']]) {
-  registry.command({ id: `view.theme-${v}`, label, icon, global: true, checked: () => prefs.get('theme') === v, run: () => prefs.set('theme', v) });
+for (const [v, label, icon] of [['system', 'Use System Setting', 'theme-system'], ['colorful', 'Colorful', 'sun'], ['white', 'White', 'sun'], ['darkgray', 'Dark Gray', 'moon'], ['black', 'Black', 'moon']]) {
+  registry.command({ id: `view.theme-${v}`, label, icon, global: true, checked: () => uiThemePref() === v, run: () => prefs.set('theme', v) });
 }
+// older ids kept for the Quick Access Toolbar and saved shortcuts
+registry.command({ id: 'view.theme-light', label: 'White', icon: 'sun', global: true, checked: () => uiThemePref() === 'white', run: () => prefs.set('theme', 'white') });
+registry.command({ id: 'view.theme-dark', label: 'Black', icon: 'moon', global: true, checked: () => uiThemePref() === 'black', run: () => prefs.set('theme', 'black') });
 
 registry.command({
   id: 'view.guidesDialog', label: 'Guides & Grid…', icon: 'guide-settings', enabled: hasDoc,
@@ -120,5 +125,6 @@ registry.group({ tab: 'view', id: 'pagesNav', label: 'Pages', order: 50, items: 
   { command: 'page.next', size: 'small' }, { command: 'page.last', size: 'small' }
 ] });
 registry.group({ tab: 'view', id: 'theme', label: 'Appearance', order: 60, items: [
-  { command: 'view.theme-system', size: 'small' }, { command: 'view.theme-light', size: 'small' }, { command: 'view.theme-dark', size: 'small' }
+  { command: 'view.theme-colorful', size: 'small' }, { command: 'view.theme-white', size: 'small' }, { command: 'view.theme-darkgray', size: 'small' },
+  { command: 'view.theme-black', size: 'small' }, { command: 'view.theme-system', size: 'small' }
 ] });

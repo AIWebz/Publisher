@@ -15,7 +15,7 @@ const IS_ELECTRON = typeof electron === 'object' && !!process.versions.electron;
 const APP_ID = 'com.folio.publisher';
 const ROOT = path.join(__dirname, '..');
 const DOC_EXT = /\.(folio|json)$/i;
-const TITLEBAR = { color: '#1b3b38', symbolColor: '#f3ecdc', height: 40 }; // = #titlebar height in src/styles/app.css
+const TITLEBAR = { color: '#1f43ad', symbolColor: '#ffffff', height: 40 }; // = #titlebar height in src/styles/app.css
 const CLOSE_ACK_TIMEOUT = 8000;
 const KNOWN_PATHS_MAX = 500;
 
