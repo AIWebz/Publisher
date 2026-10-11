@@ -101,9 +101,26 @@ const setProgress = () => progress.style.setProperty('--p', String(scrollY / Mat
 addEventListener('scroll', setProgress, { passive: true });
 setProgress();
 
-// headline letters (hover wobble + intro wave)
-for (const el of document.querySelectorAll('.letters')) {
-  el.innerHTML = [...el.dataset.text].map((c, i) => `<span style="--i:${i}">${c}</span>`).join('');
+// 3D extruded type: every [data-x3d] gets a face plus stacked depth layers (per letter with data-letters)
+const X3D_LAYERS = REDUCED_X3D() ? 0 : 12;
+function REDUCED_X3D() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+function unit(text, k, letter, depth = X3D_LAYERS) {
+  if (text === ' ') return `<span class="x3d space" style="--k:${k}"></span>`;
+  // deepest layer first and the face last, so the face is on top even where 3D gets flattened
+  let layers = '';
+  for (let z = depth; z >= 1; z--) layers += `<span class="x3d-layer" style="--z:${z}">${esc(text)}</span>`;
+  return `<span class="x3d${letter ? ' letter' : ''}" style="--k:${k}">${layers}<span class="x3d-face">${esc(text)}</span></span>`;
+}
+let k3 = 0;
+for (const el of document.querySelectorAll('[data-x3d]')) {
+  const text = el.dataset.x3d, depth = X3D_LAYERS ? +(el.dataset.depth || X3D_LAYERS) : 0;
+  if (el.hasAttribute('data-letters')) el.innerHTML = [...text].map((c) => unit(c, k3++, true, depth)).join('');
+  else el.innerHTML = text.split(/( )/).filter(Boolean).map((w) => unit(w, k3++, false, depth)).join('');
+}
+// letters spin in 3D on hover
+for (const l of document.querySelectorAll('.x3d.letter')) {
+  l.addEventListener('pointerenter', () => { if (l.classList.contains('spin')) return; l.classList.add('spin'); setTimeout(() => { l.style.transition = 'none'; l.classList.remove('spin'); void l.offsetWidth; l.style.transition = ''; }, 1000); });
 }
 
 // rotating word in the eyebrow
@@ -221,6 +238,38 @@ document.querySelectorAll('[data-count]').forEach((el) => counters.observe(el));
     const k = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
     const max = Math.max(0, track.scrollWidth - innerWidth + 80);
     track.style.transform = `translateX(${-k * max}px)`;
+  };
+  addEventListener('scroll', update, { passive: true });
+  addEventListener('resize', update);
+  update();
+})();
+
+// headline and logo follow the pointer in 3D
+(() => {
+  const head = document.querySelector('.x3d-head'), mark = document.querySelector('.mark3d');
+  if (!head || REDUCED) return;
+  let tx = 0, ty = 0, x = 0, y = 0;
+  addEventListener('pointermove', (e) => { tx = e.clientX / innerWidth - 0.5; ty = e.clientY / innerHeight - 0.5; }, { passive: true });
+  const loop = () => {
+    x += (tx - x) * 0.06; y += (ty - y) * 0.06;
+    if (scrollY < innerHeight * 1.2) {
+      head.style.transform = `rotateY(${x * 22}deg) rotateX(${-y * 16}deg)`;
+      if (mark) mark.style.transform = `rotateY(${x * 40}deg) rotateX(${-y * 30}deg)`;
+    }
+    requestAnimationFrame(loop);
+  };
+  loop();
+})();
+
+// giant word turns in 3D as the section scrolls past
+(() => {
+  const sec = document.querySelector('.spin-sec'), word = document.querySelector('.spin-word');
+  if (!sec || !word) return;
+  const update = () => {
+    if (getComputedStyle(word.parentElement).position !== 'sticky') { word.style.transform = ''; return; }
+    const r = sec.getBoundingClientRect();
+    const k = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+    word.style.transform = `rotateY(${-48 + k * 96}deg) rotateX(${22 - k * 44}deg) rotateZ(${-6 + k * 12}deg) scale(${0.72 + Math.sin(k * Math.PI) * 0.38})`;
   };
   addEventListener('scroll', update, { passive: true });
   addEventListener('resize', update);

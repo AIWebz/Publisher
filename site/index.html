@@ -31,10 +31,10 @@
     <section class="hero">
       <div class="hero-copy">
         <p class="eyebrow reveal">Desktop publishing for <span class="rotator" aria-live="polite"><span>flyers</span></span> · Windows &amp; Mac</p>
-        <h1 class="display">
-          <span class="line"><span class="slide">Design</span></span>
-          <span class="line"><span class="slide grad">it. Print</span></span>
-          <span class="line"><span class="slide">it. <span class="letters" data-text="Folio.">Folio.</span></span></span>
+        <h1 class="display x3d-head" aria-label="Design it. Print it. Folio.">
+          <span class="x3d-line" data-x3d="Design" aria-hidden="true"></span>
+          <span class="x3d-line grad-face" data-x3d="it. Print" aria-hidden="true"></span>
+          <span class="x3d-line" data-x3d="it. Folio." data-letters aria-hidden="true"></span>
         </h1>
         <p class="lead reveal">Flyers, newsletters, brochures, cards, calendars and posters — laid out in a clean ribbon workspace with 41 editable templates, real mail merge and print-ready PDF.</p>
         <div class="cta reveal">
@@ -44,7 +44,7 @@
         <p class="meta reveal" id="version-line">Free for Windows 10/11 and macOS 13 or later.</p>
       </div>
       <div class="hero-mark reveal-right" aria-hidden="true">
-        <img src="assets/logo.png" alt="" width="360" height="360">
+        <div class="mark3d"><img src="assets/logo.png" alt=""><img src="assets/logo.png" alt=""><img src="assets/logo.png" alt=""><img src="assets/logo.png" alt=""></div>
       </div>
     </section>
 
@@ -64,6 +64,62 @@
       </div>
     </section>
 
+
+
+    <!-- 3D language ring -->
+    <section class="ring-sec" aria-label="85 proofing languages">
+      <div class="ring-copy reveal-left">
+        <span class="num">Proofing</span>
+        <h2 class="display-sm">Spell-check in<br><span class="grad">85 languages</span></h2>
+        <p>Every text box can have its own language. Words are checked as you type, with suggestions on right-click — from Afrikaans to Vietnamese, right-to-left included.</p>
+      </div>
+      <div class="ring-stage reveal-right" aria-hidden="true">
+        <div class="ring r0" style="--n:10">
+            <span style="--i:0">English</span>
+            <span style="--i:1">Deutsch</span>
+            <span style="--i:2">Русский</span>
+            <span style="--i:3">한국어</span>
+            <span style="--i:4">Türkçe</span>
+            <span style="--i:5">Svenska</span>
+            <span style="--i:6">Українська</span>
+            <span style="--i:7">Bahasa Indonesia</span>
+            <span style="--i:8">Suomi</span>
+            <span style="--i:9">Kiswahili</span>
+        </div>
+        <div class="ring r1" style="--n:10">
+            <span style="--i:0">Español</span>
+            <span style="--i:1">Italiano</span>
+            <span style="--i:2">العربية</span>
+            <span style="--i:3">ไทย</span>
+            <span style="--i:4">Polski</span>
+            <span style="--i:5">Ελληνικά</span>
+            <span style="--i:6">বাংলা</span>
+            <span style="--i:7">Magyar</span>
+            <span style="--i:8">தமிழ்</span>
+            <span style="--i:9">Română</span>
+        </div>
+        <div class="ring r2" style="--n:10">
+            <span style="--i:0">Français</span>
+            <span style="--i:1">Português</span>
+            <span style="--i:2">हिन्दी</span>
+            <span style="--i:3">Tiếng Việt</span>
+            <span style="--i:4">Nederlands</span>
+            <span style="--i:5">עברית</span>
+            <span style="--i:6">فارسی</span>
+            <span style="--i:7">Čeština</span>
+            <span style="--i:8">اردو</span>
+            <span style="--i:9">Dansk</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3D spinning word on scroll -->
+    <section class="spin-sec" aria-label="Print it">
+      <div class="spin-pin">
+        <div class="spin-word x3d-line grad-face" data-x3d="Print it" data-depth="28" aria-hidden="true"></div>
+        <p class="spin-sub">Vector PDF · 600 dpi · bleed · crop marks · booklets</p>
+      </div>
+    </section>
 
     <!-- Stats -->
     <section class="stats" aria-label="Folio in numbers">
@@ -112,12 +168,12 @@
       <div class="showcase-pin">
         <h2 class="display-sm showcase-title">Make anything<br><span class="grad">that prints.</span></h2>
         <div class="showcase-track">
-          <div class="mock m-flyer"><small>Live music</small><b>Night<br>Jazz</b><i>Sat · 8 pm</i></div>
-          <div class="mock m-news"><small>Quarterly</small><b>The Garden Ledger</b><div class="cols"><i></i><i></i><i></i></div></div>
-          <div class="mock m-card"><b>Eleanor Vance</b><small>Bookbinder &amp; Restorer</small><i>hello@vance.studio</i></div>
-          <div class="mock m-invite"><small>Together with their families</small><b>Isabel<br>&amp; Thomas</b><i>June 14</i></div>
-          <div class="mock m-poster"><b>Ideas<br>worth<br>keeping</b><small>Lecture series</small></div>
-          <div class="mock m-cal"><small>October</small><div class="grid-cal"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="flip"><div class="mock m-flyer"><small>Live music</small><b>Night<br>Jazz</b><i>Sat · 8 pm</i></div><div class="mock back"><b>Flyer</b><p>Event flyers with bold type and colour schemes</p></div></div>
+          <div class="flip"><div class="mock m-news"><small>Quarterly</small><b>The Garden Ledger</b><div class="cols"><i></i><i></i><i></i></div></div><div class="mock back"><b>News</b><p>Multi-page newsletters with linked columns</p></div></div>
+          <div class="flip"><div class="mock m-card"><b>Eleanor Vance</b><small>Bookbinder &amp; Restorer</small><i>hello@vance.studio</i></div><div class="mock back"><b>Card</b><p>Business cards, front and back, ready to print</p></div></div>
+          <div class="flip"><div class="mock m-invite"><small>Together with their families</small><b>Isabel<br>&amp; Thomas</b><i>June 14</i></div><div class="mock back"><b>Invite</b><p>Invitations and greeting cards that fold</p></div></div>
+          <div class="flip"><div class="mock m-poster"><b>Ideas<br>worth<br>keeping</b><small>Lecture series</small></div><div class="mock back"><b>Poster</b><p>Posters up to tabloid and custom sizes</p></div></div>
+          <div class="flip"><div class="mock m-cal"><small>October</small><div class="grid-cal"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="mock back"><b>Cal</b><p>Calendars for any month or year</p></div></div>
         </div>
       </div>
     </section>
