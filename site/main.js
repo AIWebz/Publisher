@@ -90,3 +90,139 @@ selectTab(tabs[isMac ? 1 : 0]);
     primary.textContent = 'Choose your download';
   }
 })();
+
+// ================================ interactive layer ================================
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FINE = matchMedia('(pointer: fine)').matches;
+
+// scroll progress bar
+const progress = document.querySelector('.progress');
+const setProgress = () => progress.style.setProperty('--p', String(scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight)));
+addEventListener('scroll', setProgress, { passive: true });
+setProgress();
+
+// headline letters (hover wobble + intro wave)
+for (const el of document.querySelectorAll('.letters')) {
+  el.innerHTML = [...el.dataset.text].map((c, i) => `<span style="--i:${i}">${c}</span>`).join('');
+}
+
+// rotating word in the eyebrow
+const rot = document.querySelector('.rotator');
+if (rot && !REDUCED) {
+  const words = ['flyers', 'newsletters', 'brochures', 'posters', 'cards', 'menus', 'calendars', 'invitations'];
+  let i = 0;
+  setInterval(() => { i = (i + 1) % words.length; rot.innerHTML = `<span>${words[i]}</span>`; }, 1900);
+}
+
+// custom cursor that grows over interactive things
+const cursor = document.querySelector('.cursor');
+if (FINE && cursor && !REDUCED) {
+  let x = innerWidth / 2, y = innerHeight / 2, cx = x, cy = y;
+  addEventListener('pointermove', (e) => { x = e.clientX; y = e.clientY; cursor.classList.add('on'); }, { passive: true });
+  document.addEventListener('pointerleave', () => cursor.classList.remove('on'));
+  document.addEventListener('pointerover', (e) => cursor.classList.toggle('hover', !!e.target.closest('a, button, summary, .pic, .mock')));
+  const loop = () => { cx += (x - cx) * 0.2; cy += (y - cy) * 0.2; cursor.style.transform = `translate(${cx}px, ${cy}px)`; requestAnimationFrame(loop); };
+  loop();
+}
+
+// magnetic buttons
+if (FINE && !REDUCED) {
+  for (const b of document.querySelectorAll('.magnetic')) {
+    b.addEventListener('pointermove', (e) => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`; });
+    b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+  }
+  // 3D tilt
+  for (const t of document.querySelectorAll('.tilt')) {
+    t.addEventListener('pointermove', (e) => {
+      if (!t.classList.contains('in')) return;
+      const r = t.getBoundingClientRect(), px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+      t.style.transform = `perspective(1400px) rotateY(${px * 7}deg) rotateX(${-py * 6}deg) scale(1.01)`;
+    });
+    t.addEventListener('pointerleave', () => { t.style.transform = ''; });
+  }
+}
+
+// counters
+const counters = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    counters.unobserve(e.target);
+    const end = +e.target.dataset.count, t0 = performance.now(), dur = REDUCED ? 0 : 1400;
+    const step = (t) => { const k = dur ? Math.min(1, (t - t0) / dur) : 1; e.target.textContent = Math.round(end * (1 - Math.pow(1 - k, 4))); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+}, { threshold: 0.6 });
+document.querySelectorAll('[data-count]').forEach((el) => counters.observe(el));
+
+// playground: drag the picture, switch wrap style and colour scheme
+(() => {
+  const sheet = document.querySelector('.sheet');
+  if (!sheet) return;
+  const body = sheet.querySelector('.sheet-body');
+  const pic = sheet.querySelector('.pic');
+  const bag = document.createElement('span');
+  bag.className = 'bag';
+  body.prepend(bag);
+  const pos = { x: 0.52, y: 0.12 };   // picture position as a fraction of the free area
+  const SCHEMES = [['#7b3cff', '#00e0ff'], ['#ff5a36', '#ffc046'], ['#0f7a5a', '#b6e36a'], ['#e0216b', '#ffb3cf']];
+  function layout() {
+    const mode = sheet.dataset.wrap;
+    const W = body.clientWidth, H = sheet.clientHeight - body.offsetTop - 30;
+    pic.style.cssText = ''; bag.style.cssText = '';
+    const w = pic.offsetWidth, h = pic.offsetHeight;
+    const x = Math.round(pos.x * Math.max(0, W - w)), y = Math.round(pos.y * Math.max(0, H - h));
+    if (mode === 'none') { pic.style.left = `${x}px`; pic.style.top = `${y}px`; return; }
+    if (mode === 'topbottom') {
+      bag.style.cssText = `float:left;width:0;height:${y}px`;
+      pic.style.cssText = `float:left;clear:left;margin:0 ${W - x - w}px .6em ${x}px`;
+      return;
+    }
+    const side = x + w / 2 < W / 2 ? 'left' : 'right';
+    bag.style.cssText = `float:${side};width:0;height:${y}px`;
+    const gap = mode === 'tight' ? 'shape-outside:circle(50%);shape-margin:12px;' : '';
+    pic.style.cssText = side === 'left' ? `float:left;clear:left;margin:0 16px 10px ${x}px;${gap}` : `float:right;clear:right;margin:0 ${W - x - w}px 10px 16px;${gap}`;
+  }
+  let drag = null;
+  pic.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); pic.setPointerCapture(e.pointerId);
+    drag = { sx: e.clientX, sy: e.clientY, x: pos.x, y: pos.y, W: body.clientWidth - pic.offsetWidth, H: sheet.clientHeight - body.offsetTop - 30 - pic.offsetHeight };
+  });
+  pic.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    pos.x = Math.min(1, Math.max(0, drag.x + (e.clientX - drag.sx) / Math.max(1, drag.W)));
+    pos.y = Math.min(1, Math.max(0, drag.y + (e.clientY - drag.sy) / Math.max(1, drag.H)));
+    layout();
+  });
+  pic.addEventListener('pointerup', () => { drag = null; });
+  pic.addEventListener('keydown', (e) => {
+    const d = { ArrowLeft: [-0.05, 0], ArrowRight: [0.05, 0], ArrowUp: [0, -0.05], ArrowDown: [0, 0.05] }[e.key];
+    if (!d) return;
+    e.preventDefault(); pos.x = Math.min(1, Math.max(0, pos.x + d[0])); pos.y = Math.min(1, Math.max(0, pos.y + d[1])); layout();
+  });
+  const radios = (sel, apply) => {
+    const btns = [...document.querySelectorAll(sel)];
+    btns.forEach((b) => b.addEventListener('click', () => { btns.forEach((x) => x.setAttribute('aria-checked', String(x === b))); apply(b); }));
+  };
+  radios('.seg [data-wrap]', (b) => { sheet.dataset.wrap = b.dataset.wrap; layout(); });
+  radios('.swatches [data-scheme]', (b) => { const [c1, c2] = SCHEMES[+b.dataset.scheme]; sheet.style.setProperty('--c1', c1); sheet.style.setProperty('--c2', c2); });
+  addEventListener('resize', layout);
+  document.fonts?.ready.then(layout);
+  layout();
+})();
+
+// pinned horizontal showcase
+(() => {
+  const sec = document.querySelector('.showcase'), track = document.querySelector('.showcase-track');
+  if (!sec || !track) return;
+  const pinned = () => getComputedStyle(document.querySelector('.showcase-pin')).position === 'sticky';
+  const update = () => {
+    if (!pinned()) { track.style.transform = ''; return; }
+    const r = sec.getBoundingClientRect();
+    const k = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+    const max = Math.max(0, track.scrollWidth - innerWidth + 80);
+    track.style.transform = `translateX(${-k * max}px)`;
+  };
+  addEventListener('scroll', update, { passive: true });
+  addEventListener('resize', update);
+  update();
+})();

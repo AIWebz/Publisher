@@ -13,13 +13,16 @@
 </head>
 <body>
   <div class="glow" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"></div>
 
   <header class="nav">
     <a class="brand" href="#top"><img src="assets/logo.png" alt="" width="30" height="30"><span>FOLIO</span></a>
     <nav>
       <a href="#features">Features</a>
       <a href="#install">Install</a>
-      <a class="btn btn-small btn-primary" href="#download">Download</a>
+      <a class="btn btn-small btn-primary magnetic" href="#download">Download</a>
     </nav>
   </header>
 
@@ -27,15 +30,15 @@
     <!-- Hero -->
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow reveal">Desktop publishing · Windows &amp; Mac</p>
+        <p class="eyebrow reveal">Desktop publishing for <span class="rotator" aria-live="polite"><span>flyers</span></span> · Windows &amp; Mac</p>
         <h1 class="display">
           <span class="line"><span class="slide">Design</span></span>
           <span class="line"><span class="slide grad">it. Print</span></span>
-          <span class="line"><span class="slide">it. Folio.</span></span>
+          <span class="line"><span class="slide">it. <span class="letters" data-text="Folio.">Folio.</span></span></span>
         </h1>
         <p class="lead reveal">Flyers, newsletters, brochures, cards, calendars and posters — laid out in a clean ribbon workspace with 41 editable templates, real mail merge and print-ready PDF.</p>
         <div class="cta reveal">
-          <a class="btn btn-primary btn-big" id="primary-download" href="#download">Download Folio</a>
+          <a class="btn btn-primary btn-big magnetic" id="primary-download" href="#download">Download Folio</a>
           <a class="btn btn-ghost btn-big" href="#features">See what’s inside</a>
         </div>
         <p class="meta reveal" id="version-line">Free for Windows 10/11 and macOS 13 or later.</p>
@@ -47,7 +50,7 @@
 
     <!-- Product shot -->
     <section class="stage">
-      <div class="window rise">
+      <div class="window rise tilt">
         <div class="window-bar"><i></i><i></i><i></i><span>The Garden Ledger — Folio</span></div>
         <img src="assets/editor-dark.webp" alt="The Folio editor with a four-page newsletter open" width="1440" height="900">
       </div>
@@ -61,6 +64,64 @@
       </div>
     </section>
 
+
+    <!-- Stats -->
+    <section class="stats" aria-label="Folio in numbers">
+      <div class="stat reveal" style="--d:0"><b data-count="41">0</b><span>templates</span></div>
+      <div class="stat reveal" style="--d:1"><b data-count="85">0</b><span>languages</span></div>
+      <div class="stat reveal" style="--d:2"><b data-count="24">0</b><span>shapes</span></div>
+      <div class="stat reveal" style="--d:3"><b data-count="600">0</b><span>dpi export</span></div>
+    </section>
+
+    <!-- Playground -->
+    <section class="play" id="play">
+      <div class="play-copy reveal-left">
+        <span class="num">Try it</span>
+        <h2 class="display-sm">Wrap text your way</h2>
+        <p>This is a live page. Drag the picture around, switch the wrap style and colour scheme, and watch the text flow — the same way it does in Folio.</p>
+        <div class="seg" role="radiogroup" aria-label="Wrap style">
+          <button type="button" role="radio" aria-checked="true" data-wrap="square">Square</button>
+          <button type="button" role="radio" aria-checked="false" data-wrap="tight">Tight</button>
+          <button type="button" role="radio" aria-checked="false" data-wrap="topbottom">Top &amp; bottom</button>
+          <button type="button" role="radio" aria-checked="false" data-wrap="none">None</button>
+        </div>
+        <div class="swatches" role="radiogroup" aria-label="Colour scheme">
+          <button type="button" role="radio" aria-checked="true" aria-label="Violet" style="--c1:#7b3cff;--c2:#00e0ff" data-scheme="0"></button>
+          <button type="button" role="radio" aria-checked="false" aria-label="Sunset" style="--c1:#ff5a36;--c2:#ffc046" data-scheme="1"></button>
+          <button type="button" role="radio" aria-checked="false" aria-label="Forest" style="--c1:#0f7a5a;--c2:#b6e36a" data-scheme="2"></button>
+          <button type="button" role="radio" aria-checked="false" aria-label="Rose" style="--c1:#e0216b;--c2:#ffb3cf" data-scheme="3"></button>
+        </div>
+      </div>
+      <div class="play-stage reveal-right">
+        <article class="sheet" data-wrap="square">
+          <header><small>The Folio Gazette · Issue 12</small><h3>Summer Market</h3></header>
+          <div class="sheet-body">
+            <div class="pic" tabindex="0" aria-label="Picture — drag to move"><span>Drag me</span></div>
+            <p>Stalls open at nine along the river walk, with bread still warm from the oven, the first strawberries of the season and a brass band that plays until the lanterns come on. Bring a basket and a friend.</p>
+            <p>New this year: a printing corner where you can design a poster in minutes and take it home on heavy cream card. Kids get a free sheet of stickers, and every stall takes cards.</p>
+            <p>Parking is free after six. Follow the bunting from the station, or take the little ferry that leaves every twenty minutes from the old bridge.</p>
+            <p>At noon the bakers’ guild judges the great loaf contest, and at four the river choir sings from the bandstand. The cheese tent stays cool all day, and the lemonade stand gives refills to anyone wearing a straw hat.</p>
+            <p>Stallholders can still book a pitch for the autumn market. Pick up a form at the information kiosk by the clock tower, or print one at the printing corner while you wait for your poster.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Horizontal showcase -->
+    <section class="showcase" aria-label="Made with Folio">
+      <div class="showcase-pin">
+        <h2 class="display-sm showcase-title">Make anything<br><span class="grad">that prints.</span></h2>
+        <div class="showcase-track">
+          <div class="mock m-flyer"><small>Live music</small><b>Night<br>Jazz</b><i>Sat · 8 pm</i></div>
+          <div class="mock m-news"><small>Quarterly</small><b>The Garden Ledger</b><div class="cols"><i></i><i></i><i></i></div></div>
+          <div class="mock m-card"><b>Eleanor Vance</b><small>Bookbinder &amp; Restorer</small><i>hello@vance.studio</i></div>
+          <div class="mock m-invite"><small>Together with their families</small><b>Isabel<br>&amp; Thomas</b><i>June 14</i></div>
+          <div class="mock m-poster"><b>Ideas<br>worth<br>keeping</b><small>Lecture series</small></div>
+          <div class="mock m-cal"><small>October</small><div class="grid-cal"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Features -->
     <section class="features" id="features">
       <h2 class="display-sm reveal">Everything a page needs</h2>
@@ -71,7 +132,7 @@
           <h3>Start from a template</h3>
           <p>41 fully editable templates in 15 categories — flyers, newsletters, brochures, cards, labels, calendars and more. Pick a colour and font scheme, or save your own designs as templates.</p>
         </div>
-        <div class="feature-media reveal-right"><img src="assets/gallery.webp" alt="The template gallery" width="1440" height="900" loading="lazy"></div>
+        <div class="feature-media reveal-right tilt"><img src="assets/gallery.webp" alt="The template gallery" width="1440" height="900" loading="lazy"></div>
       </article>
 
       <article class="feature flip">
@@ -80,7 +141,7 @@
           <h3>Text that flows</h3>
           <p>Linked text boxes carry a story across columns and pages. Text wraps around pictures and shapes — square, tight or top and bottom — and updates as you move things.</p>
         </div>
-        <div class="feature-media reveal-left"><img src="assets/editor.webp" alt="A newsletter with columns of text in the Folio editor" width="1440" height="900" loading="lazy"></div>
+        <div class="feature-media reveal-left tilt"><img src="assets/editor.webp" alt="A newsletter with columns of text in the Folio editor" width="1440" height="900" loading="lazy"></div>
       </article>
 
       <div class="cards">
@@ -132,6 +193,15 @@
           <li><b>Done.</b> You only need to do this once.</li>
         </ol>
       </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+      <h2 class="display-sm reveal">Questions</h2>
+      <details class="reveal"><summary>Is Folio free?</summary><p>Yes. Download it and use it for personal and business work.</p></details>
+      <details class="reveal"><summary>Can it open Microsoft Publisher (.pub) files?</summary><p>No. Folio is its own app with its own <code>.folio</code> format. Share finished work as PDF or images.</p></details>
+      <details class="reveal"><summary>Does it work offline?</summary><p>Completely. Templates, fonts and all 85 spelling dictionaries are installed with the app.</p></details>
+      <details class="reveal"><summary>Why does Windows or macOS warn me when I install it?</summary><p>The installers aren’t code-signed yet. Follow the install steps above — you only need to allow it once.</p></details>
     </section>
   </main>
 
