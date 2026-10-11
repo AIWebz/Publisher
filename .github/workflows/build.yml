@@ -11,8 +11,8 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      release:
-        description: 'Publish a GitHub release (tag v<package.json version>) from this commit'
+      publish:
+        description: 'Publish the installers on the download website (GitHub Pages) and remove installers from GitHub Releases'
         type: boolean
         default: false
 
@@ -43,7 +43,6 @@ jobs:
             target: --mac
             files: |
               dist/*.dmg
-              dist/*.zip
     steps:
       - uses: actions/checkout@v5
         with:
@@ -93,74 +92,63 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  release:
-    name: GitHub release
+  website:
+    name: Download website
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release)
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
 
-      - name: Read version
-        id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Check the tag matches package.json
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          EXPECTED: v${{ steps.version.outputs.version }}
-        run: |
-          if [ "$GITHUB_REF_NAME" != "$EXPECTED" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($EXPECTED)."
-            exit 1
-          fi
-
       - name: Download installers
         uses: actions/download-artifact@v4
         with:
-          path: release
+          path: _site/downloads
           pattern: Folio-Publisher-*
           merge-multiple: true
 
-      - name: Checksums
-        working-directory: release
+      - name: Assemble the site
         run: |
-          ls -la
-          sha256sum *.exe *.dmg *.zip > SHA256SUMS.txt
-          cat SHA256SUMS.txt
+          cp -r site/. _site/
+          node scripts/site-manifest.mjs _site/downloads "$(node -p "require('./package.json').version")"
+          ls -la _site _site/downloads
+          du -sh _site
 
-      - name: Publish release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-pages-artifact@v3
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          target_commitish: ${{ github.sha }}
-          name: Folio Publisher ${{ steps.version.outputs.version }}
-          make_latest: true
-          fail_on_unmatched_files: true
-          files: |
-            release/*.exe
-            release/*.dmg
-            release/*.zip
-            release/SHA256SUMS.txt
-          body: |
-            ## Folio Publisher ${{ steps.version.outputs.version }}
+          path: _site
 
-            | Download | For |
-            | --- | --- |
-            | `Folio-Publisher-Setup-${{ steps.version.outputs.version }}.exe` | Windows 10 and 11 (64-bit) |
-            | `Folio-Publisher-${{ steps.version.outputs.version }}-mac-arm64.dmg` | Mac with Apple silicon (M1 or later), macOS 13 or later |
-            | `Folio-Publisher-${{ steps.version.outputs.version }}-mac-x64.dmg` | Mac with an Intel processor, macOS 13 or later |
+  deploy:
+    name: Deploy website
+    needs: website
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
 
-            The `.zip` files contain the same Mac app without the disk image. `SHA256SUMS.txt` lists checksums.
-
-            **Windows:** the installer is not code-signed, so SmartScreen may say *"Windows protected your PC"*.
-            Choose **More info → Run anyway**.
-
-            **macOS:** the app is not notarized by Apple. Open the disk image, drag **Folio Publisher** to
-            **Applications**, then open it. If macOS says it cannot verify the developer, open
-            **System Settings → Privacy & Security** and click **Open Anyway** (on macOS 14 and earlier you can
-            also Control-click the app and choose **Open**). You only need to do this once.
+  remove-releases:
+    name: Remove installers from GitHub Releases
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete releases and their tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          for tag in $(gh release list --limit 100 --json tagName --jq '.[].tagName'); do
+            echo "Deleting release $tag"
+            gh release delete "$tag" --yes --cleanup-tag
+          done

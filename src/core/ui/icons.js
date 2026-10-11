@@ -8,7 +8,7 @@ const F = 'fill="currentColor" stroke="none"';
 
 const ICONS = {
   // files & app
-  logo: '<path d="M7 3h7l4 4v12.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19.5v-15A1.5 1.5 0 0 1 7.5 3z"/><path d="M14 3v4h4"/><path d="M9 9h4M9 12.5h6M9 15.5h6"/>',
+  logo: '<image href="icons/logo-mark.png" x="0" y="0" width="24" height="24"/>',
   new: '<path d="M13.5 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8.5z"/><path d="M13.5 3v5.5H19M12 12v6M9 15h6"/>',
   open: '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h8A1.5 1.5 0 0 1 20 9.5V11"/><path d="M3 7.5v10A1.5 1.5 0 0 0 4.5 19h13.2a1.5 1.5 0 0 0 1.44-1.08L21 12H7.2a1.5 1.5 0 0 0-1.43 1.05L3.5 19"/>',
   save: '<path d="M5 3.5h11.5L20.5 7.5v11A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-13.5A1.5 1.5 0 0 1 5 3.5z"/><path d="M7.5 3.5v4.5h8v-4.5M7 20v-6.5h10V20"/>',

@@ -2,20 +2,21 @@
 
 Folio is a desktop-publishing app for flyers, newsletters, brochures, cards, calendars and posters, with
 a clean ribbon interface set in the Inter typeface, with White, Colorful, Dark Gray and Black themes and six accent colours. It runs as a desktop app on **Windows 10/11** and
-**macOS 13 or later**, and in the browser as an installable web app. Publications are saved as
+**macOS 13 or later**, as a desktop app. Publications are saved as
 `.folio` files.
 
 ## Download and install
 
-Get the latest installers from the **[Releases page](https://github.com/AIWebz/Publisher/releases/latest)**.
+Download Folio from the **[Folio website](https://aiwebz.github.io/Publisher/)**. It picks the installer for your
+computer; all three are listed under *Download*:
 
 | File | For |
 | --- | --- |
 | `Folio-Publisher-Setup-<version>.exe` | Windows 10 and 11, 64-bit (also runs on Windows on Arm through x64 emulation) |
 | `Folio-Publisher-<version>-mac-arm64.dmg` | Macs with Apple silicon (M1 or later) |
 | `Folio-Publisher-<version>-mac-x64.dmg` | Macs with an Intel processor |
-| `…-mac-*.zip` | The same Mac app without the disk image |
-| `SHA256SUMS.txt` | Checksums for all of the above |
+
+The site also lists SHA-256 checksums for each file.
 
 ### Windows
 
@@ -43,13 +44,6 @@ Folio uses the native Windows 11 caption buttons (including Snap layouts) over i
 3. `.folio` files show the Folio document icon and open in Folio from Finder. Folio has a standard Mac
    menu bar (File, Edit, View, Window, Help), follows the system light/dark appearance and keeps
    running when its last window closes, like other Mac document apps.
-
-### Web
-
-The same app runs in Chrome, Edge, Firefox and Safari from the project's GitHub Pages site and can be
-installed from the browser's address bar. In the browser, **Open** and **Save** use the browser's file
-pickers (Chrome and Edge save back to the same file; other browsers download a copy), and recovery
-copies are kept in the browser's storage.
 
 ## Features
 
@@ -132,7 +126,6 @@ npm start              # build (with source maps) and run the desktop app
 npm run watch          # rebuild the bundle on change (reload the window with Ctrl/Cmd+R in development)
 npm test               # unit tests (node --test)
 npm run dicts          # download the 85-language spelling dictionaries into app/dict (npm run build does this once)
-npm run serve          # build and serve the web app at http://localhost:8765
 ```
 
 Packaging (electron-builder; installers go to `dist/`):
@@ -141,7 +134,7 @@ Packaging (electron-builder; installers go to `dist/`):
 npm run dist:win       # Windows x64 NSIS installer — run on Windows
 npm run dist:mac       # macOS .dmg and .zip for arm64 and x64 — run on macOS
 npm run pack           # unpacked app for the current OS (quick check; Linux works too)
-npm run build:icons    # regenerate build/ icons and DMG background from app/icons/icon.svg (needs Playwright)
+npm run build:icons    # regenerate every icon, the DMG background and installer art from build/brand/logo-source.webp (needs Pillow)
 ```
 
 End-to-end tests drive the real Electron app with Playwright (install it globally with
@@ -157,26 +150,22 @@ The code is plain ES modules bundled with esbuild — no framework. `ARCHITECTUR
 document model, the registry that features plug into, the platform layer and the desktop IPC channels.
 
 ```
-app/        web root: index.html, bundled fonts, icons, spelling dictionary (app/build is generated)
+app/        app window: index.html, bundled fonts, icons, spelling dictionaries (app/build and app/dict are generated)
+site/       the download website (deployed to GitHub Pages with the installers)
 desktop/    Electron main process, preload bridge and IPC modules
 src/        core editor, engines (text flow, tables, mail merge, spelling, export, templates) and features
 build/      installer artwork: icons, DMG background, NSIS sidebar (build/tools regenerates them)
 tests/      unit tests and end-to-end scripts
 ```
 
-## Releases
+## Publishing
 
-`.github/workflows/build.yml` runs the unit tests and builds the Windows installer (on `windows-latest`)
-and the Mac disk images (on `macos-latest`) for every push and pull request, and keeps them as workflow
-artifacts for 30 days. To publish a release:
-
-1. Set `version` in `package.json` (for example `2.1.0`) and push it.
-2. Push the tag `v2.1.0`, **or** run the *Build desktop apps* workflow from the **Actions** tab with
-   **Publish release** ticked.
-
-The release job checks that the tag is exactly `v<version>`, then attaches the installers and
-`SHA256SUMS.txt` to the GitHub release. `.github/workflows/pages.yml` publishes the web app to GitHub
-Pages (enable it under **Settings → Pages → Source: GitHub Actions**).
+`.github/workflows/build.yml` runs the unit tests and builds the Windows installer (on `windows-latest`) and the Mac
+disk images (on `macos-latest`) for every push and pull request, and keeps them as workflow artifacts for 30 days.
+To publish a version, set `version` in `package.json`, push, then run the *Build desktop apps* workflow from the
+**Actions** tab with **Publish** ticked: it builds the installers, deploys the download website in `site/` together
+with the installers to GitHub Pages (`downloads/latest.json` tells the page which files to offer), and removes any
+installers left in GitHub Releases. GitHub Pages must use **GitHub Actions** as its source (Settings → Pages).
 
 ## Licences
 

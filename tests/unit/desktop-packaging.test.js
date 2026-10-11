@@ -25,11 +25,11 @@ test('packaged files: built app and desktop shell only, no sources or maps', () 
   assert.equal(cfg.publish, null, 'electron-builder never publishes; CI does');
 });
 
-test('macOS: dmg + zip for Apple silicon and Intel, graphics category, dark mode, ad-hoc signed', () => {
+test('macOS: dmg for Apple silicon and Intel, graphics category, dark mode, ad-hoc signed', () => {
   const mac = cfg.mac;
   const byTarget = Object.fromEntries(mac.target.map((t) => [t.target, [...t.arch].sort()]));
   assert.deepEqual(byTarget.dmg, ['arm64', 'x64']);
-  assert.deepEqual(byTarget.zip, ['arm64', 'x64']);
+  assert.equal(byTarget.zip, undefined, 'the website offers disk images only');
   assert.equal(mac.category, 'public.app-category.graphics-design');
   assert.equal(mac.darkModeSupport, true);
   assert.equal(mac.hardenedRuntime, false);
@@ -86,11 +86,11 @@ test('npm scripts build each platform without publishing', () => {
   for (const s of ['dist', 'dist:win', 'dist:mac', 'pack']) assert.match(pkg.scripts[s], /scripts\/build\.mjs/, `${s} builds the bundle first`);
 });
 
-test('CI builds Windows and macOS and releases only from matching version tags', { skip: !yaml && 'js-yaml not installed' }, () => {
+test('CI builds Windows and macOS and publishes them on the download website, not in Releases', { skip: !yaml && 'js-yaml not installed' }, () => {
   assert.ok(!exists('.github/workflows/windows.yml'), 'replaced by build.yml');
+  assert.ok(!exists('.github/workflows/pages.yml'), 'the site is deployed by build.yml with the installers');
   const wf = workflow('build.yml');
   assert.deepEqual(wf.permissions, { contents: 'read' });
-  assert.ok(wf.on.push.tags.includes('v*'));
   const build = wf.jobs.build;
   assert.deepEqual(build.permissions, { contents: 'read' });
   assert.deepEqual(build.strategy.matrix.include.map((m) => m.os).sort(), ['macos-latest', 'windows-latest']);
@@ -98,16 +98,20 @@ test('CI builds Windows and macOS and releases only from matching version tags',
   for (const cmd of ['npm ci', 'npm test', 'npm run build', 'electron-builder']) assert.ok(runs.includes(cmd), cmd);
   assert.ok(build.steps.some((s) => String(s.uses).startsWith('actions/upload-artifact')));
 
-  const rel = wf.jobs.release;
-  assert.equal(rel.needs, 'build');
-  assert.deepEqual(rel.permissions, { contents: 'write' });
-  assert.match(rel.if, /startsWith\(github\.ref, 'refs\/tags\/v'\)/);
-  assert.ok(rel.steps.some((s) => String(s.uses).startsWith('actions/download-artifact')));
-  const publish = rel.steps.find((s) => String(s.uses).startsWith('softprops/action-gh-release'));
-  assert.equal(publish.with.tag_name, 'v${{ steps.version.outputs.version }}');
-  for (const ext of ['exe', 'dmg', 'zip']) assert.ok(publish.with.files.includes(`*.${ext}`), ext);
-  // Tag must equal v<version> in both jobs.
-  for (const job of [build, rel]) assert.ok(job.steps.some((s) => (s.run || '').includes('GITHUB_REF_NAME') && s.env?.EXPECTED));
+  assert.equal(wf.jobs.release, undefined, 'no GitHub release job');
+  const site = wf.jobs.website;
+  assert.equal(site.needs, 'build');
+  assert.match(site.if, /inputs\.publish/);
+  assert.ok(site.steps.some((s) => String(s.uses).startsWith('actions/download-artifact') && s.with.path === '_site/downloads'));
+  assert.ok(site.steps.some((s) => (s.run || '').includes('scripts/site-manifest.mjs')));
+  assert.equal(site.steps.find((s) => String(s.uses).startsWith('actions/upload-pages-artifact')).with.path, '_site');
+  const deploy = wf.jobs.deploy;
+  assert.deepEqual(deploy.permissions, { pages: 'write', 'id-token': 'write' });
+  assert.equal(deploy.environment.name, 'github-pages');
+  assert.ok(deploy.steps.some((s) => String(s.uses).startsWith('actions/deploy-pages')));
+  const cleanup = wf.jobs['remove-releases'];
+  assert.equal(cleanup.needs, 'deploy', 'releases are removed only after the website is live');
+  assert.match(cleanup.steps[0].run, /gh release delete/);
 
   for (const [name, job] of Object.entries(wf.jobs)) {
     for (const s of job.steps) {
@@ -116,13 +120,9 @@ test('CI builds Windows and macOS and releases only from matching version tags',
   }
 });
 
-test('Pages workflow builds the web app without downloading Electron', { skip: !yaml && 'js-yaml not installed' }, () => {
-  const wf = workflow('pages.yml');
-  const steps = wf.jobs.deploy.steps;
-  const ci = steps.find((s) => s.run === 'npm ci');
-  assert.equal(ci.env.ELECTRON_SKIP_BINARY_DOWNLOAD, '1');
-  assert.ok(steps.some((s) => s.run === 'npm run build'));
-  const upload = steps.find((s) => String(s.uses).startsWith('actions/upload-pages-artifact'));
-  assert.equal(upload.with.path, 'app');
-  assert.equal(steps.find((s) => String(s.uses).startsWith('actions/checkout')).with['persist-credentials'], false);
+test('the download website offers the three installers from downloads/latest.json', () => {
+  const html = readFileSync(path.join(ROOT, 'site/index.html'), 'utf8');
+  for (const id of ['win', 'macArm', 'macIntel']) assert.ok(html.includes(`data-file="${id}"`), id);
+  assert.ok(!/src="[^"]*build\/app\.js"/.test(html), 'the site does not embed the app');
+  assert.match(readFileSync(path.join(ROOT, 'site/main.js'), 'utf8'), /downloads\/latest\.json/);
 });

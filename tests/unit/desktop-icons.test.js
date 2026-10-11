@@ -1,4 +1,5 @@
-// Packaging artwork: the .icns/.ico writers and the committed icon files in build/.
+// Packaging artwork: the .icns/.ico readers/writers and the committed icon files in build/
+// (generated from build/brand/logo-source.webp by build/tools/make-icons.py).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -58,7 +59,7 @@ test('icoFile stores BMP entries bottom-up with an AND mask, and PNG for 256 px'
 });
 
 test('build/icon.icns has every macOS app icon size as PNG', () => {
-  const chunks = readIcns(read('build/icon.icns'));
+  const chunks = readIcns(read('build/icon.icns')).filter((c) => c.type !== 'TOC ');  // table of contents
   const types = chunks.map((c) => c.type);
   for (const t of ['ic07', 'ic08', 'ic09', 'ic10', 'ic13', 'ic14']) assert.ok(types.includes(t), `missing ${t}`);
   for (const c of chunks) {

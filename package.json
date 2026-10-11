@@ -1,7 +1,7 @@
 {
   "name": "folio-publisher",
   "productName": "Folio Publisher",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "An elegant desktop publishing studio for flyers, newsletters, cards and posters.",
   "author": "Folio Publisher",
   "private": true,
@@ -17,7 +17,7 @@
     "dist:mac": "node scripts/build.mjs && electron-builder --mac --publish never",
     "pack": "node scripts/build.mjs && electron-builder --dir --publish never",
     "dicts": "node scripts/dictionaries.mjs",
-    "build:icons": "node build/tools/make-assets.mjs",
+    "build:icons": "python3 build/tools/make-icons.py",
     "test:desktop": "node tests/e2e/desktop-shell.mjs && node tests/e2e/desktop-package.mjs"
   },
   "devDependencies": {
@@ -47,13 +47,6 @@
       "target": [
         {
           "target": "dmg",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
           "arch": [
             "arm64",
             "x64"
