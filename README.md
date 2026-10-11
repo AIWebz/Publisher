@@ -162,8 +162,8 @@ tests/      unit tests and end-to-end scripts
 
 `.github/workflows/build.yml` runs the unit tests and builds the Windows installer (on `windows-latest`) and the Mac
 disk images (on `macos-latest`) for every push and pull request, and keeps them as workflow artifacts for 30 days.
-To publish a version, set `version` in `package.json`, push, then run the *Build desktop apps* workflow from the
-**Actions** tab with **Publish** ticked: it builds the installers, deploys the download website in `site/` together
+Every push to the release branch publishes (or run the *Build desktop apps* workflow from the **Actions** tab with
+**Publish** ticked): it builds the installers, deploys the download website in `site/` together
 with the installers to GitHub Pages (`downloads/latest.json` tells the page which files to offer), and removes any
 installers left in GitHub Releases. GitHub Pages must use **GitHub Actions** as its source (Settings → Pages).
 

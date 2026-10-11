@@ -102,6 +102,7 @@ test('CI builds Windows and macOS and publishes them on the download website, no
   const site = wf.jobs.website;
   assert.equal(site.needs, 'build');
   assert.match(site.if, /inputs\.publish/);
+  assert.match(site.if, /github\.event_name == 'push'/);
   assert.ok(site.steps.some((s) => String(s.uses).startsWith('actions/download-artifact') && s.with.path === '_site/downloads'));
   assert.ok(site.steps.some((s) => (s.run || '').includes('scripts/site-manifest.mjs')));
   assert.equal(site.steps.find((s) => String(s.uses).startsWith('actions/upload-pages-artifact')).with.path, '_site');

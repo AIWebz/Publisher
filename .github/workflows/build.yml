@@ -95,7 +95,8 @@ jobs:
   website:
     name: Download website
     needs: build
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    # every push to the release branch republishes the site (a branch-built GitHub Pages site would otherwise replace it)
+    if: (github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && github.ref == 'refs/heads/claude/blissful-cerf-h12c9e')
     runs-on: ubuntu-latest
     permissions:
       contents: read
