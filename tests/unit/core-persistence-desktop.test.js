@@ -74,11 +74,14 @@ test('cleanStaleTemp removes leftover .tmp files only', async () => {
 });
 
 test('filesFromArgs resolves relative paths against the working directory and filters', () => {
-  const exists = new Set(['/work/a.folio', '/abs/b.json', '/work/c.folio']);
+  // build platform-native absolute paths (POSIX on macOS/Linux, drive letters on Windows)
+  const work = path.resolve('/work'), abs = path.resolve('/abs/b.json');
+  const a = path.join(work, 'a.folio'), c = path.join(work, 'c.folio');
+  const exists = new Set([a, abs, c]);
   const isFile = (p) => exists.has(p);
-  const out = main.filesFromArgs(['/app/folio', '--flag', 'a.folio', '/abs/b.json', 'notes.txt', 'missing.folio', 'a.folio'], '/work', isFile);
-  assert.deepEqual(out, ['/work/a.folio', '/abs/b.json']);
-  assert.deepEqual(main.filesFromArgs(['/app/folio', 'c.folio'], '/work', isFile), ['/work/c.folio']);
+  const out = main.filesFromArgs(['/app/folio', '--flag', 'a.folio', abs, 'notes.txt', 'missing.folio', 'a.folio'], work, isFile);
+  assert.deepEqual(out, [a, abs]);
+  assert.deepEqual(main.filesFromArgs(['/app/folio', 'c.folio'], work, isFile), [c]);
 });
 
 test('KnownPaths persists across instances and ignores non-strings', async () => {
