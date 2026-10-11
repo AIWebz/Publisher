@@ -1,7 +1,7 @@
 // Keyboard shortcut parsing, matching and display. "Mod" means Cmd on macOS and Ctrl elsewhere.
 
 const KEY_ALIASES = {
-  plus: '=', equal: '=', equals: '=', minus: '-', esc: 'escape', del: 'delete', ins: 'insert',
+  plus: '=', '+': '=', equal: '=', equals: '=', minus: '-', esc: 'escape', del: 'delete', ins: 'insert',
   up: 'arrowup', down: 'arrowdown', left: 'arrowleft', right: 'arrowright', space: ' ', spacebar: ' ',
   return: 'enter', pgup: 'pageup', pgdn: 'pagedown', pageup: 'pageup', pagedown: 'pagedown',
   comma: ',', period: '.', slash: '/', backslash: '\\', semicolon: ';', quote: "'", backquote: '`',

@@ -162,3 +162,116 @@ typing burst is one step. Stack depth 200 per document.
 Native format: `.folio` (UTF-8 JSON of the Doc, `format: 'folio-publication'`). Unused assets/stories are
 pruned on save. Autosave writes a recovery copy per open document every few seconds after changes;
 on start, unsaved recovery copies are offered for restore. Version-1 files from the earlier app are migrated.
+
+## Core API details
+
+Additions and precise semantics of the core API (src/core). Everything below is implemented.
+
+### Ribbon tabs
+
+Built-in tab ids (registered by `features/core-tabs.js`), in order: `home` (10), `insert` (20), `pageDesign` (30),
+`mailings` (40), `review` (50), `view` (60). Contextual tabs (shown only while `contextual(ctx)` is true, accent coloured):
+`textFormat` ("Text Box Format": selection is one or more text frames, or a frame is being edited), `pictureFormat`
+(pictures), `shapeFormat` (shapes and lines), `tableDesign` and `tableLayout` (one table selected). The File tab is the
+backstage. Tab ids are matched tolerantly (`tabKey()` in registry.js lowercases, strips punctuation and resolves aliases such
+as `design` / `page-design` → `pageDesign`, `picture` → `pictureFormat`, `table` → `tableDesign`), so `registry.group({ tab: 'page-design' })` works.
+Groups may be registered before or after their tab; the ribbon re-renders on registry changes.
+
+Ribbon items: `{ command, size: 'large'|'small'|'icon', label?, icon?, arg? }` (consecutive small items stack three per
+column), `{ type: 'custom', render(el, ctx) -> { update(ctx) } }`, `{ type: 'separator' }`, and
+`{ type: 'menu', label, icon, size, items(ctx) -> MenuItem[] }` (split/drop-down button). A string item is shorthand for
+a small command button. Commands may define `labelFor(ctx)` / `iconFor(ctx)` for dynamic labels (Undo shows "Undo Move").
+
+### Commands and shortcuts
+
+`registry.command({ id, label, icon, shortcut, title?, global?, run(ctx, arg), enabled?(ctx), checked?(ctx) })`.
+Commands are disabled while no document is open unless `global: true`. `app.exec(id, arg)` runs a command (errors are
+reported with a toast); `app.isEnabled(id)` / `app.isChecked(id)`. `shortcut` may be a string or array; `registry.shortcut(combo, id)`
+binds more. Combos use `Mod` (Cmd on macOS, Ctrl elsewhere), `Ctrl`, `Alt`, `Shift` and key names (`A`…`Z`, `0`…`9`, `=`, `-`,
+`[`, `]`, `Delete`, `Backspace`, `Escape`, `Enter`, `PageUp`, `PageDown`, `ArrowLeft`, `F1`…). While text is being edited
+(or a form field has focus) only combos containing Mod/Ctrl/Alt are dispatched, and commands may set
+`allowInText: true|false` to override. Core command ids are prefixed by area (`file.*`, `edit.*`, `arrange.*`, `view.*`,
+`page.*`, `insert.*`, `design.*`); see `features/core-*.js`.
+
+### Icons
+
+`icon(name)` (core/ui/icons.js) returns an `<svg>` for a sprite symbol; ribbon/menu `icon` fields accept a sprite name or raw
+`<svg …>` markup. `registry.icon(name, innerMarkup)` adds a 24×24 stroke icon to the sprite. Built-in names are listed in
+`core/ui/icons.js` (`ICON_NAMES`).
+
+### Events (`app.on(event, fn)` returns an unsubscribe function)
+
+| event | payload | when |
+| --- | --- | --- |
+| `doc-change` | `{ session, label, undo?, redo?, reverted? }` | after every transaction / gesture commit / undo / redo |
+| `preview` | `{ session, ids: string[]|null }` | during a gesture (`app.preview(ids)`) |
+| `selection` | `Element[]` | selection changed |
+| `page` | `pageIndex` | current page changed (also on entering/leaving master mode) |
+| `view` | `session.view` | zoom/scroll/master-mode changed |
+| `session` | `DocSession|null` | current document tab changed |
+| `sessions` | `DocSession[]` | a document was opened or closed |
+| `session-closed` | `DocSession` | a document tab closed |
+| `dirty` | `DocSession` | a document's saved/unsaved state flipped |
+| `render` | `{ session, pageIndex, container }` | the canvas finished rendering a page |
+| `edit-start` / `edit-end` | `{ frameId, root, session }` | in-place text editing began / ended |
+| `saved` | `{ session, path, name }` | a document was saved |
+
+### App additions
+
+- `app.ctx()` builds the context; ctx also has `master` (the master being edited, or null).
+- `app.page` is the editing surface (the current page, or the master in master mode); `app.isMasterMode`, `app.master`,
+  `app.setMasterMode(on, masterIndex?)`, `app.setView(patch)`.
+- `app.transact(label, fn, { coalesce })` — steps with the same `coalesce` key merge (keys starting `session:` always
+  merge; others within 1.5 s). Calling `app.select()` inside `fn` is captured as the step's selection. A transaction during
+  an active gesture is folded into the gesture.
+- `app.addFlusher(fn)` / `app.flush()` — commit pending UI state (text editing, focused inputs) before save, close,
+  undo/redo, document switches.
+- `app.setEditing({ frameId, root } | null)`, `app.editing` — see Text editing.
+- `app.selectionIds`, `app.dirtySessions()`, `app.addSession(doc, opts)`, `app.newDocument(opts)`, `app.activate(session)`,
+  `app.removeSession(session)` (no prompt; use `app.files.close(session)` for the Save/Don't Save flow).
+- `app.prefs` (core/prefs.js): per-user view preferences (`get('guides.grid')`, `set`, `toggle`, `on('change')`).
+- `app.canvas`: `zoomTo(z, anchor?)`, `zoomIn()`, `zoomOut()`, `fitPage()`, `fitWidth()`, `actualSize()`,
+  `clientToPage(x, y) -> { x, y, pageIndex }`, `nodeFor(id)`, `scrollToElement(id)`, `setTool(tool)` (`'select'`, `'hand'`,
+  `{ kind: 'text'|'shape'|'line'|'picture', shape? }`), `requestRender()`.
+- `app.files`: `newDocument(opts)`, `open()`, `openText(text, { path, name, handle })`, `save(session?)`, `saveAs(session?)`,
+  `close(session?)`, `closeAll()` (Save / Don't Save / Cancel per dirty document; resolves true when everything closed).
+- `app.ui.dialog({ title, body (html string or Node), fields?, buttons?, width?, onRender?(root) })` resolves
+  `{ button, values }` (or `null` when dismissed); `fields: [{ name, label, type: 'text'|'number'|'length'|'select'|'checkbox'|'color'|'textarea'|'radio', value, options?, min?, max?, step?, unit? }]`
+  (`length` fields accept typed units such as `2.5in` and return px). `app.ui.confirm(title, html, okLabel)` → boolean;
+  `app.ui.prompt(title, label, value, opts)` → string|null; `app.ui.toast(msg, { label, run }?)`;
+  `app.ui.colorPicker(anchor, value, onPick, opts?)` (theme + standard + recent + custom + no colour; `onPick(value)` gets
+  `'@accent'`-style theme refs, `#rrggbb` or `'transparent'`); `app.ui.contextMenu(x, y, items)` with
+  `MenuItem = { label, icon?, shortcut?, command?, arg?, run?(), disabled?, checked?, danger?, submenu? } | '-'`.
+
+### Rendering
+
+`renderPage(container, doc, page, { mode, pageIndex, record, showHidden, selectableMasters })` (core/render/index.js).
+Element renderers get `rctx = { doc, page, pageIndex, mode, record, layout, resolveField(name, frame), isMaster }`
+where `layout` is the `layoutStories()` result for the page. `record` is a merge record object `{ column: value }` (or a
+function `name -> value`). Field resolution: `#page` → page number (masters on a page render that page's number; master
+mode renders `#`), `#pages` → page count, `#date` → locale date, other names → `record[name]` (falls back to the «NAME»
+placeholder). Each element node has `data-id`, class `el el-<type>`; hidden elements are skipped unless `showHidden`.
+
+### Text editing
+
+Double-click / Enter on a text frame calls `app.textEdit.start(frameId, { caret })`; the frame's content element becomes
+`contenteditable` and `app.editing = { frameId, root, session }` (`root` is the contenteditable element). The story HTML is
+shown unflowed in the head frame while editing (linked frames show their flowed fragments). Input is committed through
+`sanitizeHtml` into `doc.stories[storyId].html` on idle (~600 ms), on blur and on `app.textEdit.commit()`; one editing
+session is one undo step ("Edit Text"). `app.textEdit.stop()` ends editing (Esc, click outside). Formatting features can run
+`document.execCommand` / range operations on `root` and then call `app.textEdit.commit()`.
+
+### Desktop IPC channels
+
+Renderer → main (`folioDesktop.invoke`): `file:open` → `{ path, name, text } | null`; `file:open-path` (path) → same
+(.folio/.json regular files only; renderer-supplied paths are not trusted for silent saves); `file:save`
+`({ path, text, suggestedName, saveAs })` → `{ path, name } | null`; `recovery:list` → `[{ id, title, filePath, savedAt, size }]`;
+`recovery:save` `(id, text, meta)`; `recovery:read` (id) → text|null; `recovery:remove` (id); `store:get` (key) → value;
+`store:set` (key, value); `store:recent` → recent files `[{ path, name, openedAt }]`; `store:recent-add` (path);
+`store:recent-remove` (path); `app:info` → `{ version, platform }`.
+`folioDesktop.send`: `app:ready`, `app:theme` ('system'|'light'|'dark'), `app:doc-state` `({ dirty, names })`,
+`app:close-ack`, `app:close-now`, `app:close-cancel`.
+Main → renderer (`folioDesktop.on`): `file:opened` `{ path, name, text }`, `app:close-request`, `menu:command` (command id, arg).
+Export channels are owned by `desktop/ipc-export.js`; core/platform.js calls `export:save-binary`
+`({ data, suggestedName, filters })`, `export:save-folder` `({ files: [{ name, data }] })`, `export:pdf`
+`({ widthIn, heightIn, suggestedName })` and `print:print` `({ copies, duplex, landscape, silent })`.
