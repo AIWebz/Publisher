@@ -46,6 +46,8 @@ export class Registry extends Emitter {
     this.contextMenus = new Map();
     this.shortcuts = new Map();     // canonical combo -> command id
     this.icons = new Map();         // icon name -> svg inner markup
+    this.optionsPages = new Map();  // File › Options categories
+    this.optionsSections = new Map();
     this._pending = new Set();
     this._flushQueued = false;
   }
@@ -122,6 +124,26 @@ export class Registry extends Emitter {
     this._changed('backstage');
   }
 
+  /** Register a File › Options category. { id, label, order, icon? } */
+  optionsPage(def) {
+    if (!def || !def.id) throw new Error('registry.optionsPage needs { id }');
+    const prev = this.optionsPages.get(def.id);
+    this.optionsPages.set(def.id, { ...(prev || {}), ...def, _seq: prev ? prev._seq : seq++ });
+    this._changed('options');
+  }
+
+  /**
+   * Register a section of a File › Options category.
+   * { page, id, title?, order, render(container, ctx) -> { update?(), destroy?() }? }
+   */
+  optionsSection(def) {
+    if (!def || !def.page || !def.id || typeof def.render !== 'function') throw new Error('registry.optionsSection needs { page, id, render }');
+    const key = `${def.page}/${def.id}`;
+    const prev = this.optionsSections.get(key);
+    this.optionsSections.set(key, { ...def, _seq: prev ? prev._seq : seq++ });
+    this._changed('options');
+  }
+
   /** Register a preflight (design checker) check. { id, label, check(doc) -> Issue[] } */
   preflight(def) {
     if (!def || !def.id || typeof def.check !== 'function') throw new Error('registry.preflight needs { id, check }');
@@ -168,6 +190,8 @@ export class Registry extends Emitter {
   backstageList() { return [...this.backstages.values()].sort(byOrder); }
   preflightList() { return [...this.preflights.values()].sort(byOrder); }
   contextMenuList() { return [...this.contextMenus.values()].sort(byOrder); }
+  optionsPageList() { return [...this.optionsPages.values()].sort(byOrder); }
+  optionsSectionsFor(page) { return [...this.optionsSections.values()].filter((s) => s.page === page).sort(byOrder); }
   getElementType(type) { return this.elementTypes.get(type) || null; }
 
   /** Command id bound to a canonical combo, or null. */

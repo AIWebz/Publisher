@@ -18,6 +18,7 @@ import { installKeyboard } from './keyboard.js';
 import { installTheme } from './theme.js';
 import { installDesktopBridge } from './desktop.js';
 import { installPrintFallback } from './print.js';
+import { installOptions } from './options.js';
 
 /** Platform as seen by the renderer: 'win32' | 'darwin' | 'linux' | 'web'. */
 export function shellPlatform() {
@@ -46,6 +47,7 @@ export function buildShell() {
   installKeyboard();
   installDesktopBridge();
   installPrintFallback();
+  installOptions();
   const applyPanels = () => {
     document.body.classList.toggle('hide-pages', !prefs.get('pagesPanel'));
     document.body.classList.toggle('hide-right', !prefs.get('rightPanel'));

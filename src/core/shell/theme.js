@@ -3,6 +3,17 @@
 // colours). Pages keep their own paper colours in both themes.
 
 import { prefs } from '../prefs.js';
+import { registry } from '../registry.js';
+import { optSelect } from './options.js';
+
+registry.optionsSection({
+  page: 'general', id: 'appearance', title: 'Personalize', order: 10,
+  render(box) {
+    box.appendChild(optSelect('Theme', [
+      { value: 'system', label: 'Use system setting' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }
+    ], () => prefs.get('theme'), (v) => prefs.set('theme', v)));
+  }
+});
 
 /** The theme in effect: 'light' | 'dark'. */
 export function resolvedTheme() {

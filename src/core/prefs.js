@@ -41,7 +41,21 @@ class Prefs extends Emitter {
     super();
     let saved = null;
     try { saved = JSON.parse(storage()?.getItem(KEY) || 'null'); } catch { saved = null; }
+    this.saved = isObj(saved) ? saved : {};
     this.values = merge(DEFAULTS, saved);
+  }
+
+  /**
+   * Declare feature preferences with their defaults (top-level keys not in the core DEFAULTS).
+   * Saved values are restored for them; keys that already exist are left alone.
+   * @param {Record<string, any>} defaults
+   */
+  define(defaults) {
+    for (const [k, v] of Object.entries(defaults || {})) {
+      if (k in this.values) continue;
+      const wrapped = merge({ [k]: v }, { [k]: this.saved[k] });
+      this.values[k] = wrapped[k];
+    }
   }
 
   /** Read a preference by dotted path ("guides.grid"). */
@@ -56,6 +70,7 @@ class Prefs extends Emitter {
     for (const k of keys.slice(0, -1)) o = o[k];
     if (o[keys[keys.length - 1]] === value) return;
     o[keys[keys.length - 1]] = value;
+    this.saved[keys[0]] = this.values[keys[0]];
     try { storage()?.setItem(KEY, JSON.stringify(this.values)); } catch { /* storage full or blocked */ }
     this.emit('change', path, value);
   }
