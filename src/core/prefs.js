@@ -6,7 +6,7 @@ import { Emitter } from './events.js';
 const KEY = 'folio:prefs:v2';
 
 const DEFAULTS = {
-  theme: 'colorful',          // 'system' | 'colorful' | 'white' | 'darkgray' | 'black'
+  theme: 'white',             // 'system' | 'colorful' | 'white' | 'darkgray' | 'black'
   rulers: true,
   guides: { margins: true, columns: true, ruler: true, grid: false, boundaries: true },
   snap: { enabled: true, objects: true, guides: true, grid: true, page: true },
