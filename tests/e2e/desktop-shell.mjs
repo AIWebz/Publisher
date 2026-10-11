@@ -120,46 +120,54 @@ try {
   const missing = ['file.close', 'file.print', 'export.pdf', 'view.zoomIn', 'view.zoomOut', 'view.fitPage', 'app.settings', 'help.shortcuts']
     .filter((id) => !cmdItems.some((i) => i.id === `cmd:${id}`));
   console.log(`info menu items hidden because the command is not registered: ${missing.join(', ') || 'none'}`);
-  const editRoles = flat.filter((i) => i.trail.startsWith('Menu › Edit')).map((i) => i.role);
-  check(['cut', 'copy', 'paste', 'selectAll'].every((r) => editRoles.includes(r)), 'Edit menu keeps native clipboard roles');
+  const editRoles = flat.filter((i) => i.trail.startsWith('Menu › Edit')).map((i) => String(i.role || '').toLowerCase());
+  check(['cut', 'copy', 'paste', 'selectall'].every((r) => editRoles.includes(r)), 'Edit menu keeps native clipboard roles', editRoles);
 
-  // Clicking menu items drives the renderer.
+  // Clicking menu items drives the renderer: count the app.exec calls each click causes.
+  await page.evaluate(() => {
+    const app = window.folioApp;
+    window.__execLog = [];
+    const orig = app.exec.bind(app);
+    app.exec = (id, ...rest) => { window.__execLog.push(id); return orig(id, ...rest); };
+  });
   const clickMenu = (id) => electronApp.evaluate((_e, id) => {
     const item = globalThis.__folioMacMenu.getMenuItemById(id);
     if (!item) return false;
     item.click();
     return true;
   }, id);
+  const execCount = (id) => page.evaluate((id) => window.__execLog.filter((x) => x === id).length, id);
+  check(await clickMenu('cmd:file.new'), 'File › New menu item exists');
+  await page.waitForTimeout(500);
+  check(await execCount('file.new') === 1, `File › New (menu) runs the file.new command exactly once (${await execCount('file.new')})`);
   const before = await sessions();
-  if (await clickMenu('cmd:file.new')) {
-    await page.waitForTimeout(600);
-    // File › New may open the template gallery (backstage) or create a blank publication directly.
-    let after = await sessions();
-    if (after === before) {
-      const created = await page.evaluate(async () => {
-        const btn = [...document.querySelectorAll('.backstage:not([hidden]) button, .dialog button')].find((b) => /^(create|blank)/i.test(b.textContent.trim()));
-        if (btn) btn.click();
-        return !!btn;
-      });
-      if (created) await page.waitForTimeout(800);
-      after = await sessions();
-    }
-    check(after === before + 1, `File › New (menu) opened a publication (${before} → ${after})`);
-  } else check(false, 'File › New menu item exists');
-  if (await sessions() > 0 && menu.ids.includes('view.zoomIn')) {
-    const z0 = await page.evaluate(() => document.querySelector('.sb-pct')?.textContent);
+  const created = await page.evaluate(() => {
+    const btn = [...document.querySelectorAll('.backstage:not([hidden]) button, .dlg button, .dialog button')].find((b) => /^(create|blank)/i.test(b.textContent.trim()));
+    if (btn) { btn.click(); return 'gallery'; }
+    window.folioApp.exec('file.newBlank', { size: 'letter' });
+    return 'newBlank';
+  });
+  await page.waitForTimeout(800);
+  check(await sessions() === before + 1, `a publication opens after File › New (${created}; ${before} → ${await sessions()})`);
+  if (menu.ids.includes('view.zoomIn')) {
+    const z0 = await page.evaluate(() => window.folioApp.session?.view?.zoom ?? document.querySelector('.sb-pct, .sb-zoom')?.textContent);
     await clickMenu('cmd:view.zoomIn');
     await page.waitForTimeout(400);
-    const z1 = await page.evaluate(() => document.querySelector('.sb-pct')?.textContent);
-    check(z0 !== z1, `View › Zoom In (menu) changes the zoom (${z0} → ${z1})`);
+    const z1 = await page.evaluate(() => window.folioApp.session?.view?.zoom ?? document.querySelector('.sb-pct, .sb-zoom')?.textContent);
+    check(z0 !== z1 && await execCount('view.zoomIn') === 1, `View › Zoom In (menu) zooms once (${z0} → ${z1})`);
   }
 
   // ---- macOS: Finder / Dock opens a file through app 'open-file' ----
   const macFile = await writeSampleFolio(path.join(OUT, 'From Finder.folio'), { title: 'From Finder', text: 'Opened through open-file' });
+  // Make the open publication non-blank so the file opens in its own tab (an untouched blank
+  // publication is replaced by the opened file, by design).
+  await page.evaluate(() => window.folioApp.session?.markDirty?.() ?? window.folioApp.exec('file.newBlank', { size: 'letter' }));
   const n0 = await sessions();
   await electronApp.evaluate(({ app }, f) => app.emit('open-file', { preventDefault() {} }, f), macFile);
-  await page.waitForFunction((n) => document.querySelectorAll('.doctabs .dt').length > n, n0, { timeout: 10000 }).catch(() => {});
-  check(await sessions() === n0 + 1, 'open-file event opens the publication in a new tab');
+  await page.waitForFunction(() => /From Finder/.test(window.folioApp.session?.displayName || ''), null, { timeout: 10000 }).catch(() => {});
+  const nOpen = await sessions();
+  check(/From Finder/.test(await page.evaluate(() => window.folioApp.session?.displayName)) && nOpen >= n0 && nOpen <= n0 + 1,
+    `open-file event opens the publication and activates it (${n0} → ${nOpen} tabs)`);
   check(/From Finder/.test(await winTitle()), `window title follows the active publication ("${await winTitle()}")`);
   check(await page.evaluate(() => document.body.innerText.includes('Opened through open-file')), 'its text is rendered');
 

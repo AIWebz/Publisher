@@ -1,0 +1,3 @@
+.folio-table td.cell-sel { box-shadow: inset 0 0 0 9999px rgba(26, 115, 201, .16); }
+.folio-table .folio-tcell[contenteditable="true"] { outline: 2px solid var(--sel, #1a73c9); outline-offset: -1px; cursor: text; min-height: 1em; }
+.mode-export .folio-table td.cell-sel, .mode-thumb .folio-table td.cell-sel { box-shadow: none; }

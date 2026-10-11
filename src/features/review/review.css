@@ -1,0 +1,25 @@
+.sp-body { display: flex; flex-direction: column; gap: 10px; min-height: 220px; }
+.sp-head { font-weight: 600; color: var(--danger); }
+.sp-context { padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; line-height: 1.5; white-space: pre-wrap; }
+.sp-context mark { background: #ffd8d4; color: #8d1c12; border-radius: 2px; padding: 0 1px; }
+.sp-grid { display: grid; grid-template-columns: 1fr 170px; gap: 14px; }
+.sp-grid > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+.sp-sugg { height: auto !important; padding: 4px; }
+.sp-btns { display: flex; flex-direction: column; gap: 6px; padding-top: 18px; }
+.sp-btns .btn { justify-content: flex-start; }
+.sp-done { padding: 30px 0; text-align: center; }
+.find-panel { position: fixed; right: 300px; top: 230px; z-index: 60; width: 380px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.fr-head { display: flex; justify-content: space-between; align-items: center; }
+.fr-row { display: flex; gap: 6px; }
+.fr-row .field { flex: 1; }
+.fr-opts { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; }
+.fr-info { color: var(--ink-2); font-size: 12px; min-height: 1.3em; }
+.dc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow: auto; }
+.dc-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 7px; background: var(--surface-2); }
+.dc-dot { width: 9px; height: 9px; border-radius: 50%; background: #d9822b; flex: none; }
+.dc-error .dc-dot { background: #c62828; } .dc-info .dc-dot { background: #2563a6; }
+.dc-msg { flex: 1; }
+.dc-ok { color: #2f7d4a; font-weight: 600; }
+.dc-sum { margin: 0 0 8px; color: var(--ink-2); }
+.stats-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 24px; margin: 0; }
+.stats-grid dt { color: var(--ink-2); } .stats-grid dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }

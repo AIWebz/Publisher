@@ -357,7 +357,7 @@ function newsletter4() {
   const addr = `${field('Name')}<br>${field('Address')}<br>${field('City')}, ${field('State')} ${field('ZIP')}`;
   return setPages(doc, [
     [[
-      text(doc, 56, 34, 704, 84, p('The Garden Ledger'), { font: '@heading', size: 54, align: 'center', lineHeight: 1.1 }, { name: 'Masthead' }),
+      text(doc, 56, 30, 704, 96, p('The Garden Ledger'), { font: '@heading', size: 52, align: 'center', lineHeight: 1.1 }, { name: 'Masthead' }),
       hline(56, 128, 704, '@ink', 2, { name: 'Masthead rule' }),
       text(doc, 56, 136, 704, 20, p('Volume IV · No. 3 · Autumn 2026 · Eastside Allotment Association'),
         { size: 8.5, caps: true, letterSpacing: 2, color: '@muted', align: 'center' }, { name: 'Dateline', valign: 'middle' }),

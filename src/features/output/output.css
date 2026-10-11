@@ -1,0 +1,17 @@
+.out-page { display: grid; grid-template-columns: minmax(280px, 340px) 1fr; gap: 28px; align-items: start; }
+.out-settings { display: flex; flex-direction: column; gap: 12px; }
+.out-settings h1 { font-size: 26px; font-weight: 650; margin: 0; }
+.out-settings .bs-sub { margin: 0 0 4px; font-style: normal; }
+.out-field { display: flex; flex-direction: column; gap: 4px; }
+.out-label { font-size: 12px; color: var(--ink-2); font-weight: 500; }
+.out-field small { color: var(--ink-3); font-size: 11.5px; }
+.out-group { display: flex; flex-direction: column; gap: 10px; }
+.out-actions { display: flex; align-items: flex-end; gap: 12px; }
+.out-actions .out-field { width: 90px; }
+.out-go { height: 40px; padding: 0 22px; font-size: 14px; }
+.out-go svg { width: 18px; height: 18px; }
+.out-status { color: var(--ink-2); min-height: 1.4em; margin: 0; }
+.out-preview { background: var(--surface-3); border-radius: 12px; min-height: 520px; max-height: calc(100vh - 160px); overflow: auto; padding: 8px; }
+.out-count { text-align: center; color: var(--ink-3); font-size: 12px; padding-top: 6px; }
+.out-error { color: var(--danger); padding: 20px; }
+.export-preview-sheet figcaption { font-size: 11.5px; color: var(--ink-3); }

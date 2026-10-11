@@ -1,0 +1,29 @@
+.tg-page { display: flex; flex-direction: column; gap: 18px; height: 100%; }
+.tg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.tg-head h1 { font-size: 26px; font-weight: 650; margin: 0 0 4px; letter-spacing: -.01em; }
+.tg-head .bs-sub { margin: 0; font-style: normal; }
+.tg-search { width: 280px; height: 34px; }
+.tg-body { display: grid; grid-template-columns: 190px 1fr 290px; gap: 20px; min-height: 0; flex: 1; }
+.tg-cats { display: flex; flex-direction: column; gap: 2px; overflow: auto; }
+.tg-cat { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 7px; text-align: left; color: var(--ink-2); font-size: 13px; }
+.tg-cat em { font-style: normal; color: var(--ink-3); font-size: 11.5px; }
+.tg-cat:hover { background: var(--surface-2); color: var(--ink); }
+.tg-cat.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 18px 16px; align-content: start; overflow: auto; padding: 2px 4px 20px 2px; }
+.tg-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 10px; border: 1px solid transparent; text-align: left; }
+.tg-card:hover { background: var(--surface); border-color: var(--line); box-shadow: var(--shadow-sm); }
+.tg-card.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--surface); }
+.tg-thumb { height: 176px; display: grid; place-items: center; background: var(--surface-3); border-radius: 8px; overflow: hidden; }
+.tg-sheet { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.tg-blank { background: #fff; }
+.tg-name { font-weight: 600; font-size: 13px; color: var(--ink); }
+.tg-meta { font-size: 11.5px; color: var(--ink-3); margin: 0; }
+.tg-empty { color: var(--ink-3); grid-column: 1 / -1; }
+.tg-detail { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; align-self: start; }
+.tg-detail:empty { display: none; }
+.tg-detail h3 { margin: 4px 0 0; font-size: 17px; }
+.tg-desc { margin: 0; color: var(--ink-2); line-height: 1.45; }
+.tg-preview .tg-thumb { height: 300px; }
+.tg-opt { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ink-2); }
+.tg-actions { display: flex; gap: 8px; margin-top: 4px; }
+@media (max-width: 1200px) { .tg-body { grid-template-columns: 160px 1fr; } .tg-detail { grid-column: 1 / -1; } }

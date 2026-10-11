@@ -1,0 +1,19 @@
+.mm-editor { display: flex; flex-direction: column; gap: 8px; }
+.mm-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.mm-find { width: 200px; margin-left: auto; }
+.mm-filters { display: flex; flex-direction: column; gap: 6px; }
+.mm-filter { display: grid; grid-template-columns: 1fr 1fr 1.4fr auto; gap: 6px; }
+.mm-grid-wrap { max-height: 52vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.mm-grid { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 12.5px; }
+.mm-grid th { position: sticky; top: 0; background: var(--surface-2); border-bottom: 1px solid var(--line-2); padding: 6px 8px; text-align: left; cursor: pointer; white-space: nowrap; font-weight: 600; z-index: 1; }
+.mm-grid td { border-bottom: 1px solid var(--line); padding: 0; }
+.mm-grid td.mm-inc, .mm-grid th.mm-inc { width: 32px; text-align: center; padding: 0 6px; }
+.mm-cell { border: 0; background: transparent; padding: 6px 8px; width: 150px; font: inherit; color: inherit; }
+.mm-cell:focus { outline: 2px solid var(--sel); outline-offset: -2px; background: var(--surface); }
+.mm-excl .mm-cell { color: var(--ink-3); text-decoration: line-through; }
+.mm-del { width: 24px; height: 24px; color: var(--ink-3); border-radius: 4px; }
+.mm-del:hover { color: var(--danger); background: var(--danger-soft); }
+.mm-status { color: var(--ink-2); font-size: 12px; }
+.mm-nav { padding: 0 6px; }
+.mm-pos { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+body.no-field-highlight .mode-edit .field, body.no-field-highlight .tx-flow .field { background: none !important; }

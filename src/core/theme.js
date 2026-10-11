@@ -21,12 +21,14 @@ export const FONT_SCHEMES = {
   editorial: { name: 'Editorial', heading: 'Playfair Display',   body: 'Lora' },
   modern:    { name: 'Modern',    heading: 'Fraunces',           body: 'Crimson Pro' },
   didone:    { name: 'Didone',    heading: 'Bodoni Moda',        body: 'Libre Baskerville' },
-  display:   { name: 'Display',   heading: 'DM Serif Display',   body: 'Spectral' }
+  display:   { name: 'Display',   heading: 'DM Serif Display',   body: 'Spectral' },
+  clean:     { name: 'Clean',     heading: 'Inter',              body: 'Inter' },
+  mixed:     { name: 'Contemporary', heading: 'Playfair Display', body: 'Inter' }
 };
 
 // Font families bundled with the app (app/fonts). Keep in sync with app/fonts/fonts.css.
 export const FONTS = ['Bodoni Moda', 'Cormorant Garamond', 'Crimson Pro', 'DM Serif Display', 'EB Garamond', 'Fraunces',
-  'Libre Baskerville', 'Lora', 'Playfair Display', 'Spectral'];
+  'Inter', 'Libre Baskerville', 'Lora', 'Playfair Display', 'Spectral'];
 
 export const STANDARD_COLORS = ['#ffffff', '#f5f0e6', '#e6dcc8', '#c8bba0', '#8a8270', '#4a4740', '#2a2824', '#000000',
   '#7a2e2e', '#c0392b', '#d9822b', '#c9a046', '#5b7a4a', '#2f5d57', '#2563a6', '#2c4a6e', '#5a3e6b', '#b5677d'];
@@ -48,7 +50,7 @@ export function resolveColor(doc, v) {
 export function resolveFont(doc, v) {
   const fonts = (doc && doc.theme && doc.theme.fonts) || FONT_SCHEMES.classic;
   const fam = v === '@heading' ? fonts.heading : v === '@body' || !v ? fonts.body : v;
-  return `"${fam}", Georgia, serif`;
+  return fam === 'Inter' ? '"Inter", system-ui, sans-serif' : `"${fam}", Georgia, serif`;
 }
 
 export function fontFamilyName(doc, v) {

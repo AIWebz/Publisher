@@ -2,6 +2,7 @@ The fonts in this folder are distributed under the SIL Open Font License, Versio
 They were obtained from Google Fonts and are copyright their respective authors:
 
   Bodoni Moda          — Copyright The Bodoni Moda Project Authors
+  Inter                — Copyright The Inter Project Authors
   Cormorant Garamond   — Copyright The Cormorant Project Authors
   Crimson Pro          — Copyright The Crimson Pro Project Authors
   DM Serif Display     — Copyright The DM Serif Project Authors

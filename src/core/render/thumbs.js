@@ -21,7 +21,7 @@ export function renderThumb(container, doc, page, opts = {}) {
   const inner = document.createElement('div');
   inner.className = 'thumb-page';
   inner.style.cssText = `position:absolute;left:0;top:0;transform-origin:0 0;transform:scale(${scale});pointer-events:none`;
-  renderPage(inner, doc, page, { mode: 'thumb', pageIndex: opts.pageIndex });
+  renderPage(inner, doc, page, { mode: 'thumb', pageIndex: opts.pageIndex, record: opts.record || null });
   container.style.width = `${w}px`;
   container.style.height = `${hgt}px`;
   container.style.position = 'relative';

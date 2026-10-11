@@ -208,7 +208,7 @@ export class Canvas {
   renderSlot(slot) {
     const doc = app.doc;
     const tmp = h('div', { class: 'page-render' });
-    const { rctx } = renderPage(tmp, doc, slot.page, { mode: 'edit', pageIndex: slot.index < 0 ? 0 : slot.index, showHidden: !!prefs.get('showHidden') });
+    const { rctx } = renderPage(tmp, doc, slot.page, { mode: 'edit', pageIndex: slot.index < 0 ? 0 : slot.index, showHidden: !!prefs.get('showHidden'), record: app.previewRecord || null });
     slot.rctx = rctx;
     const editId = app.editing && app.editing.session === app.session ? app.editing.frameId : null;
     const live = editId ? this.topNodeIn(slot.renderEl, editId) : null;

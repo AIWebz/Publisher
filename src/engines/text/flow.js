@@ -165,7 +165,8 @@ function geometry(frame) {
   const gap = cols > 1 ? Math.max(0, +(frame.colGap ?? 12) || 0) : 0;
   return {
     cw: Math.max(1, (+frame.w || 0) - (+p.left || 0) - (+p.right || 0)),
-    ch: Math.max(0, (+frame.h || 0) - (+p.top || 0) - (+p.bottom || 0)),
+    // +1.5 px tolerance: a line that fits within sub-pixel rounding is not overflow
+    ch: Math.max(0, (+frame.h || 0) - (+p.top || 0) - (+p.bottom || 0) + 1.5),
     padV: (+p.top || 0) + (+p.bottom || 0),
     cols,
     gap
@@ -209,7 +210,8 @@ function makeFit(m) {
   const b = m.box.getBoundingClientRect();
   const xLimit = b.left + m.g.cw + m.gapVis / 2;
   const range = document.createRange();
-  const rectFits = (r) => (r.left + r.right) / 2 < xLimit && !(r.height > m.g.ch + 1);
+  // glyph boxes can be taller than the line box (display fonts): only a line far taller than the frame fails
+  const rectFits = (r) => (r.left + r.right) / 2 < xLimit && !(r.height > m.g.ch * 1.6 + 2);
   const pick = (rects) => {
     if (!rects || !rects.length) return null;
     for (const r of rects) if (r.width > 0 || r.height > 0) return r;
@@ -491,14 +493,17 @@ function layoutChainDOM(doc, chain, storyHtml, resolveFor) {
       split = findSplit(m);
     }
     let rest = [];
+    let clipped = false;
     if (split) {
       const { block, index, P } = split;
-      const start = index > 0 ? splitBlockAt(block, P[index]) : block;
-      rest = detachFrom(m.flow, start);
+      let start = index > 0 ? splitBlockAt(block, P[index]) : block;
+      // Nothing fits in the last frame: show the first block clipped (as Publisher does) and flag overflow.
+      if (last && start === m.flow.firstElementChild) { clipped = true; start = start.nextElementSibling; }
+      rest = start ? detachFrom(m.flow, start) : [];
     }
     const html = m.flow.innerHTML;
     unmount(m);
-    results.push({ html, overflow: last && rest.length > 0, scale, contentHeight, overflowChars: last ? textLength(rest) : 0 });
+    results.push({ html, overflow: last && (rest.length > 0 || clipped), scale, contentHeight, overflowChars: last ? textLength(rest) : 0 });
     remaining = rest;
   }
   return results;

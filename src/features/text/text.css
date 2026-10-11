@@ -1,0 +1,12 @@
+.rb-fontbox { flex-direction: column; align-items: flex-start; }
+.rb-row { display: flex; gap: 4px; }
+.rb-font { width: 170px; height: 26px !important; }
+.rb-sizein { width: 56px; height: 26px !important; }
+.rb-split { display: inline-flex; align-items: center; }
+.rb-colormain { width: 26px !important; }
+.rb-colorcaret { width: 14px !important; }
+.rb-colorcaret svg { width: 10px !important; height: 10px !important; }
+.rb-colormain .rb-ic { flex-direction: column; gap: 0; }
+.sym-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+.sym { height: 32px; border: 1px solid var(--line); border-radius: 6px; font-size: 17px; background: var(--surface); }
+.sym:hover { border-color: var(--accent); background: var(--accent-soft); }

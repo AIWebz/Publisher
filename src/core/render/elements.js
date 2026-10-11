@@ -106,6 +106,17 @@ function renderImage(node, el, rctx) {
     const b = imageContentBox(el, asset);
     Object.assign(img.style, { left: px(b.x), top: px(b.y), width: px(b.w), height: px(b.h) });
     if (el.flipH || el.flipV) img.style.transform = `scale(${el.flipH ? -1 : 1}, ${el.flipV ? -1 : 1})`;
+    const a = el.adjust;
+    if (a) {
+      const f = [];
+      if (a.brightness !== undefined && a.brightness !== 100) f.push(`brightness(${a.brightness}%)`);
+      if (a.contrast !== undefined && a.contrast !== 100) f.push(`contrast(${a.contrast}%)`);
+      if (a.saturate !== undefined && a.saturate !== 100) f.push(`saturate(${a.saturate}%)`);
+      if (a.grayscale) f.push(`grayscale(${a.grayscale}%)`);
+      if (a.sepia) f.push(`sepia(${a.sepia}%)`);
+      if (f.length) img.style.filter = f.join(' ');
+    }
+    if (el.cropping && rctx.mode === 'edit') clip.classList.add('cropping');
     clip.appendChild(img);
     node.appendChild(clip);
   } else if (rctx.mode === 'edit') {
