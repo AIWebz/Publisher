@@ -46,6 +46,7 @@ registry.command({
     let id = null;
     app.transact('Insert Table', (d) => {
       const t = T.createTable(rows, cols, { x: (d.setup.width - w) / 2, y: (d.setup.height - hgt) / 2, w, h: hgt, headerRow: arg && arg.header !== false });
+      t.wrap = { type: 'square' };
       if (t.headerRow) T.applyTableStyle(t, 'header');
       app.page.elements.push(t);
       id = t.id;

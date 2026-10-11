@@ -2,6 +2,7 @@
 import './core-tabs.js';
 import './core-edit.js';
 import './core-files.js';
+import './wrap.js';
 import './arrange.js';
 import './insert.js';
 import './pages.js';

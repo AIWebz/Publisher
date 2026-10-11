@@ -2,6 +2,7 @@
 // keyboard nudging. Registered on Home and on every contextual Format tab.
 
 import { app } from '../core/app.js';
+import { wrapMenu } from './wrap.js';
 import { registry } from '../core/registry.js';
 import { findElement, unionBounds, walkElements } from '../core/model.js';
 import { groupElements, ungroupElement, reorderElements, alignElements, distributeElements, nudgeElements } from '../core/ops.js';
@@ -119,6 +120,7 @@ for (const [key, dx, dy] of [['ArrowLeft', -1, 0], ['ArrowRight', 1, 0], ['Arrow
 
 // ---------------------------------------------------------------- ribbon
 const arrangeItems = [
+  wrapMenu,
   { command: 'arrange.front', size: 'small' }, { command: 'arrange.back', size: 'small' }, { command: 'arrange.group', size: 'small' },
   { command: 'arrange.forward', size: 'small' }, { command: 'arrange.backward', size: 'small' }, { command: 'arrange.ungroup', size: 'small' },
   {

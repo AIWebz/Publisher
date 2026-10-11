@@ -6,6 +6,23 @@
 import { app } from '../app.js';
 import { findElement, getChain, pageIndexOf } from '../model.js';
 import { sanitizeHtml, sanitizePastedHtml, textToHtml } from '../../engines/text/sanitize.js';
+import { frameExclusions, planRegion, floatsHTML } from '../../engines/text/wrap.js';
+
+/** Wrap floats for in-place editing (single-column frames; Both sides acts as Largest side while typing). */
+function editFloats(doc, frame) {
+  if ((frame.columns || 1) > 1) return '';
+  const p = frame.padding || { top: 4, right: 4, bottom: 4, left: 4 };
+  const plan = planRegion(frameExclusions(doc, frame), (frame.w || 0) - (p.left || 0) - (p.right || 0), { bothSides: false });
+  return floatsHTML(plan.floats);
+}
+
+/** Editor HTML without layout helpers. */
+const editorHtml = (root) => {
+  if (!root.querySelector('[data-wrapx],[data-wrapgap]')) return root.innerHTML;
+  const c = root.cloneNode(true);
+  c.querySelectorAll('[data-wrapx],[data-wrapgap]').forEach((n) => n.remove());
+  return c.innerHTML;
+};
 
 const IDLE_MS = 600;
 let editSeq = 0;
@@ -60,6 +77,8 @@ export class TextEditor {
     root.style.width = '';
     root.innerHTML = story.html || '<p><br></p>';
     if (!root.textContent && !root.querySelector('br')) root.innerHTML = '<p><br></p>';
+    const floats = editFloats(doc, head);
+    if (floats) { root.insertAdjacentHTML('afterbegin', floats); node.querySelector('.tx-box')?.style.setProperty('justify-content', 'flex-start'); }
     root.contentEditable = 'true';
     root.spellcheck = true;
     root.setAttribute('role', 'textbox');
@@ -104,7 +123,7 @@ export class TextEditor {
     if (!st) return;
     clearTimeout(st.timer);
     if (!st.root.isConnected || app.session !== st.session) return;
-    const html = sanitizeHtml(st.root.innerHTML);
+    const html = sanitizeHtml(editorHtml(st.root));
     const doc = st.session.doc;
     const story = doc.stories[st.storyId];
     if (!story || story.html === html) return;

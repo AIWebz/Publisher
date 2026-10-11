@@ -31,13 +31,13 @@ export function buildObject(doc, tool, rect) {
     case 'text':
       return createTextFrame(doc, { ...box, name: '' }, tool.html || '<p></p>');
     case 'picture':
-      return createElement('image', { ...box, assetId: null, fit: 'fill' });
+      return createElement('image', { ...box, assetId: null, fit: 'fill', wrap: { type: 'square' } });
     case 'line':
       return createElement('line', { ...box, h: 12, y: round(rect.y + rect.h / 2 - 6), arrowEnd: tool.arrow ? 'triangle' : 'none' });
     case 'shape':
     default: {
       const shape = tool.shape || 'rect';
-      const props = { ...box, shape, name: '' };
+      const props = { ...box, shape, name: '', wrap: { type: 'square' } };
       if (shape === 'roundRect') props.radius = Math.round(Math.min(box.w, box.h) * 0.16);
       return createElement('shape', props);
     }
@@ -109,7 +109,7 @@ export async function insertPictures(files, opts = {}) {
       const assetId = addAsset(d, img);
       const s = placementSize(img.width, img.height, d.setup.width, d.setup.height);
       const c = opts.at || { x: d.setup.width / 2, y: d.setup.height / 2 };
-      const el = createElement('image', { x: round(c.x - s.w / 2 + i * 18), y: round(c.y - s.h / 2 + i * 18), w: s.w, h: s.h, assetId, fit: 'fill', name: stripExt(img.name) });
+      const el = createElement('image', { x: round(c.x - s.w / 2 + i * 18), y: round(c.y - s.h / 2 + i * 18), w: s.w, h: s.h, assetId, fit: 'fill', name: stripExt(img.name), wrap: { type: 'square' } });
       app.page.elements.push(el);
       made.push(el);
     });

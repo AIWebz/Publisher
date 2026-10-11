@@ -77,6 +77,11 @@ function renderText(node, el, rctx) {
     lay = { html, overflow: false, scale: 1 };
   }
   flow.innerHTML = lay.html || '';
+  if (lay.wrapped) {
+    // wrapped text is laid out from the top of the frame; explicit columns replace CSS columns
+    box.style.justifyContent = 'flex-start';
+    if (lay.cols) { flow.style.columnCount = ''; flow.style.columnGap = ''; flow.style.position = 'relative'; flow.style.height = '100%'; }
+  }
   if (lay.scale && lay.scale !== 1) {
     flow.style.zoom = String(lay.scale);
     flow.style.width = `${100 / lay.scale}%`;

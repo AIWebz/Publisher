@@ -29,6 +29,7 @@ import { allElements, getChain } from '../../core/model.js';
 import { resolveFont, resolveColor } from '../../core/theme.js';
 import { listFields, renderFields } from './fields.js';
 import { parseTree, serializeTree, getAttr, setAttr } from './html.js';
+import { frameExclusions, columnExclusions, planRegion, floatsHTML } from './wrap.js';
 
 /** Smallest autofit 'shrink' scale. */
 export const MIN_SCALE = 0.3;
@@ -44,7 +45,8 @@ export const FLOW_CSS = [
   '.tx-flow li[data-cont]{list-style-type:none!important}',
   '.tx-flow [data-split]{margin-bottom:0!important}',
   '.tx-flow [data-split="justify"]{text-align-last:justify}',
-  '.tx-flow .field{white-space:nowrap}'
+  '.tx-flow .field{white-space:nowrap}',
+  '.tx-flow [data-wrapgap]{display:inline-block;vertical-align:baseline}'
 ].join('\n');
 
 const THEME_KEYS = ['paper', 'ink', 'accent', 'accent2', 'muted', 'light'];
@@ -173,8 +175,9 @@ function geometry(frame) {
   };
 }
 
-function mount(doc, frame, scale = 1) {
-  const g = geometry(frame);
+function mount(doc, frame, scale = 1, regionWidth = 0) {
+  const g0 = geometry(frame);
+  const g = regionWidth ? { ...g0, cw: regionWidth, cols: 1, gap: 0 } : g0;
   const box = document.createElement('div');
   const bs = box.style;
   bs.position = 'absolute'; bs.left = '0'; bs.top = '0'; bs.width = `${g.cw}px`; bs.height = `${g.ch}px`;
@@ -269,6 +272,7 @@ function fitIndex(fit, P, i) {
 function blocksOf(flow) {
   const out = [];
   for (let c = flow.firstElementChild; c; c = c.nextElementSibling) {
+    if (c.hasAttribute('data-wrapx')) continue;
     if (c.nodeName === 'UL' || c.nodeName === 'OL') {
       for (let li = c.firstElementChild; li; li = li.nextElementSibling) out.push(li);
     } else out.push(c);
@@ -444,7 +448,111 @@ function textLength(nodes) {
   return n;
 }
 
-function layoutChainDOM(doc, chain, storyHtml, resolveFor) {
+// ---------------------------------------------------------------------------------------------
+// Text wrap: float bands and mid-line gaps (see wrap.js)
+// ---------------------------------------------------------------------------------------------
+
+const isSpace = (ch) => ch === ' ' || ch === '\t';
+
+/** Visual rect of a position relative to the flow's top-left, or null. */
+function relRect(range, pos, base) {
+  if (pos.el) range.selectNode(pos.el);
+  else { range.setStart(pos.node, pos.offset); range.setEnd(pos.node, pos.offset + pos.len); }
+  const rects = range.getClientRects();
+  for (const r of rects) if (r.width > 0 || r.height > 0) return { left: r.left - base.left, right: r.right - base.left, top: r.top - base.top, bottom: r.bottom - base.top };
+  return null;
+}
+
+/**
+ * Open holes in the middle of lines for Both-sides wrapping: line by line, a fixed-width inline
+ * spacer is inserted at the last word break before the object so the line resumes after it.
+ */
+function insertGaps(m, gaps) {
+  const range = document.createRange();
+  const fit = makeFit(m);
+  for (const gp of gaps) {
+    let lastTop = -Infinity;
+    for (let guard = 0; guard < 400; guard++) {
+      const base = m.flow.getBoundingClientRect();
+      const P = [];
+      for (const b of blocksOf(m.flow)) for (const q of positions(b)) P.push(q);
+      // only the first (visible) column of the region counts
+      let lo = 0, hi = P.length;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (fitIndex(fit, P, mid)) lo = mid + 1; else hi = mid; }
+      const n = lo;
+      const rect = (i) => { for (let j = i; j < n; j++) { const r = relRect(range, P[j], base); if (r) return r; } return null; };
+      // first character on a new line that reaches the hole's band
+      let a = 0, b = n;
+      while (a < b) { const mid = (a + b) >> 1; const r = rect(mid); if (!r || (r.top > lastTop + 0.5 && r.bottom > gp.y0)) b = mid; else a = mid + 1; }
+      const first = rect(a);
+      if (a >= n || !first || first.top >= gp.y1) break;
+      const T = first.top;
+      lastTop = T;
+      let e = a, f = n;
+      while (e < f) { const mid = (e + f) >> 1; const r = rect(mid); if (!r || r.top > T + 1) f = mid; else e = mid + 1; }
+      const lineEnd = e - 1;
+      const endRect = rect(lineEnd);
+      if (!endRect || endRect.right <= gp.x0 || first.left >= gp.x1) continue;
+      // last character ending before the hole
+      let k = -1;
+      for (let i = lineEnd; i >= a; i--) { const r = relRect(range, P[i], base); if (r && r.right <= gp.x0 + 0.5) { k = i; break; } }
+      let at = -1, xBreak = first.left;
+      for (let i = k; i >= a; i--) {
+        const q = P[i];
+        if (q.node && isSpace(q.node.data[q.offset])) { at = i; const r = relRect(range, q, base); xBreak = r ? r.right : xBreak; break; }
+      }
+      const gap = document.createElement('span');
+      gap.setAttribute('data-wrapgap', '');
+      gap.style.cssText = `display:inline-block;width:${Math.max(0, (gp.x1 - xBreak) / m.scale).toFixed(2)}px;height:1px`;
+      const q = at >= 0 ? P[at] : P[a];
+      if (q.el) q.el.before(gap);
+      else {
+        const off = at >= 0 ? q.offset + q.len : q.offset;
+        const tail = off < q.node.data.length ? q.node.splitText(off) : null;
+        if (tail) tail.before(gap); else q.node.after(gap);
+      }
+    }
+  }
+}
+
+function stripGaps(nodes) {
+  for (const n of nodes) if (n.nodeType === 1) n.querySelectorAll('[data-wrapgap]').forEach((g) => g.remove());
+}
+
+/** Lay out one frame that has wrap exclusions, column by column. */
+function layoutWrapped(doc, frame, nodes, excl, scale, last) {
+  const g = geometry(frame);
+  const regions = g.cols > 1 ? columnExclusions(excl, g) : [{ left: 0, width: g.cw, exclusions: excl }];
+  let remaining = nodes, clipped = false, contentHeight = 0;
+  const parts = [];
+  regions.forEach((rg, ri) => {
+    if (!remaining.length) { parts.push(''); return; }
+    const m = mount(doc, frame, scale, rg.width);
+    const plan = planRegion(rg.exclusions, rg.width);
+    m.flow.innerHTML = floatsHTML(plan.floats, scale);
+    for (const n of remaining) m.flow.appendChild(n);
+    if (ri === 0) contentHeight = Math.ceil(naturalHeight(m) + m.g.padV);
+    if (plan.gaps.length) insertGaps(m, plan.gaps);
+    const split = findSplit(m);
+    let rest = [];
+    if (split) {
+      let start = split.index > 0 ? splitBlockAt(split.block, split.P[split.index]) : split.block;
+      const firstBlock = blocksOf(m.flow)[0];
+      if (last && ri === regions.length - 1 && start === firstBlock) { clipped = true; start = start.nextElementSibling; }
+      rest = start ? detachFrom(m.flow, start) : [];
+    }
+    stripGaps(rest);
+    parts.push(m.flow.innerHTML);
+    unmount(m);
+    remaining = rest;
+  });
+  const r = (n) => Math.round((n / scale) * 100) / 100;
+  const html = regions.length === 1 ? parts[0]
+    : parts.map((h, i) => `<div class="tx-col" style="position:absolute;left:${r(regions[i].left)}px;top:0;width:${r(regions[i].width)}px;height:${r(g.ch)}px">${h}</div>`).join('');
+  return { html, rest: remaining, clipped, contentHeight, cols: regions.length > 1 };
+}
+
+function layoutChainDOM(doc, chain, storyHtml, resolveFor, exclusions = []) {
   const results = [];
   let remaining = nodesFromHtml(storyHtml);
   const fieldsUsed = /class="[^"]*\bfield\b/.test(storyHtml);
@@ -456,6 +564,22 @@ function layoutChainDOM(doc, chain, storyHtml, resolveFor) {
     if (!remaining.length) {
       const g = geometry(frame);
       results.push({ html: '', overflow: false, scale: 1, contentHeight: Math.ceil(g.padV), overflowChars: 0 });
+      continue;
+    }
+    const excl = exclusions[i] || [];
+    if (excl.length) {
+      let scale = 1;
+      if (single && frame.autofit === 'shrink') {
+        const fitsAt = (sc) => { const t = layoutWrapped(doc, frame, remaining.map((n) => n.cloneNode(true)), excl, sc, true); return !t.rest.length && !t.clipped; };
+        if (!fitsAt(1)) {
+          let lo = MIN_SCALE, hi = 1;
+          if (fitsAt(lo)) for (let k = 0; k < 8 && hi - lo > 0.004; k++) { const mid = (lo + hi) / 2; if (fitsAt(mid)) lo = mid; else hi = mid; }
+          scale = Math.floor(lo * 1000) / 1000;
+        }
+      }
+      const w = layoutWrapped(doc, frame, remaining, excl, scale, last);
+      results.push({ html: w.html, overflow: last && (w.rest.length > 0 || w.clipped), scale, contentHeight: w.contentHeight, overflowChars: last ? textLength(w.rest) : 0, wrapped: true, cols: w.cols });
+      remaining = w.rest;
       continue;
     }
     let scale = 1;
@@ -510,7 +634,7 @@ function layoutChainDOM(doc, chain, storyHtml, resolveFor) {
 }
 
 function frameKey(f) {
-  return [f.id, f.w, f.h, f.padding, f.columns, f.colGap, f.autofit, f.style];
+  return [f.id, f.w, f.h, f.padding, f.columns, f.colGap, f.autofit, f.style, f.wrapAround];
 }
 
 /**
@@ -542,13 +666,14 @@ export function layoutStories(doc, opts = {}) {
     }
     const fields = listFields(html);
     const values = fields.length ? chain.map((fr) => fields.map((n) => resolveFor(fr)(n) ?? null)) : null;
-    const key = JSON.stringify([html, chain.map(frameKey), values, themeCSSVars(doc)]);
+    const exclusions = chain.map((fr) => frameExclusions(doc, fr));
+    const key = JSON.stringify([html, chain.map(frameKey), values, themeCSSVars(doc), exclusions]);
     let res = cache.get(key);
     if (res) {
       cache.delete(key);
       cache.set(key, res);
     } else {
-      res = layoutChainDOM(doc, chain, headHtml, resolveFor);
+      res = layoutChainDOM(doc, chain, headHtml, resolveFor, exclusions);
       cache.set(key, res);
       if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
     }
