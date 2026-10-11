@@ -1,7 +1,7 @@
 # Folio Publisher
 
 Folio is a desktop-publishing app for flyers, newsletters, brochures, cards, calendars and posters, with
-a ribbon interface set in the Inter typeface. It runs as a desktop app on **Windows 10/11** and
+a clean ribbon interface set in the Inter typeface, with White, Colorful, Dark Gray and Black themes and six accent colours. It runs as a desktop app on **Windows 10/11** and
 **macOS 13 or later**, and in the browser as an installable web app. Publications are saved as
 `.folio` files.
 
@@ -67,6 +67,9 @@ copies are kept in the browser's storage.
   character spacing, case), paragraph alignment, line and paragraph spacing, bullets and numbering, indents,
   styles, hyperlinks, symbols, page-number/page-count/date fields, text box margins, columns, vertical alignment,
   shrink/grow to fit, overflow marker, and **linked text frames** that reflow a story across boxes and pages.
+- **Text wrap** — text flows around pictures, shapes and tables in front of a text box: Square, Tight, Through, Top and
+  Bottom or None; both sides, left, right or largest side; distance from text; works across columns and linked boxes
+  (Wrap Text on Home and every Format tab, Layout dialog, Format pane, right-click menu).
 - **Pictures and shapes** — non-destructive crop (pan, zoom, aspect ratios), fill/fit/stretch, recolour and
   brightness/contrast/saturation, borders, solid and gradient fills, outlines with dashes and arrowheads,
   shadows, transparency, quick styles, a building-blocks library and your own saved blocks.
@@ -75,7 +78,11 @@ copies are kept in the browser's storage.
 - **Mail merge** — import recipients from CSV/TSV, Excel (.xlsx) or OpenDocument (.ods) files, or type a list; edit,
   sort, filter and include/exclude records; insert merge fields, address blocks and greeting lines; preview each
   recipient; merge to a new publication, fill label/card sheets, or export one PDF (or one PDF per recipient).
-- **Review** — spelling with an English dictionary (Ignore, Add to Dictionary, Change All), Find & Replace that
+- **Languages and spelling** — 85 proofing languages (Review › Language › Set Proofing Language, per text box or whole
+  publication) with a Hunspell dictionary for each (98 dictionaries including regional variants), check spelling as
+  you type with right-click suggestions, right-to-left text for Arabic, Hebrew, Persian and Urdu, and Proofing and
+  Language pages in File › Options.
+- **Review** — spelling (Ignore, Add to Dictionary per language, Change All), Find & Replace that
   keeps formatting, a Design Checker (overflow, off-page objects, low-resolution pictures, missing data) and
   publication statistics.
 - **Output** — PDF export at exact page size with embedded fonts and vector text, PNG/JPEG export at 72–600 dpi,
@@ -108,10 +115,10 @@ copies are kept in the browser's storage.
 
 - It does not open or save Microsoft Publisher `.pub` files. Publications use Folio's own `.folio` format; share
   finished work as PDF or images.
-- Spelling uses an English dictionary only.
+- The interface itself is in English; the 85 languages are proofing (spelling) languages.
 - The installers are not code-signed (see the install notes above).
-- Text inside a text box wraps and flows between linked boxes, but it does not yet flow around other objects on
-  the page (no "wrap text around picture"). Imposition covers common layouts (booklet, n-up, repeat), not every
+- Tight wrapping follows the outline of ellipses; other shapes and pictures wrap by their rectangle, and wrap
+  points cannot be edited by hand. Imposition covers common layouts (booklet, n-up, repeat), not every
   option of a commercial print shop.
 - Collaboration and cloud sync are not included; files are saved where you choose.
 
@@ -124,6 +131,7 @@ npm ci                 # install dependencies
 npm start              # build (with source maps) and run the desktop app
 npm run watch          # rebuild the bundle on change (reload the window with Ctrl/Cmd+R in development)
 npm test               # unit tests (node --test)
+npm run dicts          # download the 85-language spelling dictionaries into app/dict (npm run build does this once)
 npm run serve          # build and serve the web app at http://localhost:8765
 ```
 

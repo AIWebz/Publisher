@@ -54,10 +54,13 @@ export function fetchDictionaryLoader(base = 'dict/') {
 /**
  * A loaded spell checker.
  */
-class SpellChecker {
+export class SpellChecker {
   constructor(engine, opts) {
     this.engine = engine;
     this.options = { skipAllCaps: opts.skipAllCaps !== false, skipWordsWithNumbers: opts.skipWordsWithNumbers !== false };
+    this.lang = opts.lang || 'en-US';
+    // scripts written without spaces (Thai, Lao, Tibetan) are split into words with Intl.Segmenter
+    this.segmenter = opts.segment && typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter(opts.segment, { granularity: 'word' }) : null;
     this.onPersonalChange = typeof opts.onPersonalChange === 'function' ? opts.onPersonalChange : null;
     this.personal = new Set();
     this.ignored = new Set();
@@ -187,6 +190,12 @@ class SpellChecker {
         for (const p of tok.parts) if (!p.skip && !this.correct(p.word)) out.push({ word: p.word, start: p.start, end: p.end });
         continue;
       }
+      if (this.segmenter && !this.correct(tok.word)) {
+        for (const sg of this.segmenter.segment(tok.word)) {
+          if (sg.isWordLike && !this.correct(sg.segment)) out.push({ word: sg.segment, start: tok.start + sg.index, end: tok.start + sg.index + sg.segment.length });
+        }
+        continue;
+      }
       if (!this.correct(tok.word)) out.push({ word: tok.word, start: tok.start, end: tok.end });
     }
     return out;
@@ -272,16 +281,19 @@ function spellcheckPlain(plain, checker, opts = {}) {
 /**
  * Spelling issues across the whole document (stories and table cells in reading order).
  * @param {object} doc
- * @param {SpellChecker} checker
+ * @param {SpellChecker|((target: object) => SpellChecker|null)} checker one checker, or one per target (null = skip)
  * @param {{ suggestions?: boolean, includeMasters?: boolean }} [opts]
  * @returns {Array<{ target: object, start: number, end: number, word: string, suggestions: string[] }>}
  */
 export function spellcheckDocument(doc, checker, opts = {}) {
   const out = [];
+  const pick = typeof checker === 'function' ? checker : () => checker;
   for (const target of collectTextTargets(doc, opts)) {
+    const c = pick(target);
+    if (!c) continue;
     const html = getTargetHtml(doc, target);
     if (!html) continue;
-    for (const issue of spellcheckHtml(html, checker, opts)) out.push({ target, ...issue });
+    for (const issue of spellcheckHtml(html, c, opts)) out.push({ target, ...issue });
   }
   return out;
 }

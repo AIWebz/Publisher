@@ -14,5 +14,6 @@ import './templates/gallery.js';
 import './output/output.js';
 import './tables/tables.js';
 import './mailings/mailings.js';
+import './review/language.js';
 import './review/review.js';
 import './graphics/graphics.js';

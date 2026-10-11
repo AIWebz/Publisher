@@ -5,7 +5,8 @@ import { registry } from '../../core/registry.js';
 import { allElements, walkElements } from '../../core/model.js';
 import { h } from '../../core/ui/dom.js';
 import { runPreflight } from '../../core/preflight.js';
-import { getSpellChecker, fetchDictionaryLoader, spellcheckDocument, applyCorrection, changeAll } from '../../engines/spell/spell.js';
+import { spellcheckDocument, applyCorrection, changeAll } from '../../engines/spell/spell.js';
+import { langOfTarget, getChecker, langLabel } from './language.js';
 import { findAll, replaceMatch, replaceAll } from '../../engines/spell/find.js';
 import { getTargetHtml, collectTextTargets } from '../../engines/spell/targets.js';
 import { getPlainText } from '../../engines/spell/html-text.js';
@@ -24,22 +25,25 @@ function goToTarget(t) {
 const plainOf = (t) => { const p = getPlainText(getTargetHtml(app.doc, t) || ''); return typeof p === 'string' ? p : p.text; };
 
 // ---------------------------------------------------------------- spelling
-async function personalWords() { try { return (await app.platform.store.get('spell:personal')) || []; } catch { return []; } }
-async function addPersonal(word) { const list = await personalWords(); if (!list.includes(word)) { list.push(word); await app.platform.store.set('spell:personal', list); } }
 
 registry.command({
   id: 'review.spelling', label: 'Spelling', icon: 'spell', shortcut: 'F7', enabled: hasDoc,
   run: async () => {
     app.flush();
-    let checker;
+    const langs = new Set(collectTextTargets(app.doc).map((tg) => langOfTarget(app.doc, tg)));
+    langs.delete('none');
+    const checkers = new Map();
+    const slow = setTimeout(() => app.ui.toast('Loading spelling dictionaries…'), 400);
     try {
-      checker = await getSpellChecker({ loadDictionary: fetchDictionaryLoader('dict/'), personal: await personalWords() });
-    } catch (err) { app.ui.toast(`The dictionary could not be loaded: ${err.message || err}`); return; }
+      for (const id of langs) checkers.set(id, await getChecker(id));
+    } catch (err) { clearTimeout(slow); app.ui.toast(`The dictionary could not be loaded: ${err.message || err}`); return; }
+    clearTimeout(slow);
+    const pick = (tg) => checkers.get(langOfTarget(app.doc, tg)) || null;
     const ignored = new Set();
     let issues = [];
     let i = 0;
     const body = h('div', { class: 'sp-body' });
-    const refresh = () => { issues = spellcheckDocument(app.doc, checker).filter((x) => !ignored.has(x.word.toLowerCase())); };
+    const refresh = () => { issues = spellcheckDocument(app.doc, pick).filter((x) => !ignored.has(x.word.toLowerCase())); };
     const draw = () => {
       if (i >= issues.length) {
         body.replaceChildren(h('div', { class: 'sp-done' }, h('strong', { text: 'Spelling check complete.' }), h('p', { text: issues.length ? '' : 'No spelling errors were found.' })));
@@ -55,12 +59,12 @@ registry.command({
       const change = h('input', { class: 'field', value: it.suggestions[0] || it.word });
       sugg.onchange = () => { if (sugg.value) change.value = sugg.value; };
       const b1 = (label, fn, primary) => h('button', { type: 'button', class: `btn sm${primary ? ' btn-primary' : ''}`, text: label, onclick: fn });
-      body.replaceChildren(h('div', { class: 'sp-head', text: `Not in dictionary (${i + 1} of ${issues.length})` }), ctx,
+      body.replaceChildren(h('div', { class: 'sp-head', text: `Not in dictionary (${i + 1} of ${issues.length}) · ${langLabel(langOfTarget(app.doc, it.target))}` }), ctx,
         h('div', { class: 'sp-grid' }, h('div', {}, h('label', { class: 'dlg-label', text: 'Change to' }), change, h('label', { class: 'dlg-label', text: 'Suggestions' }), sugg),
           h('div', { class: 'sp-btns' },
             b1('Ignore', () => { i++; draw(); }),
             b1('Ignore All', () => { ignored.add(it.word.toLowerCase()); refresh(); draw(); }),
-            b1('Add to Dictionary', async () => { checker.addWord(it.word); await addPersonal(it.word); refresh(); draw(); }),
+            b1('Add to Dictionary', () => { const c = pick(it.target); if (c) c.addWord(it.word); refresh(); draw(); }),
             b1('Change', () => { const w = change.value; app.transact('Spelling', (doc) => applyCorrection(doc, it, w)); refresh(); draw(); }, true),
             b1('Change All', () => { const w = change.value; app.transact('Spelling', (doc) => changeAll(doc, it.word, w)); refresh(); draw(); }))));
     };
