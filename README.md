@@ -53,15 +53,67 @@ copies are kept in the browser's storage.
 
 ## Features
 
-<!-- FEATURES -->
+- **Ribbon and workspace** — File, Home, Insert, Page Design, Mailings, Review and View tabs, plus contextual
+  *Text Box Format*, *Picture Format*, *Shape Format*, *Table Design* and *Table Layout* tabs; document tabs for
+  several open publications; page thumbnails; a properties panel and a Layers (selection) pane; rulers, margin,
+  column and ruler guides, gridlines, zoom (fit page / fit width / 10–800 %) and panning (Space-drag).
+- **Templates** — 41 fully editable templates in 15 categories (flyers, posters, brochures, newsletters, business
+  cards, greeting cards, invitations, postcards, labels, envelopes, calendars, certificates, menus, catalogs, price
+  lists) plus blank sizes; colour and font scheme choice when creating; *Save as Template* for your own.
+- **Objects** — text boxes, pictures, picture placeholders, 24 shapes, lines and arrows, tables and groups, with
+  move/resize/rotate handles, smart snapping and alignment guides, multi-selection and marquee, group/ungroup,
+  layer order, align and distribute, lock, hide, flip, keyboard nudging and exact position/size fields.
+- **Text** — rich text in place (fonts, sizes, bold/italic/underline/strike, super/subscript, colour, highlight,
+  character spacing, case), paragraph alignment, line and paragraph spacing, bullets and numbering, indents,
+  styles, hyperlinks, symbols, page-number/page-count/date fields, text box margins, columns, vertical alignment,
+  shrink/grow to fit, overflow marker, and **linked text frames** that reflow a story across boxes and pages.
+- **Pictures and shapes** — non-destructive crop (pan, zoom, aspect ratios), fill/fit/stretch, recolour and
+  brightness/contrast/saturation, borders, solid and gradient fills, outlines with dashes and arrowheads,
+  shadows, transparency, quick styles, a building-blocks library and your own saved blocks.
+- **Pages** — add, duplicate, delete, reorder, go to; custom and standard sizes, orientation, margins, columns,
+  measurement units, facing pages (two-page spreads), bleed, page backgrounds and **master pages**.
+- **Mail merge** — import recipients from CSV/TSV, Excel (.xlsx) or OpenDocument (.ods) files, or type a list; edit,
+  sort, filter and include/exclude records; insert merge fields, address blocks and greeting lines; preview each
+  recipient; merge to a new publication, fill label/card sheets, or export one PDF (or one PDF per recipient).
+- **Review** — spelling with an English dictionary (Ignore, Add to Dictionary, Change All), Find & Replace that
+  keeps formatting, a Design Checker (overflow, off-page objects, low-resolution pictures, missing data) and
+  publication statistics.
+- **Output** — PDF export at exact page size with embedded fonts and vector text, PNG/JPEG export at 72–600 dpi,
+  page ranges, crop marks, bleed, booklet imposition, multiple copies or pages per sheet, and Print with a live
+  preview, copies, duplex and printer choice (desktop).
+- **Files and safety** — the native `.folio` format keeps every object and setting; Save, Save As, Open, Recent;
+  autosave with crash recovery; command-based undo/redo (one step per drag or edit).
 
 ## Keyboard shortcuts
 
-<!-- SHORTCUTS -->
+| Action | Windows | macOS |
+| --- | --- | --- |
+| New / Open / Save / Save As | Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S | ⌘N / ⌘O / ⌘S / ⇧⌘S |
+| Print / Export | Ctrl+P / Ctrl+Shift+E | ⌘P / ⇧⌘E |
+| Undo / Redo | Ctrl+Z / Ctrl+Y | ⌘Z / ⇧⌘Z |
+| Cut / Copy / Paste / Duplicate | Ctrl+X / C / V / D | ⌘X / C / V / D |
+| Group / Ungroup | Ctrl+G / Ctrl+Shift+G | ⌘G / ⇧⌘G |
+| Bring forward / Send backward | Ctrl+] / Ctrl+[ | ⌘] / ⌘[ |
+| Bold / Italic / Underline | Ctrl+B / I / U | ⌘B / I / U |
+| Align left / centre / right / justify | Ctrl+L / E / R / J | ⌘L / E / R / J |
+| Bigger / smaller text | Ctrl+Shift+. / , | ⇧⌘. / , |
+| Hyperlink | Ctrl+K | ⌘K |
+| Find / Replace / Spelling | Ctrl+F / Ctrl+H / F7 | ⌘F / ⌘H / F7 |
+| Zoom in / out / whole page / 100 % | Ctrl+= / Ctrl+- / Ctrl+0 / Ctrl+1 | ⌘= / ⌘- / ⌘0 / ⌘1 |
+| Next / previous page | Page Down / Page Up | Page Down / Page Up |
+| Nudge object | Arrow keys (Shift ×10, Alt fine) | Arrow keys |
+| Edit selected text box | Enter or double-click | Return or double-click |
 
 ## What Folio does not do
 
-<!-- LIMITS -->
+- It does not open or save Microsoft Publisher `.pub` files. Publications use Folio's own `.folio` format; share
+  finished work as PDF or images.
+- Spelling uses an English dictionary only.
+- The installers are not code-signed (see the install notes above).
+- Text inside a text box wraps and flows between linked boxes, but it does not yet flow around other objects on
+  the page (no "wrap text around picture"). Imposition covers common layouts (booklet, n-up, repeat), not every
+  option of a commercial print shop.
+- Collaboration and cloud sync are not included; files are saved where you choose.
 
 ## Develop
 

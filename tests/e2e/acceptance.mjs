@@ -32,9 +32,7 @@ const pdfPath = path.join(OUT, 'Acceptance.pdf');
 const pngOut = path.join(OUT, 'page.png');
 
 const app = await _electron.launch({ executablePath: require(path.join(ROOT, 'node_modules/electron')), args: [ROOT, '--no-sandbox', `--user-data-dir=${UD}`], env: { ...process.env, FOLIO_USER_DATA: UD } });
-console.log('launched');
 const w = await app.firstWindow();
-console.log('window');
 const errors = [];
 w.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
 w.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });

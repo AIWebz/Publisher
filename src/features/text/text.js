@@ -152,12 +152,6 @@ registry.command({
     if (r && r.button === 'ok') onFrames('Columns', (el) => { el.columns = Math.max(1, Math.min(8, Math.round(+r.values.n || 1))); el.colGap = r.values.gap; });
   }
 });
-registry.command({
-  id: 'text.wrap', label: 'Wrap Text', icon: 'wrap', enabled: (ctx) => (ctx.selection || []).length > 0,
-  checked: (ctx, v) => (ctx.selection || []).length > 0 && ctx.selection.every((e) => (e.wrap || 'none') === v),
-  run: (ctx, v) => applyToSelection('Wrap Text', (el) => { el.wrap = v; }, { deep: false })
-});
-
 // ---------------------------------------------------------------- linked frames
 registry.command({
   id: 'text.createLink', label: 'Create Link', icon: 'link-frames', title: 'Continue this story in another text box. Select the overflowing text box and an empty one, or just the first to add a new box on the next page.',
@@ -404,11 +398,6 @@ registry.group({ tab: 'textFormat', id: 'linking', label: 'Linking', order: 30, 
   { command: 'text.createLink', size: 'large' }, { command: 'text.breakLink', size: 'small' },
   { command: 'text.prevFrame', size: 'small' }, { command: 'text.nextFrame', size: 'small' }
 ] });
-const wrapMenu = { type: 'menu', label: 'Wrap Text', icon: 'wrap', size: 'large', items: () => [
-  { label: 'Square (text flows around)', command: 'text.wrap', arg: 'square' }, { label: 'None (in front of text)', command: 'text.wrap', arg: 'none' }] };
-registry.group({ tab: 'textFormat', id: 'wrap', label: 'Arrange Text', order: 40, items: [wrapMenu] });
-registry.group({ tab: 'pictureFormat', id: 'wrap', label: 'Wrap', order: 70, items: [wrapMenu] });
-registry.group({ tab: 'shapeFormat', id: 'wrap', label: 'Wrap', order: 70, items: [wrapMenu] });
 registry.group({ tab: 'insert', id: 'links', label: 'Links', order: 40, items: [{ command: 'text.link', size: 'large', label: 'Link' }] });
 registry.group({ tab: 'insert', id: 'headerFooter', label: 'Header & Footer', order: 50, items: [
   { command: 'text.field-page', size: 'small' }, { command: 'text.field-pages', size: 'small' }, { command: 'text.field-date', size: 'small' }
