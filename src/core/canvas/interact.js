@@ -163,7 +163,9 @@ function pressElement(cv, e, hit) {
     up: (ev) => {
       if (moving) { moving.end(true); return; }
       if (!toggle && wasSelected && app.selectionIds.length > 1) app.select([id]);
-      void ev;
+      // like Publisher, a click on a text box puts the cursor in its text (drag still moves the box)
+      const hitEl = !toggle && app.selectionIds.length === 1 ? findElement(app.doc, id) : null;
+      if (hitEl && hitEl.el.type === 'text' && !hitEl.el.locked) app.textEdit.start(id, { caret: { x: ev.clientX, y: ev.clientY } });
     },
     cancel: () => { if (moving) moving.end(false); }
   });
@@ -528,7 +530,9 @@ function onWheel(cv, e) {
 function onDoubleClick(cv, e) {
   if (!app.session || cv.tool !== 'select') return;
   if (app.editing && app.editing.root && app.editing.root.contains(e.target)) return;
-  const hit = hitElement(cv, e.target);
+  // pointer capture (see track()) retargets click/dblclick to the viewport: hit-test the point instead
+  const target = e.target.closest && e.target.closest('.el[data-id]') ? e.target : document.elementFromPoint(e.clientX, e.clientY) || e.target;
+  const hit = hitElement(cv, target);
   if (!hit) return;
   const doc = app.doc;
   const selected = app.selectionIds;
