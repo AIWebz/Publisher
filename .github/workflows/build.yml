@@ -115,6 +115,7 @@ jobs:
       - name: Assemble the site
         run: |
           cp -r site/. _site/
+          mkdir -p _site/site && printf '<!doctype html><meta http-equiv="refresh" content="0; url=../"><a href="../">Folio</a>\n' > _site/site/index.html
           node scripts/site-manifest.mjs _site/downloads "$(node -p "require('./package.json').version")"
           ls -la _site _site/downloads
           du -sh _site
