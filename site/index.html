@@ -9,14 +9,17 @@
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preload" href="assets/fonts/Archivo-wdth-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <a class="skip" href="#top">Skip to content</a>
   <div class="progress" aria-hidden="true"></div>
 
   <header class="nav">
-    <a class="brand" href="#top"><img src="assets/logo-white.png" alt="" width="22" height="25"><span>FOLIO</span></a>
-    <nav>
+    <a class="brand" href="#top" aria-label="Folio — back to top"><img src="assets/logo-white.png" alt="" width="22" height="25"><span>FOLIO</span></a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span></span><span></span></button>
+    <nav id="site-nav" aria-label="Sections">
       <a href="#install">Install</a>
       <a href="#presentation">Presentation</a>
       <a href="#principles">Principles</a>
@@ -24,9 +27,9 @@
     </nav>
   </header>
 
-  <main id="top">
+  <main id="top" tabindex="-1">
     <!-- 1 · Landing -->
-    <section class="hero">
+    <section class="hero" id="landing">
       <div class="hero-copy">
         <p class="eyebrow up" style="--d:0">Folio · desktop publishing</p>
         <h1 class="display">
@@ -44,7 +47,7 @@
       <div class="book-stage up" style="--d:3" aria-hidden="true">
         <div class="book">
           <div class="face front">
-            <img src="assets/logo-white.png" alt="">
+            <img src="assets/logo-white.png" alt="" width="411" height="474">
             <b>FOLIO</b>
             <i>The New Era Of Design</i>
           </div>
@@ -59,39 +62,46 @@
     </section>
 
     <!-- 2 · Installation -->
-    <section class="page install" id="install">
+    <section class="page install" id="install" aria-labelledby="install-h">
       <p class="kicker reveal">01 — Installation</p>
-      <h2 class="display-sm reveal">Install Folio</h2>
-      <p class="sub reveal" id="downloads-note">Free. Pick your computer.</p>
+      <h2 class="display-sm reveal" id="install-h">Install Folio</h2>
+      <p class="sub reveal" id="downloads-note" aria-live="polite">Free. Pick your computer.</p>
       <div class="dl-row">
         <a class="dl reveal" style="--d:0" data-file="win" href="#install">
           <span class="dl-os">Windows 11</span>
           <span class="dl-info">64-bit installer · also Windows 10</span>
           <em class="size"></em>
-          <span class="dl-arrow" aria-hidden="true">↓</span>
+          <svg class="dl-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>
         </a>
         <a class="dl reveal" style="--d:1" data-file="macArm" href="#install">
           <span class="dl-os">macOS · Apple silicon</span>
           <span class="dl-info">M1 or later · macOS 13+</span>
           <em class="size"></em>
-          <span class="dl-arrow" aria-hidden="true">↓</span>
+          <svg class="dl-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>
         </a>
         <a class="dl reveal" style="--d:2" data-file="macIntel" href="#install">
           <span class="dl-os">macOS · Intel</span>
           <span class="dl-info">Intel processor · macOS 13+</span>
           <em class="size"></em>
-          <span class="dl-arrow" aria-hidden="true">↓</span>
+          <svg class="dl-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>
         </a>
       </div>
-      <p class="fine reveal" id="version-line">The installers are not code-signed yet: on Windows choose <b>More info → Run anyway</b>; on a Mac open <b>System Settings → Privacy &amp; Security → Open Anyway</b> the first time. <a href="downloads/SHA256SUMS.txt">Checksums</a></p>
+      <p class="fine reveal" id="version-line" aria-live="polite">The installers are not code-signed yet: on Windows choose <b>More info → Run anyway</b>; on a Mac open <b>System Settings → Privacy &amp; Security → Open Anyway</b> the first time. <a href="downloads/SHA256SUMS.txt">Checksums</a></p>
     </section>
 
     <!-- 3 · Presentation -->
     <section class="page presentation" id="presentation">
       <p class="kicker reveal">02 — Presentation</p>
-      <h2 class="display-sm reveal">This is Folio</h2>
+      <div class="pres-head">
+        <h2 class="display-sm reveal">This is Folio</h2>
+        <div class="seg reveal" role="group" aria-label="Editor theme">
+          <button type="button" aria-pressed="true" data-theme="dark">Dark</button>
+          <button type="button" aria-pressed="false" data-theme="light">Light</button>
+        </div>
+      </div>
       <figure class="shot reveal-zoom">
         <img src="assets/editor-dark.webp" alt="The Folio editor with a four-page newsletter open: ribbon, page thumbnails, the page and the format panel" width="1440" height="900" loading="lazy">
+        <img class="shot-light" src="assets/editor.webp" alt="" width="1440" height="900" loading="lazy" aria-hidden="true">
       </figure>
       <p class="caption reveal">A four-page newsletter in the Folio editor — ribbon, page navigation, rulers and the format panel.</p>
     </section>
@@ -114,18 +124,24 @@
     <section class="page faq" id="faq">
       <p class="kicker reveal">04 — Questions &amp; answers</p>
       <h2 class="display-sm reveal">Q&amp;A</h2>
-      <details class="reveal"><summary>Is Folio free?</summary><p>Yes. Download it and use it for personal and business work.</p></details>
-      <details class="reveal"><summary>Which computers does it run on?</summary><p>Windows 11 and 10 (64-bit), and macOS 13 or later on both Apple silicon and Intel Macs.</p></details>
-      <details class="reveal"><summary>Does it work offline?</summary><p>Completely. Templates, fonts and all 85 spelling dictionaries are installed with the app.</p></details>
-      <details class="reveal"><summary>Why does my computer warn me when I install it?</summary><p>The installers aren’t code-signed yet. Follow the note under the install buttons — you only need to allow it once.</p></details>
-      <details class="reveal"><summary>How do I share my work?</summary><p>Export a print-ready PDF or PNG/JPEG images, or print directly. Publications are saved as <code>.folio</code> files.</p></details>
-      <details class="reveal"><summary>How do I update?</summary><p>Download the latest installer from this page and run it — your publications and settings are kept.</p></details>
+      <details class="reveal" name="faq"><summary>Is Folio free?</summary><p>Yes. Download it and use it for personal and business work.</p></details>
+      <details class="reveal" name="faq"><summary>Which computers does it run on?</summary><p>Windows 11 and 10 (64-bit), and macOS 13 or later on both Apple silicon and Intel Macs.</p></details>
+      <details class="reveal" name="faq"><summary>Does it work offline?</summary><p>Completely. Templates, fonts and all 85 spelling dictionaries are installed with the app.</p></details>
+      <details class="reveal" name="faq"><summary>Why does my computer warn me when I install it?</summary><p>The installers aren’t code-signed yet. Follow the note under the install buttons — you only need to allow it once.</p></details>
+      <details class="reveal" name="faq"><summary>How do I share my work?</summary><p>Export a print-ready PDF or PNG/JPEG images, or print directly. Publications are saved as <code>.folio</code> files.</p></details>
+      <details class="reveal" name="faq"><summary>How do I update?</summary><p>Download the latest installer from this page and run it — your publications and settings are kept.</p></details>
     </section>
   </main>
 
   <footer>
-    <span class="brand"><img src="assets/logo-white.png" alt="" width="16" height="18"><span>FOLIO</span></span>
-    <span>The New Era Of Design · fonts under the SIL Open Font License</span>
+    <div class="foot-cta">
+      <p class="display-sm">Start <span class="green">designing.</span></p>
+      <a class="btn btn-primary" href="#install">Install Folio</a>
+    </div>
+    <div class="foot-row">
+      <span class="brand"><img src="assets/logo-white.png" alt="" width="16" height="18"><span>FOLIO</span></span>
+      <span>The New Era Of Design · fonts under the SIL Open Font License</span>
+    </div>
   </footer>
   <script src="main.js"></script>
 </body>
