@@ -8,8 +8,7 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="preload" href="assets/fonts/Archivo-wdth-wght.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <script>try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches && (!localStorage.getItem('folio-intro') || /[?&]intro\b/.test(location.search))) document.documentElement.classList.add('intro-on'); } catch (e) {}</script>
@@ -102,6 +101,7 @@
           <span class="dl-os">Windows 11</span>
           <span class="dl-info">64-bit installer · also Windows 10</span>
           <em class="size"></em>
+          <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
           <svg class="dl-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>
         </a>
         <a class="dl reveal" style="--d:1" data-file="macArm" href="#install">
@@ -109,6 +109,7 @@
           <span class="dl-os">macOS · Apple silicon</span>
           <span class="dl-info">M1 or later · macOS 13+</span>
           <em class="size"></em>
+          <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
           <svg class="dl-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>
         </a>
         <a class="dl reveal" style="--d:2" data-file="macIntel" href="#install">
@@ -116,6 +117,7 @@
           <span class="dl-os">macOS · Intel</span>
           <span class="dl-info">Intel processor · macOS 13+</span>
           <em class="size"></em>
+          <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
           <svg class="dl-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 12l7 7 7-7"/></svg>
         </a>
       </div>
@@ -151,6 +153,7 @@
       <header class="head">
         <p class="kicker reveal"><span>03</span> Principles</p>
         <h2 class="h2 reveal" id="principles-h">What Folio stands for</h2>
+        <p class="sub reveal">Six ideas behind every tool in the app.</p>
       </header>
       <div class="grid">
         <article class="reveal" style="--d:0"><div class="p-model" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div><span>01</span><h3>Clarity</h3><p>A calm workspace. Tools appear when you need them and stay out of the way when you don’t.</p></article>
@@ -167,6 +170,7 @@
       <header class="head">
         <p class="kicker reveal"><span>04</span> Questions &amp; answers</p>
         <h2 class="h2 reveal" id="faq-h">Q&amp;A</h2>
+        <p class="sub reveal">Quick answers before you install.</p>
       </header>
       <div class="faq-list">
         <details class="reveal" name="faq"><summary>Is Folio free?</summary><p>Yes. Download it and use it for personal and business work.</p></details>
@@ -187,7 +191,8 @@
     </div>
     <div class="foot-row frame">
       <span class="brand"><img src="assets/logo-white.png" alt="" width="16" height="18"><span>Folio</span></span>
-      <span class="mono">The New Era Of Design · Inter and Geist Mono under the SIL Open Font License · 3D by three.js (MIT)</span>
+      <nav class="foot-links" aria-label="Footer"><a href="#install">Install</a><a href="#presentation">Presentation</a><a href="#principles">Principles</a><a href="#faq">Q&amp;A</a><a href="downloads/SHA256SUMS.txt">Checksums</a></nav>
+      <span class="mono">The New Era Of Design · Space Grotesk and Geist Mono (SIL OFL) · 3D by three.js (MIT)</span>
     </div>
   </footer>
 </body>

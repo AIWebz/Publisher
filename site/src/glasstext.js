@@ -1,9 +1,10 @@
-// The hero headline as real 3D glass. Every letter is an extruded, bevelled glyph of the wide face
-// (outlines from models/glyphs.js) in a physically based glass material (transmission, IOR,
+// Headings as real 3D glass. Every letter is an extruded, round-bevelled glyph of Space Grotesk
+// (outlines in models/glyphs.js) in a physically based glass material (transmission, IOR,
 // thickness, dispersion, clear coat), so the light through it genuinely refracts. Behind the letters
-// sits a backdrop that only the refraction pass sees: it redraws the hero's grid lines and drifting
-// light, so the glass bends the background the page really shows. The HTML headline stays in place
-// (transparent) for layout, selection and screen readers; the 3D letters follow its word boxes.
+// sits a backdrop that only the refraction pass sees: it redraws what the page shows there (the
+// hero's grid and drifting light, or a section's soft light), so the glass bends the real background.
+// The HTML heading stays in place (transparent) for layout, selection and screen readers; the 3D
+// letters follow its word boxes (.w / .gw spans), so wrapping and resizing just work.
 import {
   Group, Mesh, ShapePath, Shape, Path, ExtrudeGeometry, MeshPhysicalMaterial, PlaneGeometry, ShaderMaterial,
   Vector2, PointLight, ShapeUtils, MathUtils
@@ -62,10 +63,10 @@ function glyphShapes(d, segments) {
 
 // --- the backdrop the glass refracts: black, the hero grid (60 px, radial mask) and soft light ---
 const backdropShader = {
-  uniforms: { uTime: { value: 0 }, uSize: { value: new Vector2(1, 1) }, uOrigin: { value: new Vector2() }, uHero: { value: new Vector2(1, 1) } },
+  uniforms: { uTime: { value: 0 }, uSize: { value: new Vector2(1, 1) }, uOrigin: { value: new Vector2() }, uHero: { value: new Vector2(1, 1) }, uGrid: { value: 1 } },
   vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: `
-    uniform float uTime; uniform vec2 uSize, uOrigin, uHero; varying vec2 vUv;
+    uniform float uTime, uGrid; uniform vec2 uSize, uOrigin, uHero; varying vec2 vUv;
     float blob(vec2 p, vec2 c, float r) { return exp(-dot(p - c, p - c) / (r * r)); }
     void main() {
       vec2 px = uOrigin + vec2(vUv.x, 1.0 - vUv.y) * uSize;          // CSS px inside the hero
@@ -80,13 +81,30 @@ const backdropShader = {
                   + blob(q, vec2(0.45 + 0.25 * sin(t * 1.7), 0.85), 0.38) * 0.4;
       // a fine diagonal sheen gives the glass something crisp to bend, like light on a wall behind it
       float sheen = smoothstep(0.92, 1.0, sin((px.x + px.y) * 0.035 + uTime * 0.25)) * 0.05;
-      vec3 col = light * vec3(0.34, 0.345, 0.36) + line * max(mask, 0.35) * 0.22 + sheen;
+      vec3 col = light * vec3(0.34, 0.345, 0.36) + uGrid * line * max(mask, 0.35) * 0.22 + sheen;
       gl_FragColor = vec4(col, 1.0);
     }`
 };
 
-export function buildGlassHeadline(scene, camera, h1, { mobile = false } = {}) {
-  const words = [...h1.querySelectorAll('.w')];
+/** Wrap each word of a heading in an inline-block span the 3D letters can follow (h1 already has .w). */
+export function wrapWords(el) {
+  if (el.querySelector('.w, .gw')) return;
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) nodes.push(n);
+  for (const n of nodes) {
+    const frag = document.createDocumentFragment();
+    for (const part of n.data.split(/(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) frag.append(part);
+      else { const w = document.createElement('span'); w.className = 'gw'; w.textContent = part; frag.append(w); }
+    }
+    n.replaceWith(frag);
+  }
+}
+
+export function buildGlassText(scene, camera, h1, { mobile = false, area = h1.parentElement, grid = false } = {}) {
+  const words = [...h1.querySelectorAll('.w, .gw')];
   const segs = mobile ? 5 : 8;
   const cache = new Map();
   const geometryFor = (ch, size) => {
@@ -116,6 +134,7 @@ export function buildGlassHeadline(scene, camera, h1, { mobile = false } = {}) {
   scene.add(root);
   // backdrop: drawn only into the refraction (transmission) pass, never onto the screen
   const backMat = new ShaderMaterial(backdropShader);
+  backMat.uniforms.uGrid.value = grid ? 1 : 0;
   const back = new Mesh(new PlaneGeometry(1, 1), backMat);
   back.onBeforeRender = (renderer) => {
     const toScreen = renderer.getRenderTarget() === null;
@@ -136,7 +155,9 @@ export function buildGlassHeadline(scene, camera, h1, { mobile = false } = {}) {
       const g = new Group();
       root.add(g);
       let x = 0;
-      const letters = [...w.textContent.trim().toUpperCase()].map((ch, li) => {
+      const upper = getComputedStyle(h1).textTransform === 'uppercase';
+      const text = w.textContent.trim();
+      const letters = [...(upper ? text.toUpperCase() : text)].map((ch, li) => {
         const { geo, adv } = geometryFor(ch, fontSize);
         const holder = new Group();
         holder.position.x = x + adv / 2;
@@ -164,12 +185,12 @@ export function buildGlassHeadline(scene, camera, h1, { mobile = false } = {}) {
       }
       // camera: perspective whose z = 0 plane maps 1 world unit to 1 CSS px over the stage
       const W = rect.width, H = rect.height;
-      camera.fov = 22;
+      camera.fov = 14;
       camera.position.set(0, 0, H / 2 / Math.tan(MathUtils.degToRad(camera.fov / 2)));
       camera.near = 1; camera.far = camera.position.z * 3;
       camera.lookAt(0, 0, 0);
       // backdrop fills the view well behind the letters, mapped to the hero's CSS pixels
-      const hero = h1.closest('.hero').getBoundingClientRect();
+      const hero = area.getBoundingClientRect();
       const bz = -260, k = (camera.position.z - bz) / camera.position.z;
       back.position.set(0, 0, bz);
       back.scale.set(W * k, H * k, 1);

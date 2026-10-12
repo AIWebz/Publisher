@@ -1,8 +1,8 @@
 // First-visit cutscene (about 5 s, skippable): a vortex of printed pages bursts out, spirals back
 // into a stack that becomes the Folio book, the cover slams shut, the layered "F" flies in front
 // and the camera rushes into it as the page fades in. Runs in the shared canvas as the intro view.
-import { Group, InstancedMesh, BoxGeometry, MeshStandardMaterial, Object3D, Color, PointLight, MathUtils } from 'three';
-import { PAPER, canvasTexture, blend, lines, clamp01, easeOut, easeInOut } from './models/kit.js';
+import { Group, InstancedMesh, BoxGeometry, MeshStandardMaterial, Object3D, Color, PointLight, MathUtils, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, AdditiveBlending } from 'three';
+import { PAPER, SANS, MONO, canvasTexture, lines, clamp01, easeOut, easeInOut, grain, bend } from './models/kit.js';
 import { createBook, createLogo3D } from './models/objects.js';
 
 export const INTRO_END = 4.9; // seconds until the hand-off to the page starts
@@ -14,23 +14,34 @@ export async function buildIntro(scene, camera, signal) {
   const right = new PointLight('#d4d4d8', 34, 30, 1.5); right.position.set(5, -1, 4);
   scene.add(left, right);
 
-  // the pages: one instanced box, a printed face, a few copies in silver greys
-  const face = new MeshStandardMaterial({ roughness: 0.7, map: canvasTexture(256, 346, (c, w, h) => {
-    c.fillStyle = PAPER; c.fillRect(0, 0, w, h);
-    c.fillStyle = blend(c, 20, 20, w - 20, 120); c.fillRect(20, 20, w - 40, 100);
-    c.fillStyle = '#111'; c.fillRect(20, 140, 150, 16);
-    lines(c, 20, 172, w - 40, 7, 20, 'rgba(0,0,0,.28)');
-  }) });
-  const plain = new MeshStandardMaterial({ color: '#f1f1f1', roughness: 0.8 });
-  const pages = new InstancedMesh(new BoxGeometry(1, 1.35, 0.006), [plain, plain, plain, plain, face, plain], N);
-  const tints = [new Color('#d4d4d8'), new Color('#a1a1aa'), new Color('#71717a')], white = new Color('#ffffff');
-  for (let i = 0; i < N; i++) pages.setColorAt(i, i % 7 === 3 ? tints[i % 3].clone().lerp(white, 0.35) : white);
+  // the pages: four printed designs (magazine cover, poster, newsletter, photo spread) on curled,
+  // grained paper; each design is one instanced mesh and every page keeps its own place in the swirl
+  const photo = (c, x, y, w, h) => { const g = c.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, '#1a1a1f'); g.addColorStop(1, '#8a8a94'); c.fillStyle = g; c.fillRect(x, y, w, h); };
+  const designs = [
+    (c, w, h) => { photo(c, 0, 0, w, h); c.fillStyle = '#fff'; c.font = `700 54px ${SANS}`; c.fillText('Folio', 22, 70); c.font = `500 14px ${MONO}`; c.fillText('ISSUE 01 · AUTUMN', 24, 96); c.font = `700 30px ${SANS}`; c.fillText('The New', 22, h - 70); c.fillText('Era Of Design', 22, h - 34); },
+    (c, w, h) => { c.fillStyle = PAPER; c.fillRect(0, 0, w, h); c.fillStyle = '#111'; c.beginPath(); c.arc(w / 2, 130, 90, 0, Math.PI * 2); c.fill(); c.fillStyle = PAPER; c.beginPath(); c.arc(w / 2 + 30, 110, 40, 0, Math.PI * 2); c.fill(); c.fillStyle = '#111'; c.font = `700 40px ${SANS}`; c.fillText('Summer', 22, 280); c.fillText('Fair', 22, 318); lines(c, 22, 336, w - 44, 2, 16, 'rgba(0,0,0,.35)'); },
+    (c, w, h) => { c.fillStyle = PAPER; c.fillRect(0, 0, w, h); c.fillStyle = '#111'; c.font = `700 26px ${SANS}`; c.fillText('The Ledger', 20, 38); c.fillRect(20, 48, w - 40, 2); photo(c, 20, 60, w - 40, 96); lines(c, 20, 172, (w - 50) / 2, 8, 18, 'rgba(0,0,0,.3)'); lines(c, 30 + (w - 50) / 2, 172, (w - 50) / 2, 8, 18, 'rgba(0,0,0,.3)', 0.4); },
+    (c, w, h) => { c.fillStyle = PAPER; c.fillRect(0, 0, w, h); photo(c, 0, 0, w, 200); c.fillStyle = '#111'; c.font = `700 24px ${SANS}`; c.fillText('Studio Guide', 20, 236); lines(c, 20, 256, w - 40, 5, 18, 'rgba(0,0,0,.3)'); }
+  ];
+  const back = new MeshStandardMaterial({ color: '#efefec', roughness: 0.85, bumpMap: grain(), bumpScale: 0.4 });
+  const pageGeo = bend(new BoxGeometry(1, 1.35, 0.006, 12, 1, 1), 0.05);
+  const groups = designs.map((draw) => {
+    const face = new MeshStandardMaterial({ roughness: 0.75, bumpMap: grain(), bumpScale: 0.4, map: canvasTexture(256, 346, draw) });
+    return new InstancedMesh(pageGeo, [back, back, back, back, face, back], Math.ceil(N / designs.length));
+  });
+  const slot = (i) => [groups[i % groups.length], Math.floor(i / groups.length)];
+  // light motes swirling with the pages
+  const M = 260, mp = new Float32Array(M * 3), mseed = Array.from({ length: M }, (_, i) => ({ a: i * 2.39996, r: 1.5 + (i % 13) * 0.25, y: ((i * 37) % 100) / 100 - 0.5, s: 0.4 + (i % 7) * 0.12 }));
+  const motesGeo = new BufferGeometry();
+  motesGeo.setAttribute('position', new Float32BufferAttribute(mp, 3));
+  const motes = new Points(motesGeo, new PointsMaterial({ color: '#ffffff', size: 0.035, transparent: true, opacity: 0.8, depthWrite: false, blending: AdditiveBlending, sizeAttenuation: true }));
+  scene.add(motes);
   const seeds = Array.from({ length: N }, (_, i) => ({ a: i * 2.39996, y: (i / N - 0.5) * 3.4, r: 2.6 + (i % 5) * 0.32, tx: Math.sin(i * 1.7), tz: Math.cos(i * 1.3) }));
 
   // the book and the logo share the book's resting orientation, so the stack lands inside it
   const rest = new Group();
   rest.rotation.set(0.12, -0.45, 0.04);
-  rest.add(pages);
+  rest.add(...groups);
   scene.add(rest);
   const book = await createBook();
   book.object.visible = false;
@@ -62,12 +73,19 @@ export async function buildIntro(scene, camera, signal) {
       const grow = clamp01(T * 3 - i * 0.012);
       o.scale.set(lerp(1, 1.93, gather) * grow, lerp(1, 2.01, gather) * grow, 1);
       o.updateMatrix();
-      pages.setMatrixAt(i, o.matrix);
+      const [mesh, k] = slot(i);
+      mesh.setMatrixAt(k, o.matrix);
     }
-    pages.instanceMatrix.needsUpdate = true;
+    for (const m of groups) m.instanceMatrix.needsUpdate = true;
+    for (let i = 0; i < M; i++) {
+      const sd = mseed[i], a = sd.a + T * sd.s * 1.4, r = sd.r * (0.3 + burst * 0.9) * (1 - gather * 0.55);
+      mp[i * 3] = Math.cos(a) * r; mp[i * 3 + 1] = sd.y * 4 * (0.4 + burst * 0.6) + Math.sin(T * 2 + i) * 0.05; mp[i * 3 + 2] = Math.sin(a) * r;
+    }
+    motesGeo.attributes.position.needsUpdate = true;
+    motes.material.opacity = 0.8 * clamp01(T * 2) * (1 - clamp01((T - 4.2) / 0.6));
     // 2.9 s the book takes over the stack with its cover open, then slams it shut
     if (T >= 2.9 && !bookOn) { bookOn = true; book.object.visible = true; book.update(t, { dt: 10, hover: 1, enter: 1, scroll: 0 }); }
-    pages.visible = T < 3.0;
+    for (const m of groups) m.visible = T < 3.0;
     if (bookOn) {
       book.update(t, { dt: s.dt, hover: T < 3.15 ? 1 : 0, enter: 1, scroll: 0 });
       const thump = Math.exp(-Math.max(0, T - 3.55) * 9) * (T > 3.55 ? 1 : 0);

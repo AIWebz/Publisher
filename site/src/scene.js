@@ -3,7 +3,7 @@
 // screen; under prefers-reduced-motion they render still frames on demand.
 // Bundled to site/assets/scene.js by `npm run build:site`.
 import {
-  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, PlaneGeometry, MeshStandardMaterial, MeshBasicMaterial,
+  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, PlaneGeometry, CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial,
   TextureLoader, SRGBColorSpace, NeutralToneMapping, MathUtils
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -11,7 +11,7 @@ import { studioLights, roomEnvironment, canvasTexture, mat, contactShadow, damp,
 import * as M from './models/objects.js';
 import Lenis from 'lenis';
 import { buildIntro, disposeScene } from './intro.js';
-import { buildGlassHeadline } from './glasstext.js';
+import { buildGlassText, wrapWords } from './glasstext.js';
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const root = document.documentElement;
@@ -160,21 +160,24 @@ if (renderer) {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Hero headline: real 3D glass letters over the (transparent) HTML headline (see glasstext.js)
+  // Headings: real 3D glass letters over the (transparent) HTML headings (see glasstext.js)
   // ---------------------------------------------------------------------------------------------
-  const h1 = document.querySelector('.display');
-  if (h1 && h1.querySelector('.w')) {
+  const headings = [...document.querySelectorAll('.display, main .h2, .foot-cta .h2')];
+  if (headings.length) root.classList.add('glass3d');
+  headings.forEach((el, i) => {
+    wrapWords(el);
+    el.classList.add('gl-on');
     const stageEl = document.createElement('div');
     stageEl.className = 'glass-stage';
     stageEl.setAttribute('aria-hidden', 'true');
-    h1.appendChild(stageEl);
-    root.classList.add('glass3d');
-    view(stageEl, { fov: 22, hoverEl: h1, intro: 1.9, delay: 0.15 }, (scene, camera) => {
-      const glassText = buildGlassHeadline(scene, camera, h1, { mobile: innerWidth < 700 });
+    el.appendChild(stageEl);
+    const hero = el.closest('.hero');
+    view(stageEl, { fov: 22, hoverEl: el, intro: hero ? 1.9 : 1.5, delay: hero ? 0.15 : 0.05 }, (scene, camera) => {
+      const glassText = buildGlassText(scene, camera, el, { mobile: innerWidth < 700, area: hero || el.closest('.head, .foot-cta') || el.parentElement, grid: !!hero });
       document.fonts.ready.then(() => { glassText.rebuild(); frame(); });
       return (t, s, rect) => glassText.update(t, { ...s, pointer }, rect);
     });
-  }
+  });
 
   // ---------------------------------------------------------------------------------------------
   // Install: a device in each card
@@ -232,8 +235,11 @@ if (renderer) {
     });
     const base = new Mesh(new RoundedBoxGeometry(3.4, 0.11, 2.3, 4, 0.045), metal);
     base.position.y = -0.055;
-    const deck = new Mesh(new PlaneGeometry(2.86, 1.0), new MeshStandardMaterial({ map: deckTex, roughness: 0.6, metalness: 0.3 }));
-    deck.rotation.x = -Math.PI / 2; deck.position.set(0, 0.002, -0.4);
+    const deck = M.keycaps({ width: 2.82, depth: 0.96, cols: 14, rows: 5, color: '#121214', height: 0.022 });
+    deck.position.set(0, 0.002, -0.4);
+    const hingeBar = new Mesh(new CylinderGeometry(0.05, 0.05, 2.7, 20), new MeshStandardMaterial({ color: '#b9b9bf', metalness: 0.8, roughness: 0.35 }));
+    hingeBar.rotation.z = Math.PI / 2; hingeBar.position.set(0, 0.02, -1.12);
+    void deckTex;
     const pad = new Mesh(new PlaneGeometry(1.15, 0.66), new MeshStandardMaterial({ color: '#c6c6ca', roughness: 0.3, metalness: 0.6 }));
     pad.rotation.x = -Math.PI / 2; pad.position.set(0, 0.002, 0.64);
     const hinge = new Group();
@@ -260,7 +266,7 @@ if (renderer) {
       hinge.add(shadow, p);
       return { p, shadow, m, cut, lift, x, y, light: crop(light, cut), dark: m.map };
     });
-    g.add(base, deck, pad, hinge, contactShadow(5, 3.4, 0.22, -0.12));
+    g.add(base, deck, hingeBar, pad, hinge, contactShadow(5, 3.4, 0.22, -0.12));
     scene.add(g);
     document.addEventListener('folio:theme', (e) => {
       const isLight = e.detail === 'light';

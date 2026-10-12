@@ -10,9 +10,10 @@
 // Under prefers-reduced-motion the host calls update with enter = 1, hover = 0 and a fixed t.
 import {
   CanvasTexture, SRGBColorSpace, MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial, Mesh, PlaneGeometry,
-  HemisphereLight, DirectionalLight, PointLight, PMREMGenerator
+  HemisphereLight, DirectionalLight, PointLight, PMREMGenerator, RepeatWrapping, InstancedMesh, Object3D
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // monochrome accents: white, silver and graphite (the site is black with liquid-glass type)
 export const WHITE = '#f4f4f5';
@@ -20,7 +21,7 @@ export const GRAPHITE = '#52525b';
 export const SILVER = '#d4d4d8';
 export const INK = '#0a0a0a';
 export const PAPER = '#fbfbf7';
-export const SANS = '"Inter", system-ui, sans-serif';
+export const SANS = '"Space Grotesk", system-ui, sans-serif';
 export const MONO = '"Geist Mono", ui-monospace, monospace';
 
 export const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -102,4 +103,52 @@ export function roomEnvironment(renderer) {
   const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   pmrem.dispose();
   return env;
+}
+
+/** Clear, slightly frosted physical glass (transmission, clear coat, a touch of dispersion). */
+export function glassMat(opts = {}) {
+  return new MeshPhysicalMaterial({ color: '#ffffff', metalness: 0, roughness: 0.06, transmission: 1, thickness: 0.6, ior: 1.5,
+    clearcoat: 1, clearcoatRoughness: 0.04, dispersion: 0.2, attenuationColor: '#eef1f6', attenuationDistance: 2.5, envMapIntensity: 1.5, ...opts });
+}
+
+let grainCache = null;
+/** A fine, tileable grain texture for bump maps (paper, cloth, anodised metal). */
+export function grain() {
+  if (!grainCache) {
+    grainCache = canvasTexture(256, 256, (c, w, h) => {
+      const d = c.createImageData(w, h);
+      for (let i = 0; i < d.data.length; i += 4) { const v = 110 + Math.random() * 90; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+      c.putImageData(d, 0, 0);
+    });
+    grainCache.colorSpace = '';
+    grainCache.wrapS = grainCache.wrapT = RepeatWrapping;
+    grainCache.repeat.set(3, 3);
+  }
+  return grainCache;
+}
+
+/** Curl a flat sheet: offsets z by amount × (x / halfWidth)² (the geometry needs width segments). */
+export function bend(geometry, amount) {
+  geometry.computeBoundingBox();
+  const half = (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2 || 1;
+  const p = geometry.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i) / half; p.setZ(i, p.getZ(i) + amount * x * x); }
+  p.needsUpdate = true;
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+/** A keyboard of instanced key caps laid on the XZ plane (rows from the back). */
+export function keycaps({ width, depth, cols = 14, rows = 5, color = '#1d1d1f', height = 0.02 } = {}) {
+  const kw = width / cols, kd = depth / rows;
+  const geo = new RoundedBoxGeometry(kw * 0.84, height, kd * 0.8, 2, Math.min(kw, kd) * 0.12);
+  const keys = [];
+  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
+    if (r === rows - 1 && k > 3 && k < 10) { if (k === 4) keys.push({ x: (4 + 3) * kw - width / 2, z: r * kd - depth / 2 + kd / 2, sx: 6 }); continue; }
+    keys.push({ x: k * kw - width / 2 + kw / 2, z: r * kd - depth / 2 + kd / 2, sx: 1 });
+  }
+  const mesh = new InstancedMesh(geo, new MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.1 }), keys.length);
+  const o = new Object3D();
+  keys.forEach((key, i) => { o.position.set(key.x, height / 2, key.z); o.scale.set(key.sx === 6 ? 6.6 : 1, 1, 1); o.updateMatrix(); mesh.setMatrixAt(i, o.matrix); });
+  return mesh;
 }
