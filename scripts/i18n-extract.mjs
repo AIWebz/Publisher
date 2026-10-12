@@ -57,6 +57,7 @@ const looksLikeWords = (s) => {
   if (/^(Ctrl|Cmd|Mod|Shift|Alt|Win|Option|Meta)\+/.test(v)) return false;   // keyboard shortcuts
   if (/^[\w.+-]+\/[\w.+*-]+(,|$)/.test(v)) return false;                  // MIME types
   if (/^-?[\d.]+(px|em|rem|pt|%)?(\s+-?[\d.]+(px|em|rem|pt|%)?)*$/.test(v)) return false; // CSS lengths
+  if (/\{\d+\}px\b|^[a-z]+-[a-z]+ [a-z]/.test(s)) return false;                 // CSS values and class lists with placeholders
   if (/^(https?:|data:|blob:|file:|mailto:|about:)/i.test(v)) return false;
   if (/<[a-z!/][^>]*>/i.test(v) || /\w="/.test(v)) return false;     // HTML / SVG markup and attributes
   if (/\b[a-z][\w-]*\(/.test(v)) return false;                          // CSS / SVG functions: rgba(…), translate(…)
