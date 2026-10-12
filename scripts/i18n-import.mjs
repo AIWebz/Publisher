@@ -1,7 +1,8 @@
 // Turns a translation of the interface strings into a display-language catalog, and reports how
 // complete the catalogs are.
 //
-//   node scripts/i18n-import.mjs <code> <file>   import: write app/i18n/<code>.json
+//   node scripts/i18n-import.mjs <code> <file> [list]   import: write app/i18n/<code>.json
+//                                                       (list: the numbered English list the file follows)
 //   node scripts/i18n-import.mjs --check         coverage of every catalog against strings.json
 //
 // <file> has one line per string: "<number>\t<translation>", numbered from 1 in the order of
@@ -14,7 +15,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const dir = path.join(root, 'app/i18n');
-const keys = JSON.parse(readFileSync(path.join(dir, 'strings.json'), 'utf8'));
+// the numbering the translation used: strings.json, or a frozen numbered list ("<n><TAB><English>")
+const listFile = process.argv[4];
+const keys = listFile
+  ? readFileSync(listFile, 'utf8').split(/\r?\n/).filter(Boolean).map((l) => l.slice(l.indexOf('\t') + 1).replace(/\\n/g, '\n'))
+  : JSON.parse(readFileSync(path.join(dir, 'strings.json'), 'utf8'));
 const holes = (s) => (String(s).match(/\{\w+\}/g) || []).sort().join(' ');
 
 function writeIndex() {

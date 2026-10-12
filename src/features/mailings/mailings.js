@@ -11,6 +11,7 @@ import * as rt from '../../engines/text/richtext.js';
 import { exportPDF, printDocument } from '../../engines/export/index.js';
 import { exportRenderer } from '../output/output.js';
 import './mailings.css';
+import { plural } from '../../core/i18n.js';
 
 const hasData = (ctx) => !!(ctx.doc && ctx.doc.data && ctx.doc.data.columns && ctx.doc.data.columns.length);
 const hasDoc = (ctx) => !!ctx.doc;
@@ -239,7 +240,7 @@ registry.command({
       app.ui.toast(res.sheets === 1 ? `Filled 1 sheet with ${res.records} records` : `Filled ${res.sheets} sheets with ${res.records} records`);
     } else {
       merged = MM.buildMergedPublication(doc, doc.data, {});
-      app.ui.toast(`Created ${n} personalised cop${n > 1 ? 'ies' : 'y'}`);
+      app.ui.toast(plural(n, 'Created {n} personalised copy', 'Created {n} personalised copies'));
     }
     merged.title = `${doc.title} (merged)`;
     app.addSession(merged);
