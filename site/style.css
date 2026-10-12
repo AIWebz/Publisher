@@ -312,24 +312,33 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 /* ------------------------------------------------------------------------------------------------
-   Liquid glass type: translucent fill, bright rim, a specular highlight that follows the pointer
-   (main.js sets --gx / --gy) and a slow liquid ripple on the hero headline (SVG filter #liquid).
+   Liquid glass headings. main.js gives each heading a .lg-layer clipped to its letters (an SVG
+   clip path built from the measured words); the layer frosts, brightens and saturates whatever is
+   behind it (backdrop-filter), so the letters are see-through glass. The text on top draws only the
+   bright rim and a specular highlight that follows the pointer (--gx / --gy). Slow colour fields
+   (.aurora, .head::before) sit behind the headings so there is something to see through them.
    ------------------------------------------------------------------------------------------------ */
-.glass, .display .up, .h2, .intro-title span, .strip b {
-  color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, .5);
+.lg { position: relative; }
+.lg-layer { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .05) 48%, rgba(255, 255, 255, .12));
+  -webkit-backdrop-filter: blur(5px) saturate(2.4) brightness(1.7); backdrop-filter: blur(5px) saturate(2.4) brightness(1.7); }
+.display .lg-layer { opacity: 0; animation: fade .9s var(--ease) .85s forwards; }
+.intro-on .lg-layer { animation-play-state: paused; }
+.display .up, .h2.lg, .intro-title span {
+  color: transparent; -webkit-text-stroke: 1.3px rgba(255, 255, 255, .78);
   background:
-    radial-gradient(220px circle at var(--gx, 50vw) var(--gy, 30vh), rgba(255, 255, 255, .95), rgba(255, 255, 255, 0) 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, .96) 0%, rgba(255, 255, 255, .62) 34%, rgba(214, 228, 255, .34) 50%, rgba(255, 255, 255, .5) 72%, rgba(255, 255, 255, .92) 100%);
+    radial-gradient(260px circle at var(--gx, 50vw) var(--gy, 30vh), rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .08) 30%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, .26) 100%);
   background-attachment: fixed, scroll;
   -webkit-background-clip: text; background-clip: text;
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .25)) drop-shadow(0 12px 28px rgba(34, 211, 238, .18));
 }
-.display .accent .up, .accent.glass, .foot-cta .accent {
-  -webkit-text-stroke: 1px rgba(255, 255, 255, .45);
+/* the accent words are tinted glass in the blend */
+.display .accent .up, .foot-cta .accent {
+  -webkit-text-stroke: 1.3px rgba(255, 255, 255, .7);
   background:
-    radial-gradient(220px circle at var(--gx, 50vw) var(--gy, 30vh), rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, .35) 100%),
-    linear-gradient(90deg, #60a5fa, #22d3ee, #f472b6, #22d3ee, #60a5fa);
+    radial-gradient(260px circle at var(--gx, 50vw) var(--gy, 30vh), rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, 0) 40%),
+    linear-gradient(90deg, rgba(96, 165, 250, .55), rgba(34, 211, 238, .5), rgba(244, 114, 182, .55), rgba(34, 211, 238, .5), rgba(96, 165, 250, .55));
   background-size: auto, auto, 200% 100%;
   background-attachment: fixed, scroll, scroll;
   -webkit-background-clip: text; background-clip: text;
@@ -337,9 +346,20 @@ html.lenis, html.lenis body { height: auto; }
 }
 .display .accent .up { animation: up 1s var(--ease) forwards; animation-delay: calc(.08s + var(--d, 0) * .07s); }
 .display .accent .up.done { animation: flow 9s linear infinite; }
-.display { filter: url(#liquid); }
-.display .w { transition: transform .5s var(--ease); }
-.display .w:hover { transform: translateY(-.06em); }
+.h2.reveal.in { animation-fill-mode: backwards; }
+/* colour fields behind the glass */
+.aurora { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; opacity: .42; }
+.aurora i { position: absolute; width: 44vmax; height: 44vmax; border-radius: 50%; filter: blur(70px); will-change: transform; }
+.aurora i:nth-child(1) { left: -12%; top: -18%; background: #2563eb; animation: au1 16s ease-in-out infinite alternate; }
+.aurora i:nth-child(2) { left: 14%; top: 22%; background: #06b6d4; animation: au2 19s ease-in-out infinite alternate; }
+.aurora i:nth-child(3) { left: -6%; top: 40%; background: #db2777; animation: au3 22s ease-in-out infinite alternate; }
+@keyframes au1 { to { transform: translate(22vmax, 10vmax) scale(1.1); } }
+@keyframes au2 { to { transform: translate(-16vmax, -12vmax) scale(.9); } }
+@keyframes au3 { to { transform: translate(18vmax, -14vmax) scale(1.15); } }
+.head, .foot-cta { position: relative; isolation: isolate; }
+.head::before, .foot-cta::before { content: ""; position: absolute; z-index: -2; left: var(--pad); top: 30%; width: min(720px, 80%); height: 60%; pointer-events: none; opacity: .55; filter: blur(45px);
+  background: radial-gradient(closest-side at 20% 50%, rgba(37, 99, 235, .9), transparent), radial-gradient(closest-side at 55% 45%, rgba(6, 182, 212, .8), transparent), radial-gradient(closest-side at 85% 55%, rgba(219, 39, 119, .85), transparent);
+  animation: drift 11s ease-in-out infinite alternate; }
 
 /* ideas adapted from 21st.dev components ("Digital Serenity" and "Download Section with Column Lines") */
 /* a soft blended glow follows the pointer, clicks leave a ripple */
@@ -372,7 +392,8 @@ html.lenis, html.lenis body { height: auto; }
 @keyframes beam { to { transform: translateY(560%); } }
 @media (max-width: 680px) { .cursor-glow { display: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .display { filter: none; }
+  .aurora i, .head::before, .foot-cta::before { animation: none; }
+  .display .lg-layer { opacity: 1; }
   .hero-lines line { stroke-dashoffset: 0; opacity: .5; }
   .corner { opacity: 1; }
   .particle, .beam, .cursor-glow { display: none; }

@@ -215,3 +215,71 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(poin
     cols.appendChild(b);
   }
 })();
+
+// liquid glass headings: give each heading a frosted, see-through layer clipped to its letters (an SVG
+// clip path rebuilt from the measured words whenever the layout changes); the CSS draws the rim
+(() => {
+  const els = [...document.querySelectorAll('.display, .h2, .intro-title span')];
+  const ok = CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
+  if (!els.length || !ok) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(NS, 'svg');
+  defs.setAttribute('width', '0'); defs.setAttribute('height', '0'); defs.setAttribute('aria-hidden', 'true');
+  defs.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  document.body.appendChild(defs);
+  const ctx = document.createElement('canvas').getContext('2d');
+  const items = els.map((el, i) => {
+    el.classList.add('lg');
+    const layer = document.createElement('span');
+    layer.className = 'lg-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    el.prepend(layer);
+    const clip = document.createElementNS(NS, 'clipPath');
+    clip.id = `lg-${i}`;
+    clip.setAttribute('clipPathUnits', 'userSpaceOnUse');
+    defs.appendChild(clip);
+    layer.style.clipPath = layer.style.webkitClipPath = `url(#lg-${i})`;
+    return { el, layer, clip };
+  });
+  // word boxes: the hero headline's words sit in .w boxes (their text slides in, the boxes don't move)
+  const words = (el) => {
+    const boxes = el.querySelectorAll('.w');
+    if (boxes.length) return [...boxes].map((w) => ({ text: w.textContent.trim(), rect: w.getBoundingClientRect(), line: true }));
+    const out = [];
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      for (const m of n.data.matchAll(/\S+/g)) {
+        const r = document.createRange();
+        r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
+        const rect = r.getClientRects()[0];
+        if (rect) out.push({ text: m[0], rect, line: false });
+      }
+    }
+    return out;
+  };
+  const build = ({ el, layer, clip }) => {
+    const cs = getComputedStyle(el);
+    const size = parseFloat(cs.fontSize);
+    ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+    const m = ctx.measureText('H');
+    const asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
+    const lh = parseFloat(cs.lineHeight) || size * 1.2;
+    const o = layer.getBoundingClientRect();
+    const upper = cs.textTransform === 'uppercase';
+    const style = `font-family:${cs.fontFamily.replace(/"/g, "'")};font-weight:${cs.fontWeight};font-stretch:${cs.fontStretch};font-size:${size}px;letter-spacing:${cs.letterSpacing === 'normal' ? 0 : cs.letterSpacing}`;
+    clip.replaceChildren(...words(el).filter((w) => w.text).map((w) => {
+      const t = document.createElementNS(NS, 'text');
+      const base = w.line ? w.rect.top + (lh - (asc + desc)) / 2 + asc : w.rect.top + asc;
+      t.setAttribute('x', (w.rect.left - o.left).toFixed(2));
+      t.setAttribute('y', (base - o.top).toFixed(2));
+      t.setAttribute('style', style);
+      t.textContent = upper ? w.text.toUpperCase() : w.text;
+      return t;
+    }));
+  };
+  const all = () => items.forEach(build);
+  document.fonts.ready.then(all);
+  const ro = new ResizeObserver(() => requestAnimationFrame(all));
+  items.forEach((it) => ro.observe(it.el));
+  document.addEventListener('folio:intro-done', all);
+})();
