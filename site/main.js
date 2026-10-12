@@ -86,3 +86,35 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
   }
   if (pick) document.querySelector(`.dl[data-file="${pick}"]`)?.classList.add('recommended');
 })();
+
+// headline: once the accent words have risen, a slow sheen runs across them
+document.querySelectorAll('.display .accent .up').forEach((el) => el.addEventListener('animationend', () => el.classList.add('done'), { once: true }));
+
+// highlights: count up the number, scramble the words into place when they scroll in
+(() => {
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (REDUCED) return;
+  const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const run = (el) => {
+    const final = el.textContent, start = performance.now();
+    const count = el.dataset.count != null ? Number(el.dataset.count) : null;
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / 1100);
+      if (count != null) el.textContent = String(Math.round(count * (1 - Math.pow(1 - p, 3))));
+      else el.textContent = [...final].map((ch, i) => (p * final.length > i + 0.5 ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0])).join('');
+      if (p < 1) requestAnimationFrame(step); else el.textContent = final;
+    };
+    requestAnimationFrame(step);
+  };
+  const seen = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { run(e.target); seen.unobserve(e.target); }
+  }, { threshold: 0.6 });
+  document.querySelectorAll('[data-count], [data-scramble]').forEach((el) => seen.observe(el));
+})();
+
+// cards: a soft spotlight follows the pointer
+document.querySelectorAll('.dl, .grid article').forEach((card) => card.addEventListener('pointermove', (e) => {
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  card.style.setProperty('--my', `${e.clientY - r.top}px`);
+}, { passive: true }));
