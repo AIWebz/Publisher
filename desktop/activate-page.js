@@ -10,7 +10,6 @@
   $('serial').focus();
   $('quit').addEventListener('click', () => api.quit());
   $('serial').addEventListener('input', () => { $('error').textContent = ''; });
-  $('serial').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('form').requestSubmit(); } });
   $('form').addEventListener('submit', async (e) => {
     e.preventDefault();
     $('go').disabled = true;

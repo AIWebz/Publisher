@@ -387,13 +387,14 @@ function startApp() {
   // The installed app asks for a serial (see desktop/license.js) before it opens; running from source does not.
   const licenseRequired = app.isPackaged || process.env.FOLIO_REQUIRE_LICENSE === '1';
   const licensePath = () => path.join(userData(), 'license.json');
-  const publicKey = () => { try { return require(path.join(ROOT, 'package.json')).licensePublicKey; } catch { return null; } };
+  let issued = null;
+  const fingerprints = () => (issued ||= (() => { try { return license.readFingerprints(fs.readFileSync(path.join(__dirname, 'serials.dat'))); } catch { return new Set(); } })());
   let activationWin = null;
   let activated = false;
 
   function licensed() {
     if (!licenseRequired) return true;
-    try { return license.checkSerial(JSON.parse(fs.readFileSync(licensePath(), 'utf8')).serial, publicKey()).ok; } catch { return false; }
+    try { return license.checkSerial(JSON.parse(fs.readFileSync(licensePath(), 'utf8')).serial, fingerprints()).ok; } catch { return false; }
   }
 
   function start() {
@@ -448,7 +449,7 @@ function startApp() {
 
   ipcMain.handle('license:activate', (e, input) => {
     if (!fromActivation(e)) return false;
-    const res = license.checkSerial(input, publicKey());
+    const res = license.checkSerial(input, fingerprints());
     if (!res.ok) return false;
     try {
       fs.writeFileSync(licensePath(), JSON.stringify({ serial: res.serial, activated: new Date().toISOString() }));

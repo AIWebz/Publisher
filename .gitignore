@@ -4,3 +4,4 @@ dist/
 app/build/
 app/dict/
 *.pem
+folio-serials*.txt

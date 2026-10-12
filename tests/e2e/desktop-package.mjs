@@ -9,7 +9,6 @@ import { spawnSync } from 'node:child_process';
 import { createRequire, builtinModules } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { ROOT, check, finish, launch, waitForBoot, scratchDir, writeSampleFolio, forceQuit } from './desktop-lib.mjs';
 
 const require = createRequire(import.meta.url);
@@ -24,17 +23,23 @@ const run = (cmd, args) => {
   return r.status === 0;
 };
 
-// the packaged app asks for a serial: package it with a test key and give the profile a serial made with it
-const { makeSerial } = require(path.join(ROOT, 'desktop/license.js'));
-const testKey = crypto.generateKeyPairSync('ed25519');
-const testPub = testKey.publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
+// the packaged app asks for a serial: package it with a test serial's fingerprint added, and give the profile that serial
+const { makeSerial, fingerprint, normalize } = require(path.join(ROOT, 'desktop/license.js'));
+const testSerial = makeSerial();
+const datPath = path.join(ROOT, 'desktop/serials.dat');
+const dat = fs.existsSync(datPath) ? fs.readFileSync(datPath) : null;
 
 // ---- 1. build + package ----
 check(run(process.execPath, ['scripts/build.mjs']), 'npm run build succeeds');
 const outDir = path.join(OUT, 'out');
 fs.rmSync(outDir, { recursive: true, force: true });
-check(run(process.execPath, [path.join(ROOT, 'node_modules/electron-builder/cli.js'), '--linux', 'dir', '--publish', 'never',
-  `-c.directories.output=${outDir}`, `-c.extraMetadata.licensePublicKey=${testPub}`]), 'electron-builder --linux dir succeeds');
+fs.writeFileSync(datPath, Buffer.concat([dat || Buffer.alloc(0), fingerprint(normalize(testSerial))]));
+try {
+  check(run(process.execPath, [path.join(ROOT, 'node_modules/electron-builder/cli.js'), '--linux', 'dir', '--publish', 'never',
+    `-c.directories.output=${outDir}`]), 'electron-builder --linux dir succeeds');
+} finally {
+  if (dat) fs.writeFileSync(datPath, dat); else fs.rmSync(datPath, { force: true });
+}
 
 const unpacked = path.join(outDir, 'linux-unpacked');
 const binary = path.join(unpacked, pkg.build.linux?.executableName || pkg.name);
@@ -83,7 +88,7 @@ check(packagedPkg.main === 'desktop/main.js' && packagedPkg.version === pkg.vers
 const profile = path.join(OUT, 'profile');
 fs.rmSync(profile, { recursive: true, force: true });
 fs.mkdirSync(profile, { recursive: true });
-fs.writeFileSync(path.join(profile, 'license.json'), JSON.stringify({ serial: makeSerial(testKey.privateKey) }));
+fs.writeFileSync(path.join(profile, 'license.json'), JSON.stringify({ serial: testSerial }));
 let { electronApp, page, errors } = await launch({ executablePath: binary, args: [], profile });
 try {
   await waitForBoot(page);

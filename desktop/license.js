@@ -1,74 +1,43 @@
 /* Folio Publisher — serial numbers.
-   A serial is a short payload (format version + a random id) and an Ed25519 signature of it, written in
-   Crockford base32 as FOLIO-XXXXX-XXXXX-…. The app holds only the public key (package.json
-   "licensePublicKey"), so it can check serials offline but cannot make them; serials are made with
-   scripts/license-keygen.mjs and the private key, which is never committed. */
+   A serial is 20 random Crockford-base32 characters, written XXXXX-XXXXX-XXXXX-XXXXX (100 bits).
+   The app holds only an 8-byte SHA-256 fingerprint of each serial issued (desktop/serials.dat), so it
+   can check a serial offline but the serials cannot be read back out of it. Serials are made with
+   scripts/license-keygen.mjs, which adds their fingerprints to serials.dat; the list of serials itself
+   is never committed. A new batch works in builds made after it was added. */
 'use strict';
 
 const crypto = require('node:crypto');
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const VERSION = 1;
-const PAYLOAD = 5; // version byte + 4-byte id
-const SIG = 64;
-const CONTEXT = Buffer.from('folio-serial:');
+const LENGTH = 20;
+const FP = 8;
 
-function encode(buf) {
-  let bits = 0, value = 0, out = '';
-  for (const byte of buf) {
-    value = (value << 8) | byte;
-    bits += 8;
-    while (bits >= 5) { out += ALPHABET[(value >>> (bits - 5)) & 31]; bits -= 5; }
-    value &= (1 << bits) - 1;
-  }
-  if (bits) out += ALPHABET[(value << (5 - bits)) & 31];
-  return out;
-}
-
-function decode(str) {
-  let bits = 0, value = 0;
-  const out = [];
-  for (const ch of str) {
-    const v = ALPHABET.indexOf(ch);
-    if (v < 0) return null;
-    value = (value << 5) | v;
-    bits += 5;
-    if (bits >= 8) { out.push((value >>> (bits - 8)) & 255); bits -= 8; }
-    value &= (1 << bits) - 1;
-  }
-  return Buffer.from(out);
-}
-
-/** Upper-cases, drops the FOLIO- prefix, spaces and dashes, and reads look-alike letters (O, I, L) as digits. */
+/** Upper-cases, drops spaces and dashes, and reads look-alike letters (O, I, L, U) as their alphabet twins. */
 function normalize(input) {
-  let s = String(input || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
-  if (s.startsWith('FOLIO')) s = s.slice(5);
-  return s.replace(/O/g, '0').replace(/[IL]/g, '1');
+  return String(input || '').toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1').replace(/U/g, 'V');
 }
 
-const format = (body) => 'FOLIO-' + body.match(/.{1,5}/g).join('-');
+const format = (body) => body.match(/.{1,5}/g).join('-');
+const fingerprint = (body) => crypto.createHash('sha256').update(`folio-serial:${body}`).digest().subarray(0, FP);
 
-/** Makes a serial with the private key (a KeyObject or PEM). */
-function makeSerial(privateKey, id = crypto.randomBytes(4)) {
-  const payload = Buffer.concat([Buffer.from([VERSION]), id]);
-  const sig = crypto.sign(null, Buffer.concat([CONTEXT, payload]), privateKey);
-  return format(encode(Buffer.concat([payload, sig])));
+/** A new random serial. */
+function makeSerial() {
+  const bytes = crypto.randomBytes(LENGTH);
+  return format([...bytes].map((b) => ALPHABET[b & 31]).join(''));
 }
 
-/** Checks a serial against the public key (base64 SPKI DER). Returns { ok, id, serial }. */
-function checkSerial(input, publicKeyB64) {
-  const fail = { ok: false };
-  if (!publicKeyB64) return fail;
-  const buf = decode(normalize(input));
-  if (!buf || buf.length !== PAYLOAD + SIG || buf[0] !== VERSION) return fail;
-  try {
-    const key = crypto.createPublicKey({ key: Buffer.from(publicKeyB64, 'base64'), format: 'der', type: 'spki' });
-    const payload = buf.subarray(0, PAYLOAD);
-    if (!crypto.verify(null, Buffer.concat([CONTEXT, payload]), key, buf.subarray(PAYLOAD))) return fail;
-    return { ok: true, id: payload.subarray(1).toString('hex'), serial: format(encode(buf)) };
-  } catch {
-    return fail;
-  }
+/** The fingerprints in a serials.dat buffer, as a Set of hex strings. */
+function readFingerprints(buf) {
+  const set = new Set();
+  for (let i = 0; i + FP <= (buf ? buf.length : 0); i += FP) set.add(buf.subarray(i, i + FP).toString('hex'));
+  return set;
 }
 
-module.exports = { makeSerial, checkSerial, normalize };
+/** Checks a serial against the issued fingerprints. Returns { ok, serial }. */
+function checkSerial(input, fingerprints) {
+  const body = normalize(input);
+  if (body.length !== LENGTH || !fingerprints || !fingerprints.has(fingerprint(body).toString('hex'))) return { ok: false };
+  return { ok: true, serial: format(body) };
+}
+
+module.exports = { makeSerial, checkSerial, readFingerprints, fingerprint, normalize };

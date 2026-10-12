@@ -168,17 +168,17 @@ installers left in GitHub Releases. GitHub Pages must use **GitHub Actions** as 
 
 ### Serial numbers
 
-The installed app asks for a serial number the first time it starts, and remembers it in the user's
-profile (`license.json`). Running from source (`npm start`) skips the check; set `FOLIO_REQUIRE_LICENSE=1`
-to try it. Serials are checked offline against the public key in `package.json` (`licensePublicKey`);
-only the matching private key can make them.
+The installed app asks for a serial number (like `7KQ2M-X9D4R-BT6WN-3HPZC`) the first time it starts,
+and remembers it in the user's profile (`license.json`). Running from source (`npm start`) skips the
+check; set `FOLIO_REQUIRE_LICENSE=1` to try it. The app checks serials offline against
+`desktop/serials.dat`, which holds only a fingerprint of each serial issued, not the serials.
 
 ```sh
-node scripts/license-keygen.mjs folio-license-private.pem 10   # print 10 new serials
-node scripts/license-keygen.mjs --init new-key.pem             # new key pair (old serials stop working in new builds)
+node scripts/license-keygen.mjs 100 folio-serials.txt   # 100 new serials, appended to folio-serials.txt
 ```
 
-Keep the private key out of the repository (`*.pem` is ignored) and backed up.
+Commit the updated `desktop/serials.dat`; new serials work in builds made after that. Keep
+`folio-serials.txt` out of the repository (it is ignored) and backed up.
 
 ### Signing the Windows installer
 
