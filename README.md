@@ -166,6 +166,20 @@ Every push to the release branch publishes (or run the *Build desktop apps* work
 with the installers to GitHub Pages (`downloads/latest.json` tells the page which files to offer), and removes any
 installers left in GitHub Releases. GitHub Pages must use **GitHub Actions** as its source (Settings → Pages).
 
+### Serial numbers
+
+The installed app asks for a serial number the first time it starts, and remembers it in the user's
+profile (`license.json`). Running from source (`npm start`) skips the check; set `FOLIO_REQUIRE_LICENSE=1`
+to try it. Serials are checked offline against the public key in `package.json` (`licensePublicKey`);
+only the matching private key can make them.
+
+```sh
+node scripts/license-keygen.mjs folio-license-private.pem 10   # print 10 new serials
+node scripts/license-keygen.mjs --init new-key.pem             # new key pair (old serials stop working in new builds)
+```
+
+Keep the private key out of the repository (`*.pem` is ignored) and backed up.
+
 ### Signing the Windows installer
 
 Windows shows *"Windows protected your PC"* (SmartScreen) for unsigned installers. The build signs the installer

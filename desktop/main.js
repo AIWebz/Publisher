@@ -8,6 +8,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
+const license = require('./license.js');
 
 // When this file is required by plain Node (unit tests), `electron` is the path to the binary.
 const IS_ELECTRON = typeof electron === 'object' && !!process.versions.electron;
@@ -280,6 +281,17 @@ function startApp() {
   let uiStrings = null;
   const tr = (s, ...vals) => String((uiStrings && typeof uiStrings[s] === 'string' && uiStrings[s]) || s).replace(/\{(\d+)\}/g, (m, i) => (vals[i - 1] ?? m));
   const isWin = process.platform === 'win32';
+  let uiLang = 'en';
+  // loads the catalog for a language tag ('pt-BR' falls back to 'pt'); English needs none
+  function loadStrings(code) {
+    uiStrings = null;
+    uiLang = 'en';
+    if (typeof code !== 'string' || !/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/i.test(code)) return;
+    for (const c of [code, code.split('-')[0].toLowerCase()]) {
+      if (c === 'en') return;
+      try { uiStrings = JSON.parse(fs.readFileSync(path.join(ROOT, 'app', 'i18n', `${c}.json`), 'utf8')); uiLang = c; return; } catch { /* next */ }
+    }
+  }
 
   // Tests (and portable setups) may isolate the profile.
   if (process.env.FOLIO_USER_DATA) app.setPath('userData', path.resolve(process.env.FOLIO_USER_DATA));
@@ -361,14 +373,96 @@ function startApp() {
     if (!isMac || quitting) app.quit();
   });
 
-  app.on('activate', () => { if (!win && app.isReady()) createWindow(); });
+  app.on('activate', () => { if (!win && !activationWin && app.isReady()) start(); });
 
   app.whenReady().then(async () => {
     await cleanStaleTemp([userData(), path.join(userData(), 'recovery')]).catch(() => 0);
     getKnownPaths();
+    loadStrings(app.getLocale());
     installMenu();
-    createWindow();
+    start();
   });
+
+  // ---------- Serial number ----------
+  // The installed app asks for a serial (see desktop/license.js) before it opens; running from source does not.
+  const licenseRequired = app.isPackaged || process.env.FOLIO_REQUIRE_LICENSE === '1';
+  const licensePath = () => path.join(userData(), 'license.json');
+  const publicKey = () => { try { return require(path.join(ROOT, 'package.json')).licensePublicKey; } catch { return null; } };
+  let activationWin = null;
+  let activated = false;
+
+  function licensed() {
+    if (!licenseRequired) return true;
+    try { return license.checkSerial(JSON.parse(fs.readFileSync(licensePath(), 'utf8')).serial, publicKey()).ok; } catch { return false; }
+  }
+
+  function start() {
+    if (licensed()) createWindow();
+    else showActivation();
+  }
+
+  function showActivation() {
+    if (activationWin && !activationWin.isDestroyed()) { activationWin.focus(); return; }
+    activated = false;
+    activationWin = new BrowserWindow({
+      width: 520,
+      height: 400,
+      resizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      autoHideMenuBar: true,
+      show: false,
+      title: 'Folio Publisher',
+      backgroundColor: nativeTheme.shouldUseDarkColors ? '#161a19' : '#f4f0e8',
+      icon: isWin || !isMac ? path.join(ROOT, 'app', 'icons', 'icon-512.png') : undefined,
+      webPreferences: {
+        preload: path.join(__dirname, 'activate-preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        devTools: !app.isPackaged
+      }
+    });
+    const w = activationWin;
+    w.once('ready-to-show', () => w.show());
+    w.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    w.webContents.on('will-navigate', (e) => e.preventDefault());
+    w.on('closed', () => {
+      activationWin = null;
+      if (!activated && !win) app.quit();
+    });
+    w.loadFile(path.join(__dirname, 'activate.html'));
+  }
+
+  const fromActivation = (e) => activationWin && !activationWin.isDestroyed() && e.sender === activationWin.webContents;
+
+  ipcMain.handle('license:strings', (e) => (fromActivation(e) ? {
+    lang: uiStrings ? uiLang : 'en',
+    title: tr('Activate Folio Publisher'),
+    intro: tr('Enter the serial number you received with your purchase.'),
+    label: tr('Serial number'),
+    activate: tr('Activate'),
+    quit: tr('Quit'),
+    invalid: tr('That serial number is not valid. Check it and try again.')
+  } : {}));
+
+  ipcMain.handle('license:activate', (e, input) => {
+    if (!fromActivation(e)) return false;
+    const res = license.checkSerial(input, publicKey());
+    if (!res.ok) return false;
+    try {
+      fs.writeFileSync(licensePath(), JSON.stringify({ serial: res.serial, activated: new Date().toISOString() }));
+    } catch (err) {
+      dialog.showErrorBox('Folio Publisher', String(err && err.message || err));
+      return false;
+    }
+    activated = true;
+    createWindow();
+    activationWin.close();
+    return true;
+  });
+
+  ipcMain.on('license:quit', (e) => { if (fromActivation(e)) app.quit(); });
 
   function installMenu() {
     if (!isMac) { Menu.setApplicationMenu(null); return; }
@@ -546,10 +640,7 @@ function startApp() {
   });
 
   ipcMain.on('app:language', (_e, code) => {
-    uiStrings = null;
-    if (typeof code === 'string' && code !== 'en' && /^[a-z]{2,3}(-[A-Za-z]{2,8})?$/.test(code)) {
-      try { uiStrings = JSON.parse(fs.readFileSync(path.join(ROOT, 'app', 'i18n', `${code}.json`), 'utf8')); } catch { uiStrings = null; }
-    }
+    loadStrings(code);
     if (isMac) installMenu();
   });
 

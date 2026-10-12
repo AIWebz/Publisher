@@ -6,6 +6,7 @@
   "author": "Folio Publisher",
   "private": true,
   "main": "desktop/main.js",
+  "licensePublicKey": "MCowBQYDK2VwAyEA8olj/jN6slaip8cjIB7cjBf2Uy6TcLcEaQLbnupi19c=",
   "scripts": {
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",
