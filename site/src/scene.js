@@ -4,10 +4,10 @@
 // Bundled to site/assets/scene.js by `npm run build:site`.
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, PlaneGeometry, CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial,
-  TextureLoader, SRGBColorSpace, NeutralToneMapping, MathUtils
+  TextureLoader, SRGBColorSpace, NeutralToneMapping, MathUtils, WebGLRenderTarget, HalfFloatType
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { studioLights, roomEnvironment, canvasTexture, mat, contactShadow, damp, clamp01, easeOut, easeInOut, stagger } from './models/kit.js';
+import { studioLights, roomEnvironment, mat, contactShadow, damp, clamp01, easeOut, easeInOut, stagger } from './models/kit.js';
 import * as M from './models/objects.js';
 import Lenis from 'lenis';
 import { buildIntro, disposeScene } from './intro.js';
@@ -42,6 +42,7 @@ if (renderer) {
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = NeutralToneMapping;
   renderer.setClearColor(0x000000, 0);
+  renderer.autoClear = false; // views may overlap (the glass headline over the hero), so each clears only depth
   const env = roomEnvironment(renderer);
   const canvas = renderer.domElement;
   const views = [];
@@ -79,7 +80,9 @@ if (renderer) {
       v.camera.updateProjectionMatrix();
       renderer.setViewport(r.left, H - r.bottom, r.width, r.height);
       renderer.setScissor(r.left, H - r.bottom, r.width, r.height);
+      renderer.clearDepth();
       renderer.render(v.scene, v.camera);
+      if (v.after) v.after(r);
       if (!REDUCED && enter < 1) live = true;
     }
     if (live && !REDUCED && !document.hidden) frame();
@@ -109,53 +112,68 @@ if (renderer) {
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Hero: the book with the print pieces, swatch fan and pencil around it
+  // Hero: the book sits behind the glass headline with print pieces, a swatch fan and a pencil
+  // around it. The scene is also drawn into a texture that the headline's glass refracts.
   // ---------------------------------------------------------------------------------------------
   const heroEl = document.querySelector('.hero-3d');
-  view(heroEl, { fov: 30, cam: [0, 0, 11], hoverEl: heroEl, intro: 2.2, delay: 0.25 }, async (scene, camera) => {
+  const heroH1 = document.querySelector('.hero .display');
+  const behind = { texture: null, rect: null };
+  view(heroEl, { fov: 30, cam: [0, 0, 12], hoverEl: heroEl && heroEl.closest('.hero'), intro: 2.2, delay: 0.25 }, async (scene, camera, v) => {
     const world = new Group();
     scene.add(world);
+    // [make, [u, v] in half-sizes of the headline box from its centre, z, rotation, scale × book, depth]
     const items = await Promise.all([
-      [M.createBook, [0, 0, 0], [0, 0, 0], 1, 0],
-      [M.createSwatchFan, [-1.55, 1.15, -1.6], [0.1, 0.4, 0.25], 0.62, 0.7],
-      [M.createFlyer, [1.45, 1.25, -1.4], [0.15, -0.5, 0.12], 0.85, 0.5],
-      [M.createCard, [-1.35, -1.45, 1.1], [-0.25, 0.55, -0.18], 0.85, 0.9],
-      [M.createBrochure, [1.3, -1.6, 0.8], [-0.2, -0.35, 0.05], 0.9, 0.6],
-      [M.createPencil, [-1.55, 0.05, 1.2], [0.4, 0.3, 0.95], 0.7, 1.2]
-    ].map(async ([make, p, r, scale, depth], i) => {
+      [M.createBook, [0.04, 0.02], -0.4, [0, 0, 0], 1, 0],
+      [M.createFlyer, [-0.8, 0.24], -1.6, [0.15, 0.5, -0.1], 0.78, 0.5],
+      [M.createBrochure, [0.84, -0.26], -1.3, [-0.2, -0.45, 0.06], 0.84, 0.6],
+      [M.createSwatchFan, [-1.25, 1.2], 0.4, [0.1, 0.4, 0.25], 0.58, 0.8],
+      [M.createCard, [1.22, -1.3], 0.8, [-0.25, -0.5, -0.18], 0.78, 0.9],
+      [M.createPencil, [-1.1, -1.32], 1.0, [0.4, 0.3, 0.95], 0.64, 1.2]
+    ].map(async ([make, uv, z, r, scale, depth], i) => {
       const m = await make();
       const holder = new Group();
       holder.add(m.object);
-      holder.position.set(...p);
-      holder.rotation.set(...r);
-      holder.scale.setScalar(scale);
       world.add(holder);
-      return { m, holder, p, r, scale, depth, i };
+      return { m, holder, uv, z, r, scale, depth, i };
     }));
-    const n = items.length;
-    let px = 0, py = 0;
-    const fit = (rect) => {
-      const aspect = rect.width / Math.max(1, rect.height);
-      camera.position.z = Math.max(10.5, 4.6 / (2 * Math.tan(MathUtils.degToRad(camera.fov / 2)) * aspect));
+    const rt = new WebGLRenderTarget(2, 2, { type: HalfFloatType });
+    behind.texture = rt.texture;
+    v.after = (r) => {
+      const k = Math.min(1, devicePixelRatio) * 0.75;
+      const w = Math.max(2, Math.round(r.width * k)), h = Math.max(2, Math.round(r.height * k));
+      if (rt.width !== w || rt.height !== h) rt.setSize(w, h);
+      renderer.setRenderTarget(rt);
+      renderer.clear();
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      behind.rect = r;
     };
+    const n = items.length, tan = Math.tan(MathUtils.degToRad(15));
+    let px = 0, py = 0;
     return (t, s, rect) => {
-      fit(rect);
       px = damp(px, pointer.x, 4, s.dt); py = damp(py, pointer.y, 4, s.dt);
+      // world units per CSS px on the z = 0 plane, and the headline box in world units
+      const Z = camera.position.z, kpx = (2 * Z * tan) / rect.height;
+      const halfW = Z * tan * (rect.width / rect.height), halfH = Z * tan;
+      const h = heroH1 ? heroH1.getBoundingClientRect() : { left: rect.left + rect.width * 0.2, top: rect.top + rect.height * 0.3, width: rect.width * 0.6, height: rect.height * 0.3 };
+      const cx = (h.left + h.width / 2 - rect.left - rect.width / 2) * kpx, cy = -(h.top + h.height / 2 - rect.top - rect.height / 2) * kpx;
+      const hx = (h.width / 2) * kpx, hy = (h.height / 2) * kpx;
+      const book = Math.min((hy * 2 * 0.84) / 2.8, (hx * 2 * 0.36) / 2);
       const out = Math.max(0, -s.scroll); // 0 at rest, grows as the hero scrolls away
       for (const it of items) {
         const e = it.i === 0 ? s.enter : stagger(s.enter, it.i, n, 0.55);
         const k = easeOut(e);
-        const [x, y, z] = it.p;
         // fly in from further out, drift apart while scrolling away, parallax by depth
-        const spread = 1 + (1 - k) * 1.6 + out * 1.4;
-        it.holder.position.set(x * spread + px * it.depth * 0.6, y * spread - py * it.depth * 0.4 + (it.i ? Math.sin(t * 0.8 + it.i * 2) * 0.1 : 0), z - (1 - k) * 2);
-        it.holder.rotation.set(it.r[0] - py * 0.2 * it.depth, it.r[1] + px * 0.5 * (it.depth || 0.6) + (it.i ? Math.sin(t * 0.5 + it.i) * 0.12 : 0) + out * it.i * 0.3, it.r[2]);
-        it.holder.scale.setScalar(it.scale * (it.i ? k : 1));
+        const spread = 1 + (1 - k) * 0.9 + out * 0.9;
+        const x = MathUtils.clamp(cx + it.uv[0] * hx * spread, -halfW * 0.84, halfW * 0.84);
+        const y = MathUtils.clamp(cy + it.uv[1] * hy * spread, -halfH * 0.86, halfH * 0.7); // clear of the nav
+        it.holder.position.set(x + px * it.depth * 0.5, y - py * it.depth * 0.35 + (it.i ? Math.sin(t * 0.8 + it.i * 2) * 0.08 : 0), it.z - (1 - k) * 2);
+        it.holder.rotation.set(it.r[0] - py * 0.2 * it.depth, it.r[1] + px * 0.5 * (it.depth || 0.5) + (it.i ? Math.sin(t * 0.5 + it.i) * 0.12 : 0) + out * it.i * 0.3, it.r[2]);
+        it.holder.scale.setScalar(book * it.scale * (it.i ? k : 1));
         it.holder.visible = it.i === 0 || k > 0.001;
         if (it.m.update) it.m.update(t, { dt: s.dt, hover: it.i === 0 ? s.hover : 0, enter: e, scroll: s.scroll });
       }
-      world.rotation.y = px * 0.18;
-      world.position.y = out * 1.2;
+      world.rotation.y = px * 0.08;
     };
   });
 
@@ -173,7 +191,9 @@ if (renderer) {
     el.appendChild(stageEl);
     const hero = el.closest('.hero');
     view(stageEl, { fov: 22, hoverEl: el, intro: hero ? 1.9 : 1.5, delay: hero ? 0.15 : 0.05 }, (scene, camera) => {
-      const glassText = buildGlassText(scene, camera, el, { mobile: innerWidth < 700, area: hero || el.closest('.head, .foot-cta') || el.parentElement, grid: !!hero });
+      const glassText = buildGlassText(scene, camera, el, {
+        mobile: innerWidth < 700, area: hero || el.closest('.head, .foot-cta') || el.parentElement, grid: !!hero, behind: hero ? behind : null
+      });
       document.fonts.ready.then(() => { glassText.rebuild(); frame(); });
       return (t, s, rect) => glassText.update(t, { ...s, pointer }, rect);
     });
@@ -193,12 +213,15 @@ if (renderer) {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Principles: an icon object in each card
+  // Principles: an object in each bento card
   // ---------------------------------------------------------------------------------------------
-  const icons = [M.createClarity, M.createOwnership, M.createPrintTrue, M.createLanguages, M.createCraft, M.createFree];
-  document.querySelectorAll('.grid article').forEach((card, i) => {
-    view(card.querySelector('.p-model'), { fov: 28, cam: [0, 0.7, 6.2], look: [0, -0.1, 0], hoverEl: card, intro: 1.1, delay: (i % 3) * 0.12 }, async (scene) => {
-      const m = await icons[i]();
+  const icons = { craft: M.createCraft, print: M.createPrintTrue, languages: M.createLanguages, ownership: M.createOwnership, clarity: M.createClarity, free: M.createFree };
+  document.querySelectorAll('.bento article[data-model]').forEach((card, i) => {
+    const make = icons[card.dataset.model];
+    if (!make) return;
+    const big = card.classList.contains('b-big');
+    view(card.querySelector('.p-model'), { fov: 28, cam: big ? [0, 0.9, 5.4] : [0, 0.7, 6.2], look: [0, -0.1, 0], hoverEl: card, intro: 1.1, delay: (i % 3) * 0.12 }, async (scene) => {
+      const m = await make();
       scene.add(m.object);
       return (t, s) => m.update && m.update(t, s);
     });
@@ -217,29 +240,19 @@ if (renderer) {
   // ---------------------------------------------------------------------------------------------
   // Presentation: a laptop that opens as the page scrolls; the editor's panels lift off the screen
   // ---------------------------------------------------------------------------------------------
-  const track = document.querySelector('.pres-track');
+  const track = document.querySelector('.pres-track'), presEl = document.querySelector('.presentation');
   view(document.querySelector('.pres-3d'), { fov: 28, cam: [0, 0, 10] }, async (scene, camera) => {
     const loader = new TextureLoader();
     const load = (src) => new Promise((res) => loader.load(src, (tx) => { tx.colorSpace = SRGBColorSpace; tx.anisotropy = 8; res(tx); }, undefined, () => res(null)));
     const [dark, light] = await Promise.all([load('assets/editor-dark.webp'), load('assets/editor.webp')]);
     const g = new Group();
     const metal = mat.aluminium();
-    const deckTex = canvasTexture(1024, 360, (c, w, h) => {
-      c.fillStyle = '#cfcfd3'; c.fillRect(0, 0, w, h);
-      c.fillStyle = '#1d1d1f';
-      for (let r = 0; r < 5; r++) for (let k = 0; k < 14; k++) {
-        if (r === 4 && k > 4 && k < 10) continue;
-        const wide = r === 4 && k === 4;
-        c.beginPath(); c.roundRect(k * 73 + 5, r * 72 + 5, (wide ? 73 * 6 : 73) - 10, 62, 8); c.fill();
-      }
-    });
     const base = new Mesh(new RoundedBoxGeometry(3.4, 0.11, 2.3, 4, 0.045), metal);
     base.position.y = -0.055;
     const deck = M.keycaps({ width: 2.82, depth: 0.96, cols: 14, rows: 5, color: '#121214', height: 0.022 });
     deck.position.set(0, 0.002, -0.4);
     const hingeBar = new Mesh(new CylinderGeometry(0.05, 0.05, 2.7, 20), new MeshStandardMaterial({ color: '#b9b9bf', metalness: 0.8, roughness: 0.35 }));
     hingeBar.rotation.z = Math.PI / 2; hingeBar.position.set(0, 0.02, -1.12);
-    void deckTex;
     const pad = new Mesh(new PlaneGeometry(1.15, 0.66), new MeshStandardMaterial({ color: '#c6c6ca', roughness: 0.3, metalness: 0.6 }));
     pad.rotation.x = -Math.PI / 2; pad.position.set(0, 0.002, 0.64);
     const hinge = new Group();
@@ -279,24 +292,30 @@ if (renderer) {
       let p = 1;
       if (track && !REDUCED) {
         const r = track.getBoundingClientRect();
-        p = clamp01((-r.top / Math.max(1, r.height - innerHeight)) * 1.25 + 0.1);
+        p = clamp01((-r.top / Math.max(1, r.height - innerHeight)) * 1.3);
       }
       px = damp(px, pointer.x, 4, s.dt); py = damp(py, pointer.y, 4, s.dt);
-      const open = easeOut(clamp01(p / 0.65));
-      const lift = easeOut(clamp01((p - 0.62) / 0.3));
+      const open = easeOut(clamp01(p / 0.6));
+      // the three panels lift one after another; the step list under the laptop follows along
+      const lifts = panels.map((_, i) => easeOut(clamp01((p - 0.58 - i * 0.12) / 0.16)));
+      const lift = Math.max(...lifts);
+      const step = p < 0.58 ? 0 : p < 0.7 ? 1 : p < 0.82 ? 2 : 3;
+      if (presEl && presEl.dataset.step !== String(step)) presEl.dataset.step = String(step);
       hinge.rotation.x = MathUtils.degToRad(MathUtils.lerp(86, -14, open));
-      g.rotation.set(MathUtils.lerp(0.55, 0.22, open) - py * 0.06, MathUtils.lerp(-0.7, 0, open) + px * 0.12 * (1 - lift * 0.5), 0);
-      g.position.set(0, MathUtils.lerp(-0.5, -1.05, open), 0);
-      for (const pn of panels) {
-        pn.p.position.z = 0.002 + lift * pn.lift;
-        pn.p.scale.setScalar(1 + lift * 0.06);
-        pn.shadow.position.z = 0.0015 + lift * pn.lift * 0.35;
-        pn.shadow.material.opacity = lift * 0.28;
-      }
+      // once the panels lift, the laptop turns a little so their depth shows
+      g.rotation.set(MathUtils.lerp(0.55, 0.24, open) - py * 0.06, MathUtils.lerp(-0.7, 0, open) - lift * 0.3 + px * 0.12 * (1 - lift * 0.5), 0);
+      g.position.set(0, MathUtils.lerp(-0.45, -0.85, open), 0);
+      panels.forEach((pn, i) => {
+        const l = lifts[i];
+        pn.p.position.z = 0.002 + l * pn.lift;
+        pn.p.scale.setScalar(1 + l * 0.06);
+        pn.shadow.position.z = 0.0015 + l * pn.lift * 0.35;
+        pn.shadow.material.opacity = l * 0.28;
+      });
       const aspect = rect.width / Math.max(1, rect.height);
-      const near = Math.max(8.4, 4.6 / (2 * Math.tan(MathUtils.degToRad(camera.fov / 2)) * aspect));
+      const near = Math.max(6.4, 4.3 / (2 * Math.tan(MathUtils.degToRad(camera.fov / 2)) * aspect));
       camera.position.set(0, 0, MathUtils.lerp(near + 3, near, open));
-      camera.lookAt(0, 0.4, 0);
+      camera.lookAt(0, 0.12, 0);
     };
   });
 

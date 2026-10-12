@@ -1,5 +1,5 @@
 // Folio site: scroll reveals, nav + progress, mobile menu, current section, the editor theme switch,
-// and the install buttons filled in from downloads/latest.json (written by the publish workflow).
+// and the download buttons filled in from downloads/latest.json (written by the publish workflow).
 // The 3D models live in src/scene.js (bundled to assets/scene.js).
 
 // reveals
@@ -54,7 +54,8 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
   document.dispatchEvent(new CustomEvent('folio:theme', { detail: theme }));
 }));
 
-// install buttons
+// downloads: the three install buttons, plus the hero and footer buttons that go straight to the
+// installer for the visitor's computer; a toast then says what to expect the first time
 (async () => {
   const MB = (n) => `${Math.round(n / 1048576)} MB`;
   const note = document.getElementById('downloads-note');
@@ -79,16 +80,54 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
   }
   note.textContent = `Free · version ${latest.version}. Pick your computer.`;
   document.getElementById('pill-text').textContent = `Folio ${latest.version} for Windows & Mac`;
-  // mark the visitor's platform (Apple silicon vs Intel cannot always be told apart)
-  let pick = /Windows/i.test(navigator.userAgent) ? 'win' : /Macintosh|Mac OS X/i.test(navigator.userAgent) ? 'macArm' : null;
+  // the visitor's platform (iPhones and iPads also call themselves Mac; Apple silicon and Intel can
+  // only be told apart in some browsers, so a Mac defaults to Apple silicon)
+  const ua = navigator.userAgent;
+  let pick = /Windows NT/i.test(ua) ? 'win' : /Macintosh/i.test(ua) && navigator.maxTouchPoints < 2 ? 'macArm' : null;
   if (pick === 'macArm') {
     try { const d = navigator.userAgentData && await navigator.userAgentData.getHighEntropyValues(['architecture']); if (d && d.architecture === 'x86') pick = 'macIntel'; } catch { /* keep */ }
   }
-  if (pick) document.querySelector(`.dl[data-file="${pick}"]`)?.classList.add('recommended');
+  const f = pick && latest.files[pick];
+  if (!f) return;
+  const os = pick === 'win' ? 'Windows' : 'Mac';
+  document.querySelector(`.dl[data-file="${pick}"]`)?.classList.add('recommended');
+  document.querySelector(`.fr[data-os="${pick === 'win' ? 'win' : 'mac'}"]`)?.classList.add('mine');
+  document.querySelectorAll('[data-dl]').forEach((b) => {
+    b.href = `downloads/${encodeURIComponent(f.name)}`;
+    b.setAttribute('download', '');
+    b.dataset.file = pick;
+    b.querySelector('.dl-label').textContent = `Download for ${os}`;
+    b.setAttribute('aria-label', `Download Folio ${latest.version} for ${os} (${MB(f.size)})`);
+  });
+  const meta = document.getElementById('hero-meta');
+  if (meta) meta.textContent = `Free · version ${latest.version} · ${MB(f.size)} · No account`;
 })();
 
-// headline: once the accent words have risen, a slow sheen runs across them
-document.querySelectorAll('.display .accent .up').forEach((el) => el.addEventListener('animationend', () => el.classList.add('done'), { once: true }));
+(() => {
+  const toast = document.querySelector('.toast');
+  if (!toast) return;
+  const text = toast.querySelector('.toast-text');
+  let timer = 0;
+  const hide = () => {
+    clearTimeout(timer);
+    toast.classList.remove('show');
+    setTimeout(() => { if (!toast.classList.contains('show')) toast.hidden = true; }, 400);
+  };
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[download]');
+    if (!a) return;
+    const win = (a.dataset.file || '') === 'win';
+    text.textContent = win
+      ? 'When it finishes, open the installer. If “Windows protected your PC” appears, choose More info → Run anyway.'
+      : 'When it finishes, open the .dmg and drag Folio into Applications. If macOS stops it, choose Open Anyway in System Settings → Privacy & Security.';
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('show'));
+    clearTimeout(timer);
+    timer = setTimeout(hide, 14000);
+  });
+  toast.querySelector('.toast-x').addEventListener('click', hide);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !toast.hidden) hide(); });
+})();
 
 // highlights: count up the number, scramble the words into place when they scroll in
 (() => {
@@ -113,7 +152,7 @@ document.querySelectorAll('.display .accent .up').forEach((el) => el.addEventLis
 })();
 
 // cards: a soft spotlight follows the pointer
-document.querySelectorAll('.dl, .grid article').forEach((card) => card.addEventListener('pointermove', (e) => {
+document.querySelectorAll('.dl, .bento article').forEach((card) => card.addEventListener('pointermove', (e) => {
   const r = card.getBoundingClientRect();
   card.style.setProperty('--mx', `${e.clientX - r.left}px`);
   card.style.setProperty('--my', `${e.clientY - r.top}px`);
@@ -145,7 +184,7 @@ document.querySelectorAll('.dl, .grid article').forEach((card) => card.addEventL
 
 // buttons lean toward the pointer
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(pointer: fine)').matches) {
-  document.querySelectorAll('.cta .btn, .foot-cta .btn, .nav-end .btn').forEach((b) => {
+  document.querySelectorAll('.cta .btn, .foot-card .btn, .nav-end .btn').forEach((b) => {
     b.addEventListener('pointermove', (e) => {
       const r = b.getBoundingClientRect();
       b.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.16}px ${(e.clientY - r.top - r.height / 2) * 0.28}px`;
@@ -211,7 +250,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(poin
   for (let i = 0; i < 7 && cols; i++) {
     const b = document.createElement('span');
     b.className = 'beam';
-    b.style.cssText = `--col:${(i * 5 + 2) % 15};--c:${tints[i % 3]};--bd:${5 + (i % 4) * 1.3}s;--bdl:${(i * 0.9).toFixed(1)}s`;
+    b.style.cssText = `--col:${((i * 5 + 2) % 15) - 7};--c:${tints[i % 3]};--bd:${5 + (i % 4) * 1.3}s;--bdl:${(i * 0.9).toFixed(1)}s`;
     cols.appendChild(b);
   }
 })();

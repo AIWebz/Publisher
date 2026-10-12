@@ -2,12 +2,13 @@
 // (outlines in models/glyphs.js) in a physically based glass material (transmission, IOR,
 // thickness, dispersion, clear coat), so the light through it genuinely refracts. Behind the letters
 // sits a backdrop that only the refraction pass sees: it redraws what the page shows there (the
-// hero's grid and drifting light, or a section's soft light), so the glass bends the real background.
+// hero's grid and drifting light, or a section's soft light) plus, in the hero, the live 3D scene
+// behind the headline, so the glass bends the real background.
 // The HTML heading stays in place (transparent) for layout, selection and screen readers; the 3D
 // letters follow its word boxes (.w / .gw spans), so wrapping and resizing just work.
 import {
   Group, Mesh, ShapePath, Shape, Path, ExtrudeGeometry, MeshPhysicalMaterial, PlaneGeometry, ShaderMaterial,
-  Vector2, PointLight, ShapeUtils, MathUtils
+  Vector2, Vector4, PointLight, ShapeUtils, MathUtils
 } from 'three';
 import FONT from './models/glyphs.js';
 import { damp, clamp01, easeOut } from './models/kit.js';
@@ -63,16 +64,20 @@ function glyphShapes(d, segments) {
 
 // --- the backdrop the glass refracts: black, the hero grid (60 px, radial mask) and soft light ---
 const backdropShader = {
-  uniforms: { uTime: { value: 0 }, uSize: { value: new Vector2(1, 1) }, uOrigin: { value: new Vector2() }, uHero: { value: new Vector2(1, 1) }, uGrid: { value: 1 } },
+  uniforms: {
+    uTime: { value: 0 }, uSize: { value: new Vector2(1, 1) }, uOrigin: { value: new Vector2() }, uHero: { value: new Vector2(1, 1) }, uGrid: { value: 1 },
+    uMask: { value: new Vector2(0.5, 0.42) }, uScene: { value: null }, uSceneOn: { value: 0 }, uSceneRect: { value: new Vector4(0, 0, 1, 1) }
+  },
   vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: `
-    uniform float uTime, uGrid; uniform vec2 uSize, uOrigin, uHero; varying vec2 vUv;
+    uniform float uTime, uGrid, uSceneOn; uniform vec2 uSize, uOrigin, uHero, uMask; uniform vec4 uSceneRect;
+    uniform sampler2D uScene; varying vec2 vUv;
     float blob(vec2 p, vec2 c, float r) { return exp(-dot(p - c, p - c) / (r * r)); }
     void main() {
       vec2 px = uOrigin + vec2(vUv.x, 1.0 - vUv.y) * uSize;          // CSS px inside the hero
       vec2 g = mod(px + 1.0, 60.0);
       float line = (step(g.x, 1.0) + step(g.y, 1.0)) > 0.0 ? 1.0 : 0.0;
-      vec2 m = (px / uHero - vec2(0.75, 0.45)) / 0.7;                 // the CSS radial mask
+      vec2 m = (px / uHero - uMask) / 0.7;                             // the CSS radial mask
       float mask = 1.0 - smoothstep(0.1, 0.72, length(m));
       vec2 q = px / uHero.y;
       float t = uTime * 0.05;
@@ -82,6 +87,12 @@ const backdropShader = {
       // a fine diagonal sheen gives the glass something crisp to bend, like light on a wall behind it
       float sheen = smoothstep(0.92, 1.0, sin((px.x + px.y) * 0.035 + uTime * 0.25)) * 0.05;
       vec3 col = light * vec3(0.34, 0.345, 0.36) + uGrid * line * max(mask, 0.35) * 0.22 + sheen;
+      // the 3D scene really behind the letters (the hero's book and print pieces), if there is one
+      vec2 sp = (px - uSceneRect.xy) / uSceneRect.zw;
+      if (uSceneOn > 0.5 && sp.x > 0.0 && sp.y > 0.0 && sp.x < 1.0 && sp.y < 1.0) {
+        vec4 s = texture2D(uScene, vec2(sp.x, 1.0 - sp.y));
+        col = col * (1.0 - s.a) + s.rgb;
+      }
       gl_FragColor = vec4(col, 1.0);
     }`
 };
@@ -103,7 +114,11 @@ export function wrapWords(el) {
   }
 }
 
-export function buildGlassText(scene, camera, h1, { mobile = false, area = h1.parentElement, grid = false } = {}) {
+/**
+ * Glass letters for heading h1 in a view. area: the element whose background the backdrop redraws;
+ * mask: the centre of its grid's radial mask; behind: { texture, rect } of a 3D scene drawn behind it.
+ */
+export function buildGlassText(scene, camera, h1, { mobile = false, area = h1.parentElement, grid = false, mask = [0.5, 0.42], behind = null } = {}) {
   const words = [...h1.querySelectorAll('.w, .gw')];
   const segs = mobile ? 5 : 8;
   const cache = new Map();
@@ -135,6 +150,7 @@ export function buildGlassText(scene, camera, h1, { mobile = false, area = h1.pa
   // backdrop: drawn only into the refraction (transmission) pass, never onto the screen
   const backMat = new ShaderMaterial(backdropShader);
   backMat.uniforms.uGrid.value = grid ? 1 : 0;
+  backMat.uniforms.uMask.value.set(mask[0], mask[1]);
   const back = new Mesh(new PlaneGeometry(1, 1), backMat);
   back.onBeforeRender = (renderer) => {
     const toScreen = renderer.getRenderTarget() === null;
@@ -198,6 +214,12 @@ export function buildGlassText(scene, camera, h1, { mobile = false, area = h1.pa
       backMat.uniforms.uSize.value.set(W, H);
       backMat.uniforms.uOrigin.value.set(rect.left - hero.left, rect.top - hero.top);
       backMat.uniforms.uHero.value.set(hero.width, hero.height);
+      const sr = behind && behind.texture && behind.rect;
+      backMat.uniforms.uSceneOn.value = sr ? 1 : 0;
+      if (sr) {
+        backMat.uniforms.uScene.value = behind.texture;
+        backMat.uniforms.uSceneRect.value.set(sr.left - hero.left, sr.top - hero.top, sr.width, sr.height);
+      }
       // letters follow the HTML word boxes; they rise in, float a little and lean toward the pointer
       px = damp(px, s.pointer.x, 4, s.dt); py = damp(py, s.pointer.y, 4, s.dt);
       root.rotation.set(py * 0.16, px * 0.24, 0);
