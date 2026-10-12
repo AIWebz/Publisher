@@ -7,6 +7,7 @@
   const s = await api.strings();
   document.documentElement.lang = s.lang || 'en';
   for (const el of document.querySelectorAll('[data-s]')) el.textContent = s[el.dataset.s] || el.textContent;
+  if (s.hint) { $('hint').textContent = s.hint; $('hint').hidden = false; }
   $('serial').focus();
   $('quit').addEventListener('click', () => api.quit());
   $('serial').addEventListener('input', () => { $('error').textContent = ''; });

@@ -177,7 +177,9 @@ check; set `FOLIO_REQUIRE_LICENSE=1` to try it. The app checks serials offline a
 node scripts/license-keygen.mjs 100 folio-serials.txt   # 100 new serials, appended to folio-serials.txt
 ```
 
-Commit the updated `desktop/serials.dat`; new serials work in builds made after that. Keep
+The Windows installer also makes a serial for each computer it installs on and saves it on the user's
+desktop as `Folio Publisher serial number.txt` (`build/installer.nsh` runs the app with `--write-serial`);
+the app accepts that serial on that computer. Commit the updated `desktop/serials.dat`; new serials work in builds made after that. Keep
 `folio-serials.txt` out of the repository (it is ignored) and backed up.
 
 ### Signing the Windows installer

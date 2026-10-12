@@ -1176,4 +1176,5 @@
 "Enter the serial number you received with your purchase.":"Introduce el número de serie que recibiste con tu compra.",
 "Serial number":"Número de serie",
 "Activate":"Activar",
-"That serial number is not valid. Check it and try again.":"Ese número de serie no es válido. Revísalo e inténtalo de nuevo."}
+"That serial number is not valid. Check it and try again.":"Ese número de serie no es válido. Revísalo e inténtalo de nuevo.",
+"Your serial number is in the file “{1}” on your desktop.":"Tu número de serie está en el archivo «{1}» de tu escritorio."}

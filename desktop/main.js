@@ -299,6 +299,7 @@ function startApp() {
 
   const writer = createWriter();
   const userData = () => app.getPath('userData');
+  const installedSerialsPath = () => path.join(userData(), 'installed-serials.dat');
   let knownPaths = null;
   let win = null;
   let rendererReady = false;
@@ -340,6 +341,26 @@ function startApp() {
     if (isDocPath(file)) queueFiles([path.resolve(file)]);
     if (app.isReady() && !win) createWindow();
   });
+
+  // The Windows installer runs `Folio Publisher.exe --write-serial <file>` (build/installer.nsh): make a serial for
+  // this computer, accept it from now on, write it to <file> for the user, and exit without opening a window.
+  const serialArg = process.argv.indexOf('--write-serial');
+  if (serialArg > 0 && process.argv[serialArg + 1]) {
+    try {
+      const serial = license.makeSerial();
+      fs.mkdirSync(userData(), { recursive: true });
+      fs.appendFileSync(installedSerialsPath(), license.fingerprint(license.normalize(serial)));
+      fs.writeFileSync(path.resolve(process.argv[serialArg + 1]), [
+        'Folio Publisher serial number', '', serial, '',
+        'Enter this serial number when Folio Publisher asks for it. Keep this file somewhere safe.', ''
+      ].join('\r\n'));
+    } catch (err) {
+      process.exitCode = 1;
+      console.error(err);
+    }
+    app.exit(process.exitCode || 0);
+    return;
+  }
 
   if (!app.requestSingleInstanceLock()) {
     app.quit();
@@ -387,8 +408,12 @@ function startApp() {
   // The installed app asks for a serial (see desktop/license.js) before it opens; running from source does not.
   const licenseRequired = app.isPackaged || process.env.FOLIO_REQUIRE_LICENSE === '1';
   const licensePath = () => path.join(userData(), 'license.json');
-  let issued = null;
-  const fingerprints = () => (issued ||= (() => { try { return license.readFingerprints(fs.readFileSync(path.join(__dirname, 'serials.dat'))); } catch { return new Set(); } })());
+  const serialFile = () => path.join(app.getPath('desktop'), 'Folio Publisher serial number.txt');
+  // serials you issue (desktop/serials.dat) and the ones the installer made on this computer
+  const fingerprints = () => {
+    const read = (p) => { try { return fs.readFileSync(p); } catch { return Buffer.alloc(0); } };
+    return license.readFingerprints(Buffer.concat([read(path.join(__dirname, 'serials.dat')), read(installedSerialsPath())]));
+  };
   let activationWin = null;
   let activated = false;
 
@@ -441,6 +466,7 @@ function startApp() {
     lang: uiStrings ? uiLang : 'en',
     title: tr('Activate Folio Publisher'),
     intro: tr('Enter the serial number you received with your purchase.'),
+    hint: fs.existsSync(serialFile()) ? tr('Your serial number is in the file “{1}” on your desktop.', path.basename(serialFile())) : '',
     label: tr('Serial number'),
     activate: tr('Activate'),
     quit: tr('Quit'),
