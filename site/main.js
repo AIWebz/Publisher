@@ -207,7 +207,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(poin
     hero.appendChild(p);
   }
   const cols = document.querySelector('.columns');
-  const tints = ['#60a5fa', '#22d3ee', '#f472b6'];
+  const tints = ['#ffffff', '#d4d4d8', '#a1a1aa'];
   for (let i = 0; i < 7 && cols; i++) {
     const b = document.createElement('span');
     b.className = 'beam';

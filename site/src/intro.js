@@ -2,7 +2,7 @@
 // into a stack that becomes the Folio book, the cover slams shut, the layered "F" flies in front
 // and the camera rushes into it as the page fades in. Runs in the shared canvas as the intro view.
 import { Group, InstancedMesh, BoxGeometry, MeshStandardMaterial, Object3D, Color, PointLight, MathUtils } from 'three';
-import { BLUE, CYAN, PINK, PAPER, canvasTexture, blend, lines, clamp01, easeOut, easeInOut } from './models/kit.js';
+import { PAPER, canvasTexture, blend, lines, clamp01, easeOut, easeInOut } from './models/kit.js';
 import { createBook, createLogo3D } from './models/objects.js';
 
 export const INTRO_END = 4.9; // seconds until the hand-off to the page starts
@@ -10,11 +10,11 @@ const N = 56;
 const lerp = (a, b, t) => a + (b - a) * t;
 
 export async function buildIntro(scene, camera, signal) {
-  const pink = new PointLight(PINK, 40, 30, 1.5); pink.position.set(-5, 2, 3);
-  const cyan = new PointLight(CYAN, 40, 30, 1.5); cyan.position.set(5, -1, 4);
-  scene.add(pink, cyan);
+  const left = new PointLight('#ffffff', 34, 30, 1.5); left.position.set(-5, 2, 3);
+  const right = new PointLight('#d4d4d8', 34, 30, 1.5); right.position.set(5, -1, 4);
+  scene.add(left, right);
 
-  // the pages: one instanced box, a printed face, tinted copies in the accent colours
+  // the pages: one instanced box, a printed face, a few copies in silver greys
   const face = new MeshStandardMaterial({ roughness: 0.7, map: canvasTexture(256, 346, (c, w, h) => {
     c.fillStyle = PAPER; c.fillRect(0, 0, w, h);
     c.fillStyle = blend(c, 20, 20, w - 20, 120); c.fillRect(20, 20, w - 40, 100);
@@ -23,7 +23,7 @@ export async function buildIntro(scene, camera, signal) {
   }) });
   const plain = new MeshStandardMaterial({ color: '#f1f1f1', roughness: 0.8 });
   const pages = new InstancedMesh(new BoxGeometry(1, 1.35, 0.006), [plain, plain, plain, plain, face, plain], N);
-  const tints = [new Color(BLUE), new Color(CYAN), new Color(PINK)], white = new Color('#ffffff');
+  const tints = [new Color('#d4d4d8'), new Color('#a1a1aa'), new Color('#71717a')], white = new Color('#ffffff');
   for (let i = 0; i < N; i++) pages.setColorAt(i, i % 7 === 3 ? tints[i % 3].clone().lerp(white, 0.35) : white);
   const seeds = Array.from({ length: N }, (_, i) => ({ a: i * 2.39996, y: (i / N - 0.5) * 3.4, r: 2.6 + (i % 5) * 0.32, tx: Math.sin(i * 1.7), tz: Math.cos(i * 1.3) }));
 

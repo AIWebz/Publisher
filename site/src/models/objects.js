@@ -2,11 +2,11 @@
 // icons and the layered Folio "F". Everything is built from primitives and canvas textures.
 import {
   Group, Mesh, BoxGeometry, CylinderGeometry, ConeGeometry, TorusGeometry, SphereGeometry, IcosahedronGeometry,
-  PlaneGeometry, ExtrudeGeometry, Shape, InstancedMesh, Object3D, MeshStandardMaterial, MeshBasicMaterial, DoubleSide
+  PlaneGeometry, ExtrudeGeometry, Shape, InstancedMesh, Object3D, MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial, DoubleSide
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
-  BLUE, CYAN, PINK, blend, PAPER, SANS, MONO, canvasTexture, loadImage, lines, mat, contactShadow, damp, clamp01,
+  WHITE, SILVER, blend, PAPER, SANS, MONO, canvasTexture, loadImage, lines, mat, contactShadow, damp, clamp01,
   easeOut, easeInOut, stagger
 } from './kit.js';
 
@@ -17,6 +17,9 @@ function faced(w, h, d, front, side) {
   return new Mesh(new BoxGeometry(w, h, d), [side, side, side, side, front, side]);
 }
 const tex = (map, opts = {}) => new MeshStandardMaterial({ map, roughness: 0.75, ...opts });
+/** Clear, slightly frosted glass (the site's liquid-glass look in 3D). */
+const glass = () => new MeshPhysicalMaterial({ color: '#ffffff', metalness: 0, roughness: 0.08, transmission: 1, thickness: 0.6, ior: 1.45,
+  clearcoat: 1, clearcoatRoughness: 0.05, attenuationColor: '#e8ecf5', attenuationDistance: 2.5, envMapIntensity: 1.4 });
 
 // ------------------------------------------------------------------------------------------------
 // Hero: book, print pieces, swatch fan, pencil
@@ -38,7 +41,7 @@ export async function createBook() {
     c.fillStyle = '#fff'; c.font = `600 190px ${SANS}`; c.fillText('Folio', 100, 780);
     c.fillStyle = 'rgba(255,255,255,.6)'; c.font = `400 40px ${MONO}`; c.fillText('Desktop publishing', 112, 860);
     c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(112, 1180, 800, 3);
-    c.fillStyle = blend(c, 112, 0, 680, 0); c.font = `500 44px ${MONO}`; c.fillText('THE NEW ERA OF DESIGN', 112, 1262);
+    c.fillStyle = blend(c, 112, 0, 680, 0, true); c.font = `500 44px ${MONO}`; c.fillText('THE NEW ERA OF DESIGN', 112, 1262);
   }), { roughness: 0.42, metalness: 0.15 });
   const endpaper = tex(canvasTexture(512, 716, (c, w, h) => {
     c.fillStyle = '#eef4ff'; c.fillRect(0, 0, w, h);
@@ -49,7 +52,7 @@ export async function createBook() {
     c.fillStyle = PAPER; c.fillRect(0, 0, w, h);
     c.fillStyle = '#111'; c.font = `500 22px ${MONO}`; c.fillText('FOLIO MAGAZINE · ISSUE 01', 50, 70);
     c.fillRect(50, 88, w - 100, 2);
-    c.font = `700 74px ${SANS}`; c.fillText('The New', 50, 190); c.fillStyle = blend(c, 50, 0, 560, 0, true); c.fillText('Era Of Design', 50, 270);
+    c.font = `700 74px ${SANS}`; c.fillText('The New', 50, 190); c.fillStyle = blend(c, 50, 0, 560, 0); c.fillText('Era Of Design', 50, 270);
     c.fillStyle = blend(c, 50, 310, w - 50, 580); c.fillRect(50, 310, w - 100, 270);
     c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.arc(w - 170, 445, 80, 0, TAU); c.fill();
     lines(c, 50, 620, (w - 130) / 2, 10, 30, 'rgba(0,0,0,.32)');
@@ -62,7 +65,7 @@ export async function createBook() {
   const spineTex = tex(canvasTexture(256, 1434, (c, w, h) => {
     c.fillStyle = '#0b0b0b'; c.fillRect(0, 0, w, h);
     c.save(); c.translate(w / 2 + 26, 120); c.rotate(Math.PI / 2);
-    c.fillStyle = blend(c, 0, 0, 200, 0); c.font = `600 78px ${SANS}`; c.fillText('Folio', 0, 0); c.restore();
+    c.fillStyle = blend(c, 0, 0, 200, 0, true); c.font = `600 78px ${SANS}`; c.fillText('Folio', 0, 0); c.restore();
   }), { roughness: 0.45, metalness: 0.2 });
   const edgeSide = stripes(true), edgeTop = stripes(false), paper = mat.paper();
 
@@ -114,7 +117,7 @@ export function createFlyer() {
 export function createCard() {
   const m = paperPiece(1.05, 0.62, canvasTexture(525, 310, (c, w, h) => {
     c.fillStyle = '#0d0d0d'; c.fillRect(0, 0, w, h);
-    c.fillStyle = blend(c, 0, 0, w, 0); c.fillRect(0, h - 10, w, 10);
+    c.fillStyle = blend(c, 0, 0, w, 0, true); c.fillRect(0, h - 10, w, 10);
     c.fillStyle = '#fff'; c.font = `600 44px ${SANS}`; c.fillText('Ada Park', 34, 90);
     c.fillStyle = 'rgba(255,255,255,.6)'; c.font = `400 22px ${MONO}`; c.fillText('Art director', 36, 128);
     lines(c, 36, 200, 230, 3, 24, 'rgba(255,255,255,.35)', 0.8);
@@ -126,7 +129,7 @@ export function createBrochure() {
   const g = new Group();
   const panel = (i) => canvasTexture(240, 440, (c, w, h) => {
     c.fillStyle = PAPER; c.fillRect(0, 0, w, h);
-    if (i === 1) { c.fillStyle = '#0a0a0a'; c.fillRect(0, 0, w, 190); c.fillStyle = CYAN; c.fillRect(20, 150, 90, 12); }
+    if (i === 1) { c.fillStyle = '#0a0a0a'; c.fillRect(0, 0, w, 190); c.fillStyle = SILVER; c.fillRect(20, 150, 90, 12); }
     else { c.fillStyle = 'rgba(0,0,0,.8)'; c.fillRect(20, 30, 140, 22); }
     lines(c, 20, i === 1 ? 220 : 80, w - 40, i === 1 ? 6 : 10, 26, 'rgba(0,0,0,.3)');
   });
@@ -150,7 +153,7 @@ export function createBrochure() {
 }
 
 export function createSwatchFan() {
-  const colors = ['#0a0a0a', '#1e3a8a', '#2563eb', BLUE, '#06b6d4', CYAN, '#a5f3fc', '#f9a8d4', PINK, '#be185d'];
+  const colors = ['#0a0a0a', '#27272a', '#3f3f46', '#52525b', '#71717a', '#a1a1aa', '#c4c4cc', '#d4d4d8', '#e4e4e7', '#fafafa'];
   const g = new Group();
   const pin = new Mesh(new CylinderGeometry(0.06, 0.06, 0.2, 20), mat.aluminium());
   pin.rotation.x = Math.PI / 2;
@@ -183,7 +186,7 @@ export function createSwatchFan() {
 
 export function createPencil() {
   const g = new Group();
-  const body = new Mesh(new CylinderGeometry(0.075, 0.075, 1.5, 6), mat.plastic(PINK));
+  const body = new Mesh(new CylinderGeometry(0.075, 0.075, 1.5, 6), mat.aluminium());
   const wood = new Mesh(new ConeGeometry(0.075, 0.24, 6), mat.plastic('#e9c99c'));
   wood.position.y = 0.87;
   const lead = new Mesh(new ConeGeometry(0.026, 0.085, 12), mat.plastic('#222'));
@@ -212,7 +215,7 @@ export async function createMonitor() {
   const body = mat.plastic('#e7e7ea');
   const wall = canvasTexture(1024, 620, (c, w, h) => {
     const bg = c.createLinearGradient(0, 0, w, h);
-    bg.addColorStop(0, BLUE); bg.addColorStop(0.5, CYAN); bg.addColorStop(1, PINK);
+    bg.addColorStop(0, '#3f3f46'); bg.addColorStop(0.5, '#a1a1aa'); bg.addColorStop(1, '#e4e4e7');
     c.fillStyle = bg; c.fillRect(0, 0, w, h);
     c.fillStyle = 'rgba(255,255,255,.96)'; c.fillRect(170, 90, 684, 430);
     c.fillStyle = '#f2f2f2'; c.fillRect(170, 90, 684, 40);
@@ -318,7 +321,7 @@ export function createLaptopSilver() { return makeLaptop('silver', 'assets/edito
 function chip() {
   const g = new Group();
   const pkg = new Mesh(new RoundedBoxGeometry(0.62, 0.07, 0.62, 2, 0.02), mat.ink());
-  const die = new Mesh(new RoundedBoxGeometry(0.3, 0.03, 0.3, 2, 0.01), new MeshStandardMaterial({ color: CYAN, roughness: 0.25, metalness: 0.4, emissive: CYAN, emissiveIntensity: 0.2 }));
+  const die = new Mesh(new RoundedBoxGeometry(0.3, 0.03, 0.3, 2, 0.01), new MeshStandardMaterial({ color: WHITE, roughness: 0.2, metalness: 0.6, emissive: WHITE, emissiveIntensity: 0.15 }));
   die.position.y = 0.045;
   const pins = new InstancedMesh(new BoxGeometry(0.04, 0.03, 0.09), mat.aluminium(), 32);
   const o = new Object3D();
@@ -371,8 +374,8 @@ function icon(build, onHover) {
 export function createClarity() {
   let gem, core;
   return icon((g) => {
-    gem = new Mesh(new IcosahedronGeometry(0.82, 0), new MeshStandardMaterial({ color: '#2a2a2e', roughness: 0.12, metalness: 0.5, flatShading: true, transparent: true, opacity: 0.55, depthWrite: false }));
-    core = new Mesh(new IcosahedronGeometry(0.34, 0), new MeshStandardMaterial({ color: PINK, roughness: 0.3, flatShading: true }));
+    gem = new Mesh(new IcosahedronGeometry(0.82, 0), glass());
+    core = new Mesh(new IcosahedronGeometry(0.34, 0), new MeshStandardMaterial({ color: WHITE, roughness: 0.25, metalness: 0.3, flatShading: true }));
     g.add(gem, core);
   }, (h, t) => { gem.rotation.set(t * 0.3 + h * 1.2, t * 0.4, 0); core.rotation.set(-t * 0.6, -t * 0.8 - h * 2, 0); core.scale.setScalar(1 + h * 0.35); });
 }
@@ -382,9 +385,9 @@ export function createOwnership() {
   return icon((g) => {
     const body = new Mesh(new RoundedBoxGeometry(1.1, 0.9, 0.42, 3, 0.08), mat.ink());
     body.position.y = -0.3;
-    const hole = new Mesh(new CylinderGeometry(0.09, 0.09, 0.05, 20), mat.plastic(CYAN));
+    const hole = new Mesh(new CylinderGeometry(0.09, 0.09, 0.05, 20), mat.aluminium());
     hole.rotation.x = Math.PI / 2; hole.position.set(0, -0.25, 0.22);
-    const slot = new Mesh(new BoxGeometry(0.06, 0.2, 0.05), mat.plastic(CYAN));
+    const slot = new Mesh(new BoxGeometry(0.06, 0.2, 0.05), mat.aluminium());
     slot.position.set(0, -0.4, 0.22);
     shackle = new Group();
     const steel = mat.aluminium();
@@ -434,7 +437,7 @@ export function createLanguages() {
   let globe, tiles = [];
   return icon((g) => {
     globe = new Group();
-    const ink = mat.ink(), accent = mat.plastic(BLUE);
+    const ink = mat.ink(), accent = mat.plastic(WHITE);
     for (let i = 1; i < 6; i++) {
       const lat = -Math.PI / 2 + (i * Math.PI) / 6, r = Math.cos(lat) * 0.72;
       const ring = new Mesh(new TorusGeometry(r, i === 3 ? 0.02 : 0.011, 6, 64), i === 3 ? accent : ink);
@@ -450,8 +453,8 @@ export function createLanguages() {
     g.add(globe);
     ['A', 'あ', 'ع', 'Я'].forEach((ch, i) => {
       const map = canvasTexture(128, 128, (c, w, h) => {
-        c.fillStyle = [BLUE, '#0891b2', PINK, '#111'][i]; c.beginPath(); c.roundRect(0, 0, w, h, 20); c.fill();
-        c.fillStyle = '#fff'; c.font = `600 72px ${SANS}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, w / 2, h / 2 + 4);
+        c.fillStyle = ['#fafafa', '#a1a1aa', '#3f3f46', '#111'][i]; c.beginPath(); c.roundRect(0, 0, w, h, 20); c.fill();
+        c.fillStyle = i < 2 ? '#111' : '#fff'; c.font = `600 72px ${SANS}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, w / 2, h / 2 + 4);
       });
       const tile = new Mesh(new PlaneGeometry(0.32, 0.32), new MeshBasicMaterial({ map, transparent: true, side: DoubleSide, toneMapped: false }));
       tile.userData.a = (i / 4) * TAU;
@@ -488,7 +491,7 @@ export function createCraft() {
 export function createFree() {
   let lid;
   return icon((g) => {
-    const white = mat.ink(), ribbon = mat.plastic(PINK);
+    const white = mat.ink(), ribbon = mat.aluminium();
     const box = new Mesh(new BoxGeometry(1, 0.8, 1), white);
     box.position.y = -0.45;
     const r1 = new Mesh(new BoxGeometry(0.16, 0.81, 1.01), ribbon); r1.position.y = -0.45;
@@ -517,9 +520,9 @@ export function createLogo3D() {
   const geo = new ExtrudeGeometry(f, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.03, bevelSegments: 3 });
   geo.translate(0, 0, -0.11);
   const mats = [
-    new MeshStandardMaterial({ color: BLUE, roughness: 0.3, metalness: 0.2 }),
-    new MeshStandardMaterial({ color: CYAN, roughness: 0.3, metalness: 0.2 }),
-    new MeshStandardMaterial({ color: PINK, roughness: 0.26, metalness: 0.2 })
+    new MeshStandardMaterial({ color: '#3f3f46', roughness: 0.3, metalness: 0.85 }),
+    new MeshStandardMaterial({ color: '#c4c4cc', roughness: 0.18, metalness: 0.95 }),
+    glass()
   ];
   const g = new Group(), mark = new Group();
   const layers = mats.map((m, i) => { const l = new Mesh(geo, m); mark.add(l); return l; });

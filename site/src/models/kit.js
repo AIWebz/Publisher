@@ -1,4 +1,4 @@
-// Shared palette, materials and helpers for the site's 3D models (light theme: white page, black type, a blue–cyan–pink accent blend).
+// Shared palette, materials and helpers for the site's 3D models (light theme: black page, white liquid-glass type, monochrome accents).
 //
 // Model contract — every model module exports factory functions returning
 //   { object: Object3D, update?(t, s) }
@@ -14,10 +14,9 @@ import {
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-// the accent is a blend of blue, cyan and pink (used sparingly on a black-and-white base)
-export const BLUE = '#3b82f6';
-export const CYAN = '#22d3ee';
-export const PINK = '#ec4899';
+// monochrome accents: white, silver and graphite (the site is black with liquid-glass type)
+export const WHITE = '#f4f4f5';
+export const GRAPHITE = '#52525b';
 export const SILVER = '#d4d4d8';
 export const INK = '#0a0a0a';
 export const PAPER = '#fbfbf7';
@@ -32,10 +31,10 @@ export const damp = (current, target, lambda, dt) => current + (target - current
 /** Stagger helper: progress of item i (of n) inside an overall 0…1 progress. */
 export const stagger = (p, i, n, spread = 0.5) => clamp01((p - (i / Math.max(1, n - 1)) * spread) / (1 - spread));
 
-/** The accent blend as a canvas gradient from (x0, y0) to (x1, y1). */
-export function blend(c, x0, y0, x1, y1, deep = false) {
+/** A silver sheen as a canvas gradient from (x0, y0) to (x1, y1): graphite tones for paper, light tones on dark. */
+export function blend(c, x0, y0, x1, y1, onDark = false) {
   const g = c.createLinearGradient(x0, y0, x1, y1);
-  g.addColorStop(0, deep ? '#2563eb' : BLUE); g.addColorStop(0.5, deep ? '#0891b2' : CYAN); g.addColorStop(1, deep ? '#db2777' : PINK);
+  g.addColorStop(0, onDark ? '#ffffff' : '#18181b'); g.addColorStop(0.5, onDark ? '#a1a1aa' : '#71717a'); g.addColorStop(1, onDark ? '#e4e4e7' : '#27272a');
   return g;
 }
 
@@ -83,10 +82,10 @@ export function contactShadow(w = 2, d = 1.2, opacity = 0.22, y = -1) {
 }
 
 /** The standard studio lighting used by every view (the page is white, so keep it bright and soft). */
-export function studioLights(scene, { key = 2.4, rim = CYAN } = {}) {
+export function studioLights(scene, { key = 2.4, rim = '#ffffff' } = {}) {
   scene.add(new HemisphereLight('#ffffff', '#3a3a44', 0.8));
-  // a pink rim from the left so dark objects keep their silhouette on the black page
-  const r2 = new PointLight(PINK, 36, 30, 1.6);
+  // a second rim from the left so dark objects keep their silhouette on the black page
+  const r2 = new PointLight('#d4d4d8', 32, 30, 1.6);
   r2.position.set(-5, 1, -4);
   scene.add(r2);
   const k = new DirectionalLight('#ffffff', key);
