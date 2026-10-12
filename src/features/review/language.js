@@ -100,7 +100,9 @@ async function applyDisplayLanguage() {
   const ticket = ++applying;
   const codes = await displayLanguages();
   const want = prefs.get('uiLang') === 'follow' ? prefs.get('proofLang') : prefs.get('uiLang');
-  const code = catalogFor(want, codes);
+  let code = catalogFor(want, codes);
+  // following a proofing language without a catalog (or English, the only choice for e.g. Japanese): use the system's
+  if (code === 'en' && prefs.get('uiLang') === 'follow' && globalThis.navigator?.language) code = catalogFor(navigator.language, codes);
   if (code === currentLanguage() && ticket === applying) return;
   let strings = null;
   if (code !== 'en') {
