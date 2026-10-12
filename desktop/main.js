@@ -50,13 +50,15 @@ function filesFromArgs(argv, cwd = process.cwd(), isFile = (p) => { try { return
  * The macOS application menu. Items with `command` forward that app command id to the renderer
  * through `send(id)`; when `available` (Set of registered command ids) is given, command items
  * the renderer does not know are left out. Edit uses roles so native text fields keep working.
- * @param {{ appName?: string, isDev?: boolean, available?: Set<string>|null, send: (id: string) => void }} opts
+ * Labels go through `t` (the display language's translations; {1} placeholders are filled in).
+ * @param {{ appName?: string, isDev?: boolean, available?: Set<string>|null, send: (id: string) => void, t?: (s: string) => string }} opts
  * @returns {object[]} Electron MenuItemConstructorOptions[]
  */
-function buildMenuTemplate({ appName = 'Folio Publisher', isDev = false, available = null, send }) {
+function buildMenuTemplate({ appName = 'Folio Publisher', isDev = false, available = null, send, t = (s) => s }) {
+  const L = (s, ...vals) => t(s).replace(/\{(\d+)\}/g, (m, i) => (vals[i - 1] ?? m));
   const cmd = (label, id, accelerator) => {
     if (available && !available.has(id)) return null;
-    return { label, accelerator, id: `cmd:${id}`, click: () => send(id) };
+    return { label: t(label), accelerator, id: `cmd:${id}`, click: () => send(id) };
   };
   const clean = (items) => {
     const out = [];
@@ -73,25 +75,25 @@ function buildMenuTemplate({ appName = 'Folio Publisher', isDev = false, availab
     {
       label: appName,
       submenu: clean([
-        { role: 'about', label: `About ${appName}` },
+        { role: 'about', label: L('About {1}', appName) },
         sep,
         cmd('Settings…', 'app.settings', 'Cmd+,'),
         sep,
-        { role: 'services' },
+        { role: 'services', label: t('Services') },
         sep,
-        { role: 'hide', label: `Hide ${appName}` },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
+        { role: 'hide', label: L('Hide {1}', appName) },
+        { role: 'hideOthers', label: t('Hide Others') },
+        { role: 'unhide', label: t('Show All') },
         sep,
-        { role: 'quit', label: `Quit ${appName}` }
+        { role: 'quit', label: L('Quit {1}', appName) }
       ])
     },
     {
-      label: 'File',
+      label: t('File'),
       submenu: clean([
         cmd('New', 'file.new', 'CmdOrCtrl+N'),
         cmd('Open…', 'file.open', 'CmdOrCtrl+O'),
-        { label: 'Open Recent', role: 'recentDocuments', submenu: [{ label: 'Clear Menu', role: 'clearRecentDocuments' }] },
+        { label: t('Open Recent'), role: 'recentDocuments', submenu: [{ label: t('Clear Menu'), role: 'clearRecentDocuments' }] },
         sep,
         cmd('Close', 'file.close', 'CmdOrCtrl+W'),
         cmd('Save', 'file.save', 'CmdOrCtrl+S'),
@@ -105,21 +107,21 @@ function buildMenuTemplate({ appName = 'Folio Publisher', isDev = false, availab
       ])
     },
     {
-      label: 'Edit',
+      label: t('Edit'),
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: t('Undo') },
+        { role: 'redo', label: t('Redo') },
         sep,
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'pasteAndMatchStyle' },
-        { role: 'delete' },
-        { role: 'selectAll' }
+        { role: 'cut', label: t('Cut') },
+        { role: 'copy', label: t('Copy') },
+        { role: 'paste', label: t('Paste') },
+        { role: 'pasteAndMatchStyle', label: t('Paste and Match Style') },
+        { role: 'delete', label: t('Delete') },
+        { role: 'selectAll', label: t('Select All') }
       ]
     },
     {
-      label: 'View',
+      label: t('View'),
       submenu: clean([
         cmd('Zoom In', 'view.zoomIn', null),
         cmd('Zoom Out', 'view.zoomOut', null),
@@ -129,15 +131,15 @@ function buildMenuTemplate({ appName = 'Folio Publisher', isDev = false, availab
         isDev ? { role: 'reload' } : null,
         isDev ? { role: 'toggleDevTools' } : null,
         sep,
-        { role: 'togglefullscreen' }
+        { role: 'togglefullscreen', label: t('Toggle Full Screen') }
       ])
     },
-    { role: 'windowMenu' },
+    { role: 'windowMenu', label: t('Window') },
     {
-      role: 'help',
+      role: 'help', label: t('Help'),
       submenu: clean([
         cmd('Keyboard Shortcuts', 'help.shortcuts', null),
-        cmd(`${appName} Help`, 'help.show', null)
+        cmd(L('{1} Help', appName), 'help.show', null)
       ])
     }
   ].filter((m) => !m.submenu || m.submenu.length || m.role);
@@ -274,6 +276,9 @@ if (IS_ELECTRON) startApp();
 function startApp() {
   const { app, BrowserWindow, Menu, dialog, ipcMain, nativeTheme, screen, shell } = electron;
   const isMac = process.platform === 'darwin';
+  // the display language's translations (sent by the renderer as 'app:language')
+  let uiStrings = null;
+  const tr = (s, ...vals) => String((uiStrings && typeof uiStrings[s] === 'string' && uiStrings[s]) || s).replace(/\{(\d+)\}/g, (m, i) => (vals[i - 1] ?? m));
   const isWin = process.platform === 'win32';
 
   // Tests (and portable setups) may isolate the profile.
@@ -371,7 +376,8 @@ function startApp() {
       appName: app.name || 'Folio Publisher',
       isDev: !app.isPackaged,
       available: menuCommands,
-      send: (id) => { if (win && !win.isDestroyed()) win.webContents.send('menu:command', id); }
+      send: (id) => { if (win && !win.isDestroyed()) win.webContents.send('menu:command', id); },
+      t: tr
     });
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   }
@@ -451,13 +457,13 @@ function startApp() {
         items.push({ label: s, click: () => w.webContents.replaceMisspelling(s) });
       }
       if (p.misspelledWord) {
-        if (!items.length) items.push({ label: 'No suggestions', enabled: false });
-        items.push({ label: 'Add to dictionary', click: () => w.webContents.session.addWordToSpellCheckerDictionary(p.misspelledWord) });
+        if (!items.length) items.push({ label: tr('No suggestions'), enabled: false });
+        items.push({ label: tr('Add to dictionary'), click: () => w.webContents.session.addWordToSpellCheckerDictionary(p.misspelledWord) });
         items.push({ type: 'separator' });
       }
-      if (p.isEditable) items.push({ role: 'cut', enabled: p.editFlags.canCut });
-      items.push({ role: 'copy', enabled: p.editFlags.canCopy });
-      if (p.isEditable) items.push({ role: 'paste', enabled: p.editFlags.canPaste }, { type: 'separator' }, { role: 'selectAll' });
+      if (p.isEditable) items.push({ role: 'cut', label: tr('Cut'), enabled: p.editFlags.canCut });
+      items.push({ role: 'copy', label: tr('Copy'), enabled: p.editFlags.canCopy });
+      if (p.isEditable) items.push({ role: 'paste', label: tr('Paste'), enabled: p.editFlags.canPaste }, { type: 'separator' }, { role: 'selectAll', label: tr('Select All') });
       Menu.buildFromTemplate(items).popup({ window: w });
     });
 
@@ -471,9 +477,9 @@ function startApp() {
     });
     w.on('unresponsive', async () => {
       const r = await dialog.showMessageBox(w, {
-        type: 'warning', buttons: ['Wait', 'Reload'], defaultId: 0, cancelId: 0,
-        title: 'Folio Publisher', message: 'Folio Publisher is not responding.',
-        detail: 'Reloading restores your publications from their latest recovery copies.'
+        type: 'warning', buttons: [tr('Wait'), tr('Reload')], defaultId: 0, cancelId: 0,
+        title: 'Folio Publisher', message: tr('Folio Publisher is not responding.'),
+        detail: tr('Reloading restores your publications from their latest recovery copies.')
       });
       if (r.response === 1 && !w.isDestroyed()) w.webContents.forcefullyCrashRenderer();
     });
@@ -539,6 +545,14 @@ function startApp() {
     }
   });
 
+  ipcMain.on('app:language', (_e, code) => {
+    uiStrings = null;
+    if (typeof code === 'string' && code !== 'en' && /^[a-z]{2,3}(-[A-Za-z]{2,8})?$/.test(code)) {
+      try { uiStrings = JSON.parse(fs.readFileSync(path.join(ROOT, 'app', 'i18n', `${code}.json`), 'utf8')); } catch { uiStrings = null; }
+    }
+    if (isMac) installMenu();
+  });
+
   ipcMain.on('app:menu-commands', (_e, ids) => {
     if (!Array.isArray(ids)) return;
     menuCommands = new Set(ids.filter((x) => typeof x === 'string'));
@@ -562,7 +576,7 @@ function startApp() {
   });
 
   // ---------- File IPC ----------
-  const DOC_FILTERS = [{ name: 'Folio publications', extensions: ['folio'] }, { name: 'JSON', extensions: ['json'] }, { name: 'All files', extensions: ['*'] }];
+  const DOC_FILTERS = () => [{ name: tr('Folio publications'), extensions: ['folio'] }, { name: 'JSON', extensions: ['json'] }, { name: tr('All files'), extensions: ['*'] }];
 
   async function readDoc(file) {
     const st = await fsp.stat(file);
@@ -571,7 +585,7 @@ function startApp() {
   }
 
   ipcMain.handle('file:open', async () => {
-    const r = await dialog.showOpenDialog(win, { title: 'Open publication', properties: ['openFile'], filters: DOC_FILTERS });
+    const r = await dialog.showOpenDialog(win, { title: tr('Open publication'), properties: ['openFile'], filters: DOC_FILTERS() });
     if (r.canceled || !r.filePaths[0]) return null;
     const file = path.resolve(r.filePaths[0]);
     const text = await readDoc(file);
@@ -600,9 +614,9 @@ function startApp() {
     let file = typeof wanted === 'string' && path.isAbsolute(wanted) && kp.has(wanted) && !saveAs ? path.resolve(wanted) : null;
     if (!file) {
       const r = await dialog.showSaveDialog(win, {
-        title: saveAs ? 'Save publication as' : 'Save publication',
+        title: saveAs ? tr('Save publication as') : tr('Save publication'),
         defaultPath: typeof wanted === 'string' && path.isAbsolute(wanted) ? path.resolve(wanted) : path.join(app.getPath('documents'), safeName(suggestedName, 'Publication') + '.folio'),
-        filters: [{ name: 'Folio publication', extensions: ['folio'] }]
+        filters: [{ name: tr('Folio publication'), extensions: ['folio'] }]
       });
       if (r.canceled || !r.filePath) return null;
       file = path.resolve(r.filePath);
@@ -621,7 +635,8 @@ function startApp() {
     get knownPaths() { return getKnownPaths(); },
     writeAtomic: (file, data, opts) => writer.writeAtomic(file, data, opts),
     removeFile: (file) => writer.removeFile(file),
-    userData
+    userData,
+    t: (s, ...vals) => tr(s, ...vals)
   };
   for (const f of fs.readdirSync(__dirname).filter((n) => /^ipc-.+\.js$/.test(n)).sort()) {
     try {

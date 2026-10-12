@@ -1,13 +1,16 @@
 // Proofing languages: Review › Language › Set Proofing Language (85 languages), the document and
 // app default language, File › Options › Proofing and Language, and check-spelling-as-you-type
 // (wavy underlines while editing text in place, with suggestions on right-click).
+// Also the display language: the interface follows the default editing language unless one is
+// chosen in File › Options › Language; its catalog (app/i18n/<code>.json) is loaded and installed,
+// and core/ui/translate.js switches everything on screen to it.
 
 import { app } from '../../core/app.js';
 import { registry } from '../../core/registry.js';
 import { prefs } from '../../core/prefs.js';
 import { findElement } from '../../core/model.js';
 import { h } from '../../core/ui/dom.js';
-import { t } from '../../core/i18n.js';
+import { t, setCatalog, currentLanguage, onLanguageChange } from '../../core/i18n.js';
 import { PROOFING, LANGUAGES, proofing, matchLanguage } from '../../core/languages.js';
 import { checkerFor, peekChecker, setCheckerOptions, dictionaryManifest } from '../../engines/spell/dictionaries.js';
 import { optCheck, optSelect } from '../../core/shell/options.js';
@@ -15,6 +18,7 @@ import './language.css';
 
 prefs.define({
   proofLang: matchLanguage(globalThis.navigator && navigator.language),
+  uiLang: 'follow',
   spellAsYouType: true,
   spellIgnoreCaps: true,
   spellIgnoreNumbers: true
@@ -45,11 +49,85 @@ export async function getChecker(id) {
   return checkerFor(id, { personal, onPersonalChange: (words) => app.platform.store.set(personalKey(id), words), ...checkerOptions() });
 }
 
-/** Display name of a proofing id. */
+// ------------------------------------------------------------------------------------------------
+// Display language
+// ------------------------------------------------------------------------------------------------
+
+const I18N_BASE = 'i18n/';
+let catalogs = null;        // promise of the codes that have a catalog (app/i18n/index.json)
+
+function getText(url) {
+  return fetch(url).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status} loading ${url}`); return r.text(); }).catch((err) => {
+    // file:// pages (Electron) may refuse fetch(); XMLHttpRequest still works there
+    if (typeof XMLHttpRequest === 'undefined') throw err;
+    return new Promise((resolve, reject) => {
+      const x = new XMLHttpRequest();
+      x.open('GET', url);
+      x.onload = () => (x.status === 200 || (x.status === 0 && x.responseText) ? resolve(x.responseText) : reject(err));
+      x.onerror = () => reject(err);
+      x.send();
+    });
+  });
+}
+
+/** The display languages with a catalog (codes such as 'de', 'pt', 'sr-Latn'), English excluded. */
+export function displayLanguages() {
+  if (!catalogs) catalogs = getText(`${I18N_BASE}index.json`).then((s) => JSON.parse(s)).catch(() => []);
+  return catalogs;
+}
+
+/** The catalog code for a language tag or proofing id ('de-AT' -> 'de'), or 'en' when there is none. */
+export function catalogFor(tag, codes) {
+  const id = String(tag || 'en');
+  if (codes.includes(id)) return id;
+  const base = id.split('-')[0];
+  if (base === 'nn' && codes.includes('nb') && !codes.includes('nn')) return 'nb';
+  return codes.includes(base) ? base : 'en';
+}
+
+/** The language name in its own language ('de' -> 'Deutsch'). */
+export function nativeName(code) {
+  try {
+    const n = new Intl.DisplayNames([code], { type: 'language' }).of(code);
+    if (n && n !== code) return n.charAt(0).toLocaleUpperCase(code) + n.slice(1);
+  } catch { /* unknown to this browser */ }
+  const l = LANGUAGES.find((x) => x.code === code.split('-')[0]);
+  return l ? l.native : code;
+}
+
+let applying = 0;
+async function applyDisplayLanguage() {
+  const ticket = ++applying;
+  const codes = await displayLanguages();
+  const want = prefs.get('uiLang') === 'follow' ? prefs.get('proofLang') : prefs.get('uiLang');
+  const code = catalogFor(want, codes);
+  if (code === currentLanguage() && ticket === applying) return;
+  let strings = null;
+  if (code !== 'en') {
+    try { strings = JSON.parse(await getText(`${I18N_BASE}${code}.json`)); } catch (err) { console.warn(`Display language ${code} could not be loaded`, err); }
+  }
+  if (ticket !== applying) return;
+  setCatalog(strings ? code : 'en', strings);
+}
+
+onLanguageChange((code) => {
+  document.documentElement.lang = code;
+  const d = globalThis.folioDesktop;
+  if (d && d.send) d.send('app:language', code);
+});
+prefs.on('change', (p) => { if (p === 'uiLang' || (p === 'proofLang' && prefs.get('uiLang') === 'follow')) applyDisplayLanguage(); });
+applyDisplayLanguage();
+
+/** Display name of a proofing id, in the display language ('de-AT' -> 'German (Austria)'). */
 export function langLabel(id) {
   if (id === 'none') return t('Do not check spelling');
   const p = proofing(id);
-  return p ? `${t(p.label)}${p.native && p.native !== p.label ? ` — ${p.native}` : ''}` : id;
+  if (!p) return id;
+  let name = '';
+  try { name = new Intl.DisplayNames([currentLanguage(), 'en'], { type: 'language' }).of(id) || ''; } catch { /* unknown tag */ }
+  if (!name || name === id || name.toLowerCase() === id.toLowerCase()) name = p.label;
+  name = name.charAt(0).toLocaleUpperCase() + name.slice(1);
+  return `${name}${p.native && p.native !== name ? ` — ${p.native}` : ''}`;
 }
 
 prefs.on('change', (p) => {
@@ -88,9 +166,12 @@ registry.command({
     search.addEventListener('input', fill);
     fill();
     const asDefault = h('input', { type: 'checkbox' });
+    // the interface follows along when the whole publication changes language (or when asked)
+    const asDisplay = h('input', { type: 'checkbox', checked: !targets.length });
     const scope = targets.length ? t('Applies to the selected text ({n} object(s)).', { n: targets.length }) : t('Applies to the whole publication.');
     const body = h('div', { class: 'lang-dlg' }, h('p', { class: 'dlg-hint', text: scope }), search, list,
-      h('label', { class: 'check' }, asDefault, h('span', { text: t('Set as default for new publications') })));
+      h('label', { class: 'check' }, asDefault, h('span', { text: t('Set as default for new publications') })),
+      h('label', { class: 'check' }, asDisplay, h('span', { text: t('Show Folio’s menus and buttons in this language') })));
     list.addEventListener('dblclick', () => api && api.submit('ok'));
     let api = null;
     const r = await app.ui.dialog({ title: t('Language'), body, width: 460, onRender: (_root, a) => { api = a; } });
@@ -102,6 +183,7 @@ registry.command({
       else doc.meta.lang = id;
     });
     if (asDefault.checked && id !== 'none') prefs.set('proofLang', id);
+    if (asDisplay.checked && id !== 'none') prefs.set('uiLang', catalogFor(id, await displayLanguages()));
     live.recheck();
   }
 });
@@ -121,6 +203,23 @@ registry.optionsSection({
       optCheck('Ignore words in UPPERCASE', () => prefs.get('spellIgnoreCaps'), (v) => prefs.set('spellIgnoreCaps', v)),
       optCheck('Ignore words that contain numbers', () => prefs.get('spellIgnoreNumbers'), (v) => prefs.set('spellIgnoreNumbers', v))
     );
+  }
+});
+
+registry.optionsSection({
+  page: 'language', id: 'display', title: 'Display language', order: 5,
+  render(box) {
+    const sel = h('select', { class: 'field' }, h('option', { value: 'follow', text: t('Same as the default editing language') }), h('option', { value: 'en', translate: 'no', text: 'English' }));
+    sel.value = prefs.get('uiLang');
+    sel.addEventListener('change', () => prefs.set('uiLang', sel.value));
+    displayLanguages().then((codes) => {
+      const opts = codes.map((c) => ({ c, n: nativeName(c) })).sort((a, b) => a.n.localeCompare(b.n));
+      sel.append(...opts.map(({ c, n }) => h('option', { value: c, lang: c, translate: 'no', text: n })));
+      sel.value = prefs.get('uiLang');
+      if (sel.selectedIndex < 0) sel.value = 'follow';
+    });
+    box.append(h('label', { class: 'opt-row' }, h('span', { text: t('Menus, buttons and messages') }), sel),
+      h('p', { class: 'dlg-hint', text: t('Folio’s interface switches to this language at once. Your publications are not changed.') }));
   }
 });
 

@@ -103,7 +103,7 @@ function pdfOptions(o, size) {
   };
 }
 
-module.exports = function registerExportIpc({ ipcMain, app, dialog, shell, BrowserWindow, getWindow, writeAtomic }) {
+module.exports = function registerExportIpc({ ipcMain, app, dialog, shell, BrowserWindow, getWindow, writeAtomic, t = (s) => s }) {
   const written = new Set();   // files and folders this module wrote — the only ones it will reveal
   const batches = new Map();   // batchId -> { folder, names, sender, size, done: [] }
 
@@ -132,13 +132,13 @@ module.exports = function registerExportIpc({ ipcMain, app, dialog, shell, Brows
   const saveDialog = async (win, title, suggestedName, filters) => {
     const exts = filters[0].extensions;
     const name = withExt(safeName(suggestedName, 'Untitled'), exts);
-    const r = await dialog.showSaveDialog(win, { title, defaultPath: path.join(defaultDir(), name), filters });
+    const r = await dialog.showSaveDialog(win, { title: t(title), defaultPath: path.join(defaultDir(), name), filters: filters.map((f) => ({ ...f, name: t(f.name) })) });
     if (r.canceled || !r.filePath) return null;
     return r.filePath;
   };
 
   const chooseFolder = async (win, title) => {
-    const r = await dialog.showOpenDialog(win, { title, defaultPath: defaultDir(), properties: ['openDirectory', 'createDirectory', 'promptToCreate'] });
+    const r = await dialog.showOpenDialog(win, { title: t(title), defaultPath: defaultDir(), properties: ['openDirectory', 'createDirectory', 'promptToCreate'] });
     if (r.canceled || !r.filePaths || !r.filePaths[0]) return null;
     const folder = r.filePaths[0];
     await fsp.mkdir(folder, { recursive: true });

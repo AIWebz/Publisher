@@ -6,7 +6,7 @@
 import { app } from '../app.js';
 import { registry } from '../registry.js';
 import { h } from '../ui/dom.js';
-import { t } from '../i18n.js';
+import { t, onLanguageChange } from '../i18n.js';
 import { dialog } from '../ui/dialog.js';
 import './options.css';
 
@@ -59,11 +59,13 @@ export function openOptions(pageId) {
   }
 
   draw();
+  // a new display language redraws the page (names and lists built in code follow it too)
+  const off = onLanguageChange(() => draw());
   const root = h('div', { class: 'opt-root' }, nav, body);
   return dialog({
     title: t('Options'), body: root, width: 860, className: 'dlg-options',
     buttons: [{ label: t('OK'), value: 'ok', primary: true }]
-  }).finally(destroy);
+  }).finally(() => { off(); destroy(); });
 }
 
 // ------------------------------------------------------------------------------------------------

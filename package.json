@@ -19,9 +19,13 @@
     "dicts": "node scripts/dictionaries.mjs",
     "build:icons": "python3 build/tools/make-icons.py",
     "test:desktop": "node tests/e2e/desktop-shell.mjs && node tests/e2e/desktop-package.mjs",
-    "build:site": "node scripts/build-site.mjs"
+    "build:site": "node scripts/build-site.mjs",
+    "i18n:extract": "node scripts/i18n-extract.mjs",
+    "i18n:check": "node scripts/i18n-import.mjs --check"
   },
   "devDependencies": {
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
     "electron": "44.7.0",
     "electron-builder": "26.15.3",
     "esbuild": "^0.28.2",

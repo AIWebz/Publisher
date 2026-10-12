@@ -101,8 +101,13 @@ test('KnownPaths persists across instances and ignores non-strings', async () =>
 test('macOS menu template: roles for Edit, commands forwarded, unknown commands hidden', () => {
   const sent = [];
   const tpl = main.buildMenuTemplate({ appName: 'Folio Publisher', available: new Set(['file.new', 'file.open', 'file.save', 'file.saveAs', 'file.close']), send: (id) => sent.push(id) });
-  const labels = tpl.map((m) => m.label || m.role);
-  assert.deepEqual(labels, ['Folio Publisher', 'File', 'Edit', 'View', 'windowMenu', 'help']);
+  assert.deepEqual(tpl.map((m) => m.label || m.role), ['Folio Publisher', 'File', 'Edit', 'View', 'Window', 'Help']);
+  assert.deepEqual(tpl.slice(-2).map((m) => m.role), ['windowMenu', 'help']);
+  // labels follow the display language
+  const de = main.buildMenuTemplate({ send: () => {}, t: (s) => ({ File: 'Datei', Save: 'Speichern', 'About {1}': 'Über {1}' }[s] || s) });
+  assert.equal(de[1].label, 'Datei');
+  assert.ok(de[1].submenu.some((i) => i.label === 'Speichern'));
+  assert.equal(de[0].submenu[0].label, 'Über Folio Publisher');
   const edit = tpl.find((m) => m.label === 'Edit').submenu.map((i) => i.role).filter(Boolean);
   for (const r of ['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll']) assert.ok(edit.includes(r), r);
   const file = tpl.find((m) => m.label === 'File').submenu;
