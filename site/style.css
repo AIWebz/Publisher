@@ -398,3 +398,9 @@ html.lenis, html.lenis body { height: auto; }
   .corner { opacity: 1; }
   .particle, .beam, .cursor-glow { display: none; }
 }
+
+/* the hero headline is drawn as real 3D glass by scene.js (glasstext.js); the HTML text stays for
+   layout, selection and screen readers but is not painted */
+.glass-stage { position: absolute; inset: -.55em -.45em; pointer-events: none; }
+.glass3d .display .up, .glass3d .display .accent .up { color: transparent; -webkit-text-stroke: 0; background: none; filter: none; }
+.glass3d .display .lg-layer { display: none; }

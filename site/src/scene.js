@@ -11,6 +11,7 @@ import { studioLights, roomEnvironment, canvasTexture, mat, contactShadow, damp,
 import * as M from './models/objects.js';
 import Lenis from 'lenis';
 import { buildIntro, disposeScene } from './intro.js';
+import { buildGlassHeadline } from './glasstext.js';
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const root = document.documentElement;
@@ -157,6 +158,23 @@ if (renderer) {
       world.position.y = out * 1.2;
     };
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Hero headline: real 3D glass letters over the (transparent) HTML headline (see glasstext.js)
+  // ---------------------------------------------------------------------------------------------
+  const h1 = document.querySelector('.display');
+  if (h1 && h1.querySelector('.w')) {
+    const stageEl = document.createElement('div');
+    stageEl.className = 'glass-stage';
+    stageEl.setAttribute('aria-hidden', 'true');
+    h1.appendChild(stageEl);
+    root.classList.add('glass3d');
+    view(stageEl, { fov: 22, hoverEl: h1, intro: 1.9, delay: 0.15 }, (scene, camera) => {
+      const glassText = buildGlassHeadline(scene, camera, h1, { mobile: innerWidth < 700 });
+      document.fonts.ready.then(() => { glassText.rebuild(); frame(); });
+      return (t, s, rect) => glassText.update(t, { ...s, pointer }, rect);
+    });
+  }
 
   // ---------------------------------------------------------------------------------------------
   // Install: a device in each card
