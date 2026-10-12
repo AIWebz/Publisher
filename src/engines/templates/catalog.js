@@ -57,9 +57,9 @@ const BLANK_TEMPLATES = BLANK_SIZES.map(([id, name, opts, sizeLabel]) => ({
 }));
 
 const CALENDAR_TEMPLATES = [
-  { id: 'wall-calendar', name: 'Monthly Wall Calendar', category: 'calendars', description: 'Twelve pages, one per month, each with a photo and a full month grid. Options: { year, weekStart }.',
+  { id: 'wall-calendar', name: 'Monthly Wall Calendar', category: 'calendars', description: 'Twelve pages, one per month, each with a photo and a full month grid..',
     sizeLabel: 'Letter · 12 pages', build: wallCalendar },
-  { id: 'year-at-a-glance', name: 'Year at a Glance', category: 'calendars', description: 'All twelve months on a single landscape page. Options: { year, weekStart }.',
+  { id: 'year-at-a-glance', name: 'Year at a Glance', category: 'calendars', description: 'All twelve months on a single landscape page..',
     sizeLabel: 'Letter landscape · 1 page', build: yearAtAGlance }
 ];
 

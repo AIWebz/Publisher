@@ -4,6 +4,7 @@
 import { serialize, parseDocument, pruneUnused, allElements, PAGE_SIZES, matchPageSize, VERSION } from '../model.js';
 import { snapshotDoc } from '../history.js';
 import { hashString } from '../hash.js';
+import { plural } from '../i18n.js';
 
 /** File extension of native publications. */
 export const EXTENSION = 'folio';
@@ -150,7 +151,7 @@ export function formatWhen(ts, now = Date.now()) {
   const diff = now - ts;
   const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   if (diff >= 0 && diff < 60000) return 'Just now';
-  if (diff >= 0 && diff < 3600000) { const m = Math.round(diff / 60000); return `${m} minute${m === 1 ? '' : 's'} ago`; }
+  if (diff >= 0 && diff < 3600000) { const m = Math.round(diff / 60000); return plural(m, '{n} minute ago', '{n} minutes ago'); }
   const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const days = Math.round((day(n) - day(d)) / 86400000);
   if (days === 0) return `Today at ${time}`;

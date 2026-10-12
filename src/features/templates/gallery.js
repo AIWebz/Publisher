@@ -13,6 +13,7 @@ import { CATEGORIES, TEMPLATES } from '../../engines/templates/catalog.js';
 import { createTemplateRecord, docFromTemplate, searchTemplates, MY_TEMPLATES } from '../../engines/templates/custom.js';
 import { listCustomTemplates, saveCustomTemplate, deleteCustomTemplate } from './store.js';
 import './gallery.css';
+import { plural } from '../../core/i18n.js';
 
 const BLANKS = ['letter', 'a4', 'a5', 'halfLetter', 'tabloid', 'legal', 'businessCard', 'postcard', 'card5x7', 'square8', 'envelope10', 'certificate'];
 const docCache = new Map();
@@ -112,7 +113,7 @@ registry.backstage({
         await deleteCustomTemplate(item.record.id); custom = await listCustomTemplates(); picked = null; detail.replaceChildren(); drawCats(); drawGrid();
       } }));
       detail.replaceChildren(h('div', { class: 'tg-preview' }, preview), h('h3', { text: item.name }), h('p', { class: 'tg-desc', text: item.description || item.meta }),
-        h('p', { class: 'tg-meta', text: `${pages} page${pages > 1 ? 's' : ''}` }),
+        h('p', { class: 'tg-meta', text: plural(pages, '{n} page', '{n} pages') }),
         item.kind === 'blank' ? null : h('label', { class: 'tg-opt' }, h('span', { text: 'Colour scheme' }), colorSel),
         item.kind === 'blank' ? null : h('label', { class: 'tg-opt' }, h('span', { text: 'Font scheme' }), fontSel),
         h('div', { class: 'tg-actions' }, ...actions));

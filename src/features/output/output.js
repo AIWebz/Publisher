@@ -7,6 +7,7 @@ import { icon } from '../../core/ui/icons.js';
 import { renderPage } from '../../core/render/index.js';
 import { exportPDF, exportImages, printDocument, buildPreview, parsePageRange, PAPER_SIZES } from '../../engines/export/index.js';
 import './output.css';
+import { plural } from '../../core/i18n.js';
 
 /** renderPage adapter for the export engine. */
 export function exportRenderer(doc) {
@@ -55,7 +56,7 @@ function previewPane() {
       try {
         current = buildPreview(pane, doc, exportRenderer(doc), { ...options, width: Math.max(320, pane.clientWidth || 520), height: 560, maxSheets: 24 });
         const n = current.sheetCount;
-        pane.prepend(h('div', { class: 'out-count', text: `${n} sheet${n === 1 ? '' : 's'}${n > 24 ? ' (showing the first 24)' : ''}` }));
+        pane.prepend(h('div', { class: 'out-count', text: `${plural(n, '{n} sheet', '{n} sheets')}${n > 24 ? ' (showing the first 24)' : ''}` }));
       } catch (err) {
         pane.replaceChildren(h('p', { class: 'out-error', text: err.message || String(err) }));
       }

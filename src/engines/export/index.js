@@ -6,6 +6,7 @@ import { parsePageRange, computeLayout, applyRecords, layoutStats, PAPER_SIZES }
 import { preparePrintRoot, clearPrintRoot, buildSheetElement, whenRendered } from './print.js';
 import { exportPagesAsImages } from './raster.js';
 import { safeFileName } from './imagemeta.js';
+import { plural } from '../../core/i18n.js';
 
 export { parsePageRange, computeLayout, applyRecords, layoutStats, PAPER_SIZES } from './imposition.js';
 export { preparePrintRoot, clearPrintRoot, buildSheetElement, mountPage } from './print.js';
@@ -216,7 +217,7 @@ export function buildPreview(container, doc, renderPage, options = {}) {
   if (layout.sheets.length > max) {
     const more = document.createElement('p');
     more.className = 'export-preview-more';
-    more.textContent = `+ ${layout.sheets.length - max} more sheet${layout.sheets.length - max === 1 ? '' : 's'}`;
+    more.textContent = `+ ${plural(layout.sheets.length - max, '{n} more sheet', '{n} more sheets')}`;
     Object.assign(more.style, { font: '12px system-ui, sans-serif', opacity: '.7', margin: '0' });
     wrap.appendChild(more);
   }

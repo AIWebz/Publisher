@@ -20,7 +20,13 @@ const report = process.argv.includes('--report');
 
 const SOURCES = ['src', 'desktop'];
 // engines build publication content (not interface text); language names come from Intl.DisplayNames
-const SKIP_FILES = [/^src\/engines\/(?!templates\/catalog\.js|mailmerge\/(?!xlsx))/, /^src\/core\/languages\.js$/, /\.test\.js$/];
+const SKIP_FILES = [/^src\/engines\/(?!templates\/(catalog|custom)\.js|mailmerge\/(?!xlsx)|export\/index\.js)/, /^src\/core\/languages\.js$/, /\.test\.js$/];
+// names, not words: the brand, font families, file types
+const NOT_WORDS = new Set(['Folio', 'Folio Publisher', 'Excel', 'JSON', 'Aa']);
+// …and the font families (theme.js lists them in FONTS and the font schemes)
+const themeSrc = readFileSync(path.join(root, 'src/core/theme.js'), 'utf8');
+for (const m of themeSrc.matchAll(/(?:heading|body):\s*'([^']+)'/g)) NOT_WORDS.add(m[1]);
+for (const m of (/export const FONTS = \[([\s\S]*?)\]/.exec(themeSrc) || ['', ''])[1].matchAll(/'([^']+)'/g)) NOT_WORDS.add(m[1]);
 
 // properties whose values are ids, not words
 const ID_KEYS = new Set(['id', 'icon', 'tab', 'group', 'type', 'kind', 'key', 'cmd', 'command', 'role', 'accelerator', 'class', 'className', 'cls',
@@ -28,7 +34,8 @@ const ID_KEYS = new Set(['id', 'icon', 'tab', 'group', 'type', 'kind', 'key', 'c
   'keys', 'accel', 'when', 'align', 'valign', 'dir', 'style', 'css', 'color', 'fill', 'stroke', 'mode', 'lang', 'locale', 'event', 'pref', 'prefKey',
   'selector', 'page', 'section', 'panel', 'size', 'shape', 'preset', 'variant', 'cursor', 'effect', 'blend', 'anchor', 'side', 'position', 'layout',
   'engine', 'script', 'channel', 'ref', 'target', 'field', 'column', 'sheet', 'storageKey', 'storeKey', 'native', 'code', 'aff', 'dic', 'image',
-  'pattern', 'regex', 'fallback', 'weight', 'transform', 'decoration', 'case', 'wrap', 'mask', 'clip', 'dash', 'cap', 'join', 'arrow', 'easing']);
+  'pattern', 'regex', 'fallback', 'weight', 'transform', 'decoration', 'case', 'wrap', 'mask', 'clip', 'dash', 'cap', 'join', 'arrow', 'easing',
+  'synonyms', 'aliases', 'accept']);
 // calls whose string arguments are ids (all arguments unless a position is given)
 const ID_CALLS = new Map(Object.entries({
   h: [0], createElement: null, createElementNS: null, createTextNode: [], querySelector: null, querySelectorAll: null, closest: null, matches: null,
@@ -46,7 +53,10 @@ const COMPARE = new Set(['===', '!==', '==', '!=', 'in', 'instanceof']);
 
 const looksLikeWords = (s) => {
   const v = s.trim();
-  if (v.length < 2 || !/[A-Za-z]/.test(v)) return false;
+  if (v.length < 2 || !/[A-Za-z]/.test(v) || NOT_WORDS.has(v)) return false;
+  if (/^(Ctrl|Cmd|Mod|Shift|Alt|Win|Option|Meta)\+/.test(v)) return false;   // keyboard shortcuts
+  if (/^[\w.+-]+\/[\w.+*-]+(,|$)/.test(v)) return false;                  // MIME types
+  if (/^-?[\d.]+(px|em|rem|pt|%)?(\s+-?[\d.]+(px|em|rem|pt|%)?)*$/.test(v)) return false; // CSS lengths
   if (/^(https?:|data:|blob:|file:|mailto:|about:)/i.test(v)) return false;
   if (/<[a-z!/][^>]*>/i.test(v) || /\w="/.test(v)) return false;     // HTML / SVG markup and attributes
   if (/\b[a-z][\w-]*\(/.test(v)) return false;                          // CSS / SVG functions: rgba(…), translate(…)
@@ -61,9 +71,10 @@ const looksLikeWords = (s) => {
     if (/\.\w{2,5}$/.test(v)) return false;                           // file names
     if (/^[\d\s.,:%×x+-]+[a-z]{0,3}$/i.test(v)) return false;         // measurements like 12pt
   }
-  if (/^[a-z][\w-]*( [a-z][\w-]*)*$/.test(v) && !/\b(the|a|an|of|to|and|or|in|on|for|with|from|by|at|is|are|no|not|all|this|that|your|you)\b/.test(v)) return false; // class lists
   return true;
 };
+// lowercase words with no placeholders and no small words are class lists ('btn primary'), not text
+const classList = (v) => /^[a-z][\w-]*( [a-z][\w-]*)*$/.test(v) && !/\b(the|a|an|of|to|and|or|in|on|for|with|from|by|at|is|are|no|not|all|this|that|your|you)\b/.test(v);
 
 const calleeName = (c) => (c.type === 'Identifier' ? c.name : c.type === 'MemberExpression' && !c.computed && c.property.type === 'Identifier' ? c.property.name : null);
 
@@ -128,6 +139,7 @@ for (const src of SOURCES) {
       key = key.replace(/\s+/g, ' ').trim();
       const words = key.replace(/\{\d+\}/g, '');
       if (!looksLikeWords(words) || !/[A-Za-z]{2}/.test(words)) return;
+      if (!/\{\w+\}/.test(key) && classList(key)) return;
       if (excluded(node, ancestors)) return;
       if (!found.has(key)) found.set(key, []);
       found.get(key).push(`${rel}:${node.loc.start.line}`);

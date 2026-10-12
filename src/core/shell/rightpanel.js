@@ -10,6 +10,7 @@ import { icon } from '../ui/icons.js';
 import { setTip } from '../ui/tooltip.js';
 import { findElement } from '../model.js';
 import { SHAPE_LABELS } from '../render/shapes.js';
+import { plural } from '../i18n.js';
 
 const TYPE_ICON = { text: 'text-box', image: 'picture', shape: 'shapes', line: 'line', table: 'table', group: 'group' };
 const TYPE_NAME = { text: 'Text Box', image: 'Picture', line: 'Line', table: 'Table', group: 'Group' };
@@ -163,7 +164,7 @@ export function buildRightPanel(el) {
       while (hit && hit.parent) { expanded.add(hit.parent.id); hit = findElement(app.doc, hit.parent.id); }
     }
     walk(page.elements, 0);
-    const head = h('div', { class: 'ly-head' }, h('span', { text: app.isMasterMode ? `Master ${app.master.name}` : `Page ${app.pageIndex + 1}` }), h('span', { class: 'ly-count', text: `${page.elements.length} object${page.elements.length === 1 ? '' : 's'}` }));
+    const head = h('div', { class: 'ly-head' }, h('span', { text: app.isMasterMode ? `Master ${app.master.name}` : `Page ${app.pageIndex + 1}` }), h('span', { class: 'ly-count', text: plural(page.elements.length, '{n} object', '{n} objects') }));
     const tree = h('div', { class: 'ly-tree', role: 'tree' }, rows.length ? rows : [h('div', { class: 'ins-empty' }, h('p', { text: 'This page has no objects yet.' }))]);
     layers.replaceChildren(head, tree);
     layers.querySelector('.ly-row.selected')?.scrollIntoView({ block: 'nearest' });

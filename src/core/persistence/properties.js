@@ -4,6 +4,7 @@
 import { docStats, formatBytes, pageSizeName } from './format.js';
 import { formatUnit, UNITS } from '../units.js';
 import { esc } from '../ui/dom.js';
+import { plural } from '../i18n.js';
 
 const TYPE_LABELS = { text: 'text boxes', image: 'pictures', shape: 'shapes', line: 'lines', table: 'tables', group: 'groups' };
 
@@ -18,10 +19,10 @@ export function propertiesSummaryHTML(session) {
   const rows = [
     ['Page size', `${esc(pageSizeName(s))} — ${formatUnit(s.width, u)} × ${formatUnit(s.height, u, true)}`],
     ['Margins', `${formatUnit(m.top, u)} top, ${formatUnit(m.bottom, u)} bottom, ${formatUnit(m.left, u)} left, ${formatUnit(m.right, u, true)} right`],
-    ['Layout', `${s.columns.count} column${s.columns.count === 1 ? '' : 's'}${s.facing ? ' · facing pages' : ''}${s.bleed ? ` · ${formatUnit(s.bleed, u, true)} bleed` : ''}`],
-    ['Pages', `${st.pages} page${st.pages === 1 ? '' : 's'} · ${st.masters} master page${st.masters === 1 ? '' : 's'}`],
+    ['Layout', `${plural(s.columns.count, '{n} column', '{n} columns')}${s.facing ? ' · facing pages' : ''}${s.bleed ? ` · ${formatUnit(s.bleed, u, true)} bleed` : ''}`],
+    ['Pages', `${plural(st.pages, '{n} page', '{n} pages')} · ${plural(st.masters, '{n} master page', '{n} master pages')}`],
     ['Objects', `${st.objects} (${esc(kinds)})`],
-    ['Text', `${st.words.toLocaleString()} word${st.words === 1 ? '' : 's'} · ${st.characters.toLocaleString()} characters`],
+    ['Text', `${plural(st.words, '{n} word', '{n} words').replace(String(st.words), st.words.toLocaleString())} · ${plural(st.characters, '{n} character', '{n} characters').replace(String(st.characters), st.characters.toLocaleString())}`],
     ['Size', esc(formatBytes(st.bytes))],
     ['Location', session.filePath ? esc(session.filePath) : session.fileName ? esc(session.fileName) : 'Not saved yet'],
     ['Status', session.dirty ? 'Unsaved changes' : 'Saved']

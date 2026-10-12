@@ -3,6 +3,7 @@
 import { app } from '../core/app.js';
 import { registry } from '../core/registry.js';
 import { insertPages, duplicatePage, deletePages, movePage, addMaster, duplicateMaster, deleteMaster, applyMaster, nextMasterName } from '../core/pages.js';
+import { plural } from '../core/i18n.js';
 
 const hasDoc = (ctx) => !!ctx.doc;
 const idx = (arg) => (typeof arg === 'number' ? arg : app.pageIndex);
@@ -44,7 +45,7 @@ registry.command({
   run: async (ctx, arg) => {
     const i = idx(arg);
     const page = app.doc.pages[i];
-    if (page.elements.length && !(await app.ui.confirm('Delete page?', `Page ${i + 1} contains ${page.elements.length} object${page.elements.length > 1 ? 's' : ''}. Delete it? You can undo this.`, 'Delete'))) return;
+    if (page.elements.length && !(await app.ui.confirm('Delete page?', `Page ${i + 1} contains ${plural(page.elements.length, '{n} object', '{n} objects')}. Delete it? You can undo this.`, 'Delete'))) return;
     app.transact('Delete Page', (doc) => { deletePages(doc, [i]); });
     app.goToPage(Math.min(i, app.doc.pages.length - 1));
   }
@@ -139,7 +140,7 @@ registry.command({
     const doc = app.doc;
     const m = doc.masters[i];
     const users = doc.pages.filter((p) => p.masterId === m.id).length;
-    if (users && !(await app.ui.confirm('Delete master page?', `Master ${m.name} is used by ${users} page${users > 1 ? 's' : ''}. They will use Master ${doc.masters[i === 0 ? 1 : 0].name} instead.`, 'Delete'))) return;
+    if (users && !(await app.ui.confirm('Delete master page?', `Master ${m.name} is used by ${plural(users, '{n} page', '{n} pages')}. They will use Master ${doc.masters[i === 0 ? 1 : 0].name} instead.`, 'Delete'))) return;
     app.transact('Delete Master Page', (d) => { deleteMaster(d, m.id, d.masters[i === 0 ? 1 : 0].id); });
     if (app.isMasterMode) app.setMasterMode(true, 0);
   }

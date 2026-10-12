@@ -4,6 +4,7 @@
 import { registry } from './registry.js';
 import { walkElements, elementBounds } from './model.js';
 import { layoutStories } from '../engines/text/flow.js';
+import { plural } from './i18n.js';
 
 const TYPE_NAMES = { text: 'Text box', image: 'Picture', shape: 'Shape', line: 'Line', table: 'Table', group: 'Group' };
 const nameOf = (el) => el.name || TYPE_NAMES[el.type] || 'Object';
@@ -58,7 +59,7 @@ export function checkHidden(doc) {
   doc.pages.forEach((p, pageIndex) => {
     let n = 0, first = null;
     walkElements(p.elements, (el) => { if (el.hidden) { n++; first = first || el.id; } });
-    if (n) out.push({ level: 'info', message: `${n} hidden object${n > 1 ? 's' : ''} will not print`, pageIndex, elementId: first });
+    if (n) out.push({ level: 'info', message: plural(n, '{n} hidden object will not print', '{n} hidden objects will not print'), pageIndex, elementId: first });
   });
   return out;
 }

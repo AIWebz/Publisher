@@ -54,6 +54,12 @@ export function tp(n, one, other, params = {}) {
   return t(n === 1 ? one : other, p);
 }
 
+/**
+ * English singular or plural of a counted phrase, kept whole so the display language can translate
+ * it on screen ("{n} page" / "{n} pages"): plural(3, '{n} page', '{n} pages') -> '3 pages'.
+ */
+export const plural = (n, one, other) => fill(n === 1 ? one : other, { n });
+
 /** Mark a string for extraction without translating it now (translate later with t(s)). */
 export const tx = (text) => text;
 

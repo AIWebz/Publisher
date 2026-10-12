@@ -5,6 +5,7 @@
 import { readPublication, saveSnapshot, suggestedName, formatWhen, OpenError } from './format.js';
 import { recoverableEntries } from './recovery.js';
 import { esc } from '../ui/dom.js';
+import { plural } from '../i18n.js';
 
 /** File-flow controller installed as `app.files`. */
 export class FilesController {
@@ -310,7 +311,7 @@ export class FilesController {
       <label class="recover-row">
         <input type="checkbox" data-i="${i}" checked>
         <span class="recover-info"><strong>${esc(e.title || 'Untitled publication')}</strong>
-        <span class="recover-meta">${esc(formatWhen(e.savedAt))} · ${e.pages || '?'} page${e.pages === 1 ? '' : 's'}${e.filePath ? ` · ${esc(e.filePath)}` : ' · never saved'}</span></span>
+        <span class="recover-meta">${esc(formatWhen(e.savedAt))} · ${plural(e.pages || 0, '{n} page', '{n} pages')}${e.filePath ? ` · ${esc(e.filePath)}` : ' · never saved'}</span></span>
       </label>`).join('');
     let checked = list.map(() => true);
     const r = await this.ui.dialog({
@@ -344,7 +345,7 @@ export class FilesController {
       }
     }
     this.app.emit('recovery', null);
-    if (restored.length) this.ui.toast(`Restored ${restored.length} publication${restored.length === 1 ? '' : 's'} — save to keep the changes`);
+    if (restored.length) this.ui.toast(plural(restored.length, 'Restored {n} publication — save to keep the changes', 'Restored {n} publications — save to keep the changes'));
     return restored;
   }
 

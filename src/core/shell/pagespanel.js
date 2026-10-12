@@ -8,6 +8,7 @@ import { icon } from '../ui/icons.js';
 import { setTip } from '../ui/tooltip.js';
 import { renderThumb, pageSignature } from '../render/thumbs.js';
 import { spreads, movePage } from '../pages.js';
+import { plural } from '../i18n.js';
 
 const THUMB_W = 116;
 
@@ -140,7 +141,7 @@ export function buildPagesPanel(el) {
       }
     }
     list.replaceChildren(...rows, indicator);
-    foot.textContent = master ? `${doc.masters.length} master page${doc.masters.length > 1 ? 's' : ''}` : `${doc.pages.length} page${doc.pages.length > 1 ? 's' : ''}`;
+    foot.textContent = master ? plural(doc.masters.length, '{n} master page', '{n} master pages') : plural(doc.pages.length, '{n} page', '{n} pages');
     list.querySelector('.thumb.active')?.scrollIntoView({ block: 'nearest' });
     const live = new Set([...doc.pages, ...doc.masters].map((p) => p.id));
     for (const id of cache.keys()) if (!live.has(id)) cache.delete(id);

@@ -7,6 +7,7 @@ import { installPersistence } from '../core/persistence/index.js';
 import { formatWhen, formatBytes } from '../core/persistence/format.js';
 import { h } from '../core/ui/dom.js';
 import { icon } from '../core/ui/icons.js';
+import { plural } from '../core/i18n.js';
 
 installPersistence({ app });
 
@@ -121,7 +122,7 @@ registry.backstage({
           h('button', { type: 'button', class: 'bsf-action', onclick: () => app.exec('file.open') },
             icon('open'), h('span', {}, h('strong', { text: 'Browse…' }), h('small', { text: 'Open a .folio publication' }))),
           recover.length ? h('button', { type: 'button', class: 'bsf-action', onclick: () => app.exec('file.recover') },
-            icon('recover'), h('span', {}, h('strong', { text: 'Recover unsaved' }), h('small', { text: `${recover.length} publication${recover.length === 1 ? '' : 's'} not saved` }))) : null),
+            icon('recover'), h('span', {}, h('strong', { text: 'Recover unsaved' }), h('small', { text: plural(recover.length, '{n} publication not saved', '{n} publications not saved') }))) : null),
         h('p', { class: 'bsf-sub', text: 'Recent publications' }),
         await recentList(8));
     });
@@ -155,7 +156,7 @@ registry.backstage({
       const rows = list.map((e) => h('div', { class: 'bsf-item' }, icon('recover'),
         h('div', { class: 'bsf-item-open' },
           h('strong', { text: e.title || 'Untitled publication' }),
-          h('span', { text: `${formatWhen(e.savedAt)} · ${e.pages || '?'} page${e.pages === 1 ? '' : 's'}${e.size ? ` · ${formatBytes(e.size)}` : ''}${e.filePath ? ` · ${e.filePath}` : ' · never saved'}` })),
+          h('span', { text: `${formatWhen(e.savedAt)} · ${plural(e.pages || 0, '{n} page', '{n} pages')}${e.size ? ` · ${formatBytes(e.size)}` : ''}${e.filePath ? ` · ${e.filePath}` : ' · never saved'}` })),
         h('div', { class: 'bsf-item-tools' },
           h('button', { type: 'button', class: 'primary', text: 'Restore', onclick: async () => { if (await files().restore(e)) { app.emit('recovery', null); closeBackstage(); } } }),
           h('button', { type: 'button', class: 'danger', text: 'Discard', onclick: async () => {

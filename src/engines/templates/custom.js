@@ -12,6 +12,7 @@
 
 import { clone, uid, normalizeDocument, pruneUnused } from '../../core/model.js';
 import { COLOR_SCHEMES, FONT_SCHEMES } from '../../core/theme.js';
+import { plural } from '../../core/i18n.js';
 
 /** Format tag of stored custom templates. */
 export const TEMPLATE_FORMAT = 'folio-template';
@@ -34,7 +35,7 @@ export function sizeLabelFor(doc) {
   const units = UNIT_FACTORS[doc.setup.units] ? doc.setup.units : 'in';
   const f = UNIT_FACTORS[units];
   const n = doc.pages.length;
-  return `${fmt(doc.setup.width / f)} × ${fmt(doc.setup.height / f)} ${units} · ${n} page${n === 1 ? '' : 's'}`;
+  return `${fmt(doc.setup.width / f)} × ${fmt(doc.setup.height / f)} ${units} · ${plural(n, '{n} page', '{n} pages')}`;
 }
 
 const cleanText = (s, max) => String(s ?? '').replace(/[\u0000-\u001f]+/g, ' ').trim().slice(0, max);

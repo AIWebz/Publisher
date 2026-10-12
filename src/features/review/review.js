@@ -11,6 +11,7 @@ import { findAll, replaceMatch, replaceAll } from '../../engines/spell/find.js';
 import { getTargetHtml, collectTextTargets } from '../../engines/spell/targets.js';
 import { getPlainText } from '../../engines/spell/html-text.js';
 import './review.css';
+import { plural } from '../../core/i18n.js';
 
 const hasDoc = (ctx) => !!ctx.doc;
 
@@ -92,7 +93,7 @@ function buildFind() {
   const search = () => {
     try { matches = q.value ? findAll(app.doc, q.value, opts()) : []; } catch (err) { matches = []; info.textContent = err.message; return; }
     if (idx >= matches.length) idx = -1;
-    info.textContent = q.value ? `${matches.length} match${matches.length === 1 ? '' : 'es'}` : '';
+    info.textContent = q.value ? plural(matches.length, '{n} match', '{n} matches') : '';
   };
   const show = () => {
     const m = matches[idx]; if (!m) return;
@@ -111,7 +112,7 @@ function buildFind() {
     if (!q.value) return;
     let n = 0;
     try { app.transact('Replace All', (doc) => { n = replaceAll(doc, q.value, rep.value, opts()); }); } catch (err) { info.textContent = err.message; return; }
-    info.textContent = `Replaced ${n} occurrence${n === 1 ? '' : 's'}.`; matches = []; idx = -1;
+    info.textContent = plural(n, 'Replaced {n} occurrence.', 'Replaced {n} occurrences.'); matches = []; idx = -1;
   }));
   const el = h('div', { class: 'find-panel', role: 'dialog', 'aria-label': 'Find and Replace' },
     h('div', { class: 'fr-head' }, h('strong', { text: 'Find and Replace' }), h('button', { type: 'button', class: 'dlg-x', text: '×', onclick: () => { el.hidden = true; } })),
@@ -152,7 +153,7 @@ registry.command({
       let issues = [];
       try { issues = [...runPreflight(app.doc), ...extraChecks(app.doc)]; } catch (err) { issues = [{ level: 'error', message: String(err.message || err) }]; }
       if (!issues.length) { body.replaceChildren(h('p', { class: 'dc-ok', text: 'No problems found. Your publication is ready to print.' })); return; }
-      body.replaceChildren(h('p', { class: 'dc-sum', text: `${issues.length} item${issues.length > 1 ? 's' : ''} to review` }), h('ul', { class: 'dc-list' }, ...issues.map((it) => h('li', { class: `dc-item dc-${it.level || 'warning'}` },
+      body.replaceChildren(h('p', { class: 'dc-sum', text: plural(issues.length, '{n} item to review', '{n} items to review') }), h('ul', { class: 'dc-list' }, ...issues.map((it) => h('li', { class: `dc-item dc-${it.level || 'warning'}` },
         h('span', { class: 'dc-dot' }), h('span', { class: 'dc-msg', text: `${it.message}${it.pageIndex >= 0 ? ` — page ${it.pageIndex + 1}` : ''}` }),
         it.elementId ? h('button', { type: 'button', class: 'btn sm', text: 'Go To', onclick: () => goToTarget({ kind: 'cell', elementId: it.elementId, pageIndex: it.pageIndex }) }) : null))));
     };

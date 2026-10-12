@@ -236,7 +236,7 @@ registry.command({
     if (slots && slots.count > 1) {
       const res = MM.fillSheetFromRecords(doc, pi, doc.data, {});
       merged = res.doc;
-      app.ui.toast(`Filled ${res.sheets} sheet${res.sheets > 1 ? 's' : ''} with ${res.records} records`);
+      app.ui.toast(res.sheets === 1 ? `Filled 1 sheet with ${res.records} records` : `Filled ${res.sheets} sheets with ${res.records} records`);
     } else {
       merged = MM.buildMergedPublication(doc, doc.data, {});
       app.ui.toast(`Created ${n} personalised cop${n > 1 ? 'ies' : 'y'}`);
