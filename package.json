@@ -18,12 +18,14 @@
     "pack": "node scripts/build.mjs && electron-builder --dir --publish never",
     "dicts": "node scripts/dictionaries.mjs",
     "build:icons": "python3 build/tools/make-icons.py",
-    "test:desktop": "node tests/e2e/desktop-shell.mjs && node tests/e2e/desktop-package.mjs"
+    "test:desktop": "node tests/e2e/desktop-shell.mjs && node tests/e2e/desktop-package.mjs",
+    "build:site": "node scripts/build-site.mjs"
   },
   "devDependencies": {
     "electron": "44.7.0",
     "electron-builder": "26.15.3",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "three": "0.185.1"
   },
   "build": {
     "appId": "com.folio.publisher",

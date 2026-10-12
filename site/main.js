@@ -1,12 +1,12 @@
-// Folio site: scroll reveals, nav + progress, the floating 3D book following the pointer, and the
-// install buttons filled in from downloads/latest.json (written by the publish workflow).
-const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Folio site: scroll reveals, nav + progress, mobile menu, current section, the editor theme switch,
+// and the install buttons filled in from downloads/latest.json (written by the publish workflow).
+// The 3D models live in src/scene.js (bundled to assets/scene.js).
 
 // reveals
 const io = new IntersectionObserver((entries) => {
   for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
 }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.reveal, .reveal-zoom').forEach((el) => io.observe(el));
+document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
 // nav state and progress bar (batched to one write per frame)
 const nav = document.querySelector('.nav'), bar = document.querySelector('.progress');
@@ -45,31 +45,14 @@ const spy = new IntersectionObserver((entries) => {
 }, { rootMargin: '-45% 0px -50% 0px' });
 document.querySelectorAll('main section[id]').forEach((s) => spy.observe(s));
 
-// presentation: dark / light editor
+// presentation: dark / light editor (the 3D laptop listens for folio:theme)
 document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListener('click', () => {
   all.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-  document.querySelector('.shot').classList.toggle('light', b.dataset.theme === 'light');
+  const theme = b.dataset.theme, src = theme === 'light' ? 'assets/editor.webp' : 'assets/editor-dark.webp';
+  document.querySelectorAll('.shot, .shot-link').forEach((a) => { a.href = src; });
+  document.querySelector('.shot img').src = src;
+  document.dispatchEvent(new CustomEvent('folio:theme', { detail: theme }));
 }));
-
-// 3D book: turns toward the pointer, eased; idles with a slow sway
-(() => {
-  const book = document.querySelector('.book');
-  if (!book || REDUCED) return;
-  let tx = 0, ty = 0, x = 0, y = 0, t = 0, visible = true, raf = 0;
-  addEventListener('pointermove', (e) => { tx = e.clientX / innerWidth - 0.5; ty = e.clientY / innerHeight - 0.5; }, { passive: true });
-  const loop = () => {
-    raf = 0;
-    if (!visible || document.hidden) return; // paused off screen
-    t += 0.01;
-    x += (tx - x) * 0.05; y += (ty - y) * 0.05;
-    book.style.setProperty('--ry', `${-28 + x * 50 + Math.sin(t) * 6}deg`);
-    book.style.setProperty('--rx', `${12 - y * 26}deg`);
-    raf = requestAnimationFrame(loop);
-  };
-  const resume = () => { if (!raf) raf = requestAnimationFrame(loop); };
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; resume(); }).observe(book.parentElement);
-  document.addEventListener('visibilitychange', resume);
-})();
 
 // install buttons
 (async () => {
@@ -91,10 +74,11 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
     if (!f) { c.setAttribute('aria-disabled', 'true'); c.tabIndex = -1; continue; }
     c.href = `downloads/${encodeURIComponent(f.name)}`;
     c.setAttribute('download', '');
-    c.querySelector('.size').textContent = `${f.name} · ${MB(f.size)}`;
+    c.querySelector('.size').textContent = `${MB(f.size)} · ${f.name}`;
     c.setAttribute('aria-label', `Download Folio ${latest.version} for ${c.querySelector('.dl-os').textContent} (${MB(f.size)})`);
   }
   note.textContent = `Free · version ${latest.version}. Pick your computer.`;
+  document.getElementById('pill-text').textContent = `Folio ${latest.version} for Windows & Mac`;
   // mark the visitor's platform (Apple silicon vs Intel cannot always be told apart)
   let pick = /Windows/i.test(navigator.userAgent) ? 'win' : /Macintosh|Mac OS X/i.test(navigator.userAgent) ? 'macArm' : null;
   if (pick === 'macArm') {
