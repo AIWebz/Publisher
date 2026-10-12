@@ -168,3 +168,50 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(poin
   };
   addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(loop); }, { passive: true });
 })();
+
+// ideas adapted from 21st.dev components: a glow that follows the pointer, click ripples, drifting
+// particles in the hero, light beams running down the install columns, and the pointer position
+// (--gx / --gy) that the liquid-glass headings use for their highlight
+(() => {
+  const root = document.documentElement;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const glow = document.querySelector('.cursor-glow');
+  let tx = innerWidth / 2, ty = innerHeight / 3, x = tx, y = ty, raf = 0;
+  const step = () => {
+    x += (tx - x) * 0.14; y += (ty - y) * 0.14;
+    if (glow) glow.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    root.style.setProperty('--gx', `${x}px`); root.style.setProperty('--gy', `${y}px`);
+    raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(step) : 0;
+  };
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    tx = e.clientX; ty = e.clientY;
+    if (glow) glow.classList.add('on');
+    if (!raf) raf = requestAnimationFrame(step);
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => glow && glow.classList.remove('on'));
+  if (still) return;
+  addEventListener('pointerdown', (e) => {
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.left = `${e.clientX}px`; r.style.top = `${e.clientY}px`;
+    document.body.appendChild(r);
+    r.addEventListener('animationend', () => r.remove());
+  }, { passive: true });
+  const hero = document.querySelector('.hero');
+  for (let i = 0; i < 14 && hero; i++) {
+    const p = document.createElement('span');
+    p.className = 'particle';
+    p.setAttribute('aria-hidden', 'true');
+    p.style.cssText = `left:${(i * 37) % 97 + 1}%;top:${(i * 53) % 90 + 5}%;--pd:${6 + (i % 5)}s;--pdl:${(i * 0.45).toFixed(2)}s`;
+    hero.appendChild(p);
+  }
+  const cols = document.querySelector('.columns');
+  const tints = ['#60a5fa', '#22d3ee', '#f472b6'];
+  for (let i = 0; i < 7 && cols; i++) {
+    const b = document.createElement('span');
+    b.className = 'beam';
+    b.style.cssText = `--col:${(i * 5 + 2) % 15};--c:${tints[i % 3]};--bd:${5 + (i % 4) * 1.3}s;--bdl:${(i * 0.9).toFixed(1)}s`;
+    cols.appendChild(b);
+  }
+})();

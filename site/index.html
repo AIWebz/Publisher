@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Folio — The New Era Of Design</title>
   <meta name="description" content="Folio is a desktop publishing app for Windows and Mac. Design flyers, newsletters, brochures, cards and posters, and export print-ready PDF.">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#000000">
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/Archivo-wdth-wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
@@ -16,6 +17,15 @@
   <script src="main.js" defer></script>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="liquid" x="-4%" y="-12%" width="108%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="2" seed="7" result="noise">
+        <animate attributeName="baseFrequency" dur="14s" values="0.006 0.018;0.009 0.026;0.006 0.018" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+  <div class="cursor-glow" aria-hidden="true"></div>
   <div class="intro-bg" aria-hidden="true"><div class="intro-glow"></div></div>
   <div class="intro-3d" aria-hidden="true"></div>
   <div class="intro-ui">
@@ -28,7 +38,7 @@
 
   <header class="nav">
     <div class="nav-in">
-      <a class="brand" href="#top" aria-label="Folio — back to top"><img src="assets/logo-black.png" alt="" width="20" height="23"><span>Folio</span></a>
+      <a class="brand" href="#top" aria-label="Folio — back to top"><img src="assets/logo-white.png" alt="" width="20" height="23"><span>Folio</span></a>
       <nav id="site-nav" aria-label="Sections">
         <a href="#install">Install</a>
         <a href="#presentation">Presentation</a>
@@ -36,7 +46,7 @@
         <a href="#faq">Q&amp;A</a>
       </nav>
       <div class="nav-end">
-        <a class="btn btn-black btn-sm" href="#install">Download</a>
+        <a class="btn btn-primary btn-sm" href="#install">Download</a>
         <button class="menu" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span></span><span></span></button>
       </div>
     </div>
@@ -46,6 +56,12 @@
     <!-- 1 · Landing -->
     <section class="hero frame" id="landing">
       <div class="hero-grid" aria-hidden="true"></div>
+      <svg class="hero-lines" aria-hidden="true">
+        <line x1="0" y1="22%" x2="100%" y2="22%" style="--ld:.4s"/><line x1="0" y1="78%" x2="100%" y2="78%" style="--ld:.7s"/>
+        <line x1="18%" y1="0" x2="18%" y2="100%" style="--ld:1s"/><line x1="58%" y1="0" x2="58%" y2="100%" style="--ld:1.3s"/>
+      </svg>
+      <span class="corner tl" aria-hidden="true" style="--cd:1.1s"></span><span class="corner tr" aria-hidden="true" style="--cd:1.25s"></span>
+      <span class="corner bl" aria-hidden="true" style="--cd:1.4s"></span><span class="corner br" aria-hidden="true" style="--cd:1.55s"></span>
       <div class="hero-copy">
         <a class="pill up" style="--d:0" href="#install"><span class="dot" aria-hidden="true"></span><span id="pill-text">Now for Windows &amp; Mac</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></a>
         <h1 class="display" aria-label="The New Era Of Design">
@@ -54,7 +70,7 @@
         </h1>
         <p class="lead up" style="--d:6">Folio is a desktop publishing app for Windows and Mac. Lay out flyers, newsletters, brochures, cards, calendars and posters with ready-made templates, flowing text, text wrap, mail merge and spell check in 85 languages — then export print-ready PDF.</p>
         <div class="cta up" style="--d:7">
-          <a class="btn btn-black" href="#install">Install Folio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></a>
+          <a class="btn btn-primary" href="#install">Install Folio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></a>
           <a class="btn btn-ghost" href="#presentation">See it in 3D</a>
         </div>
       </div>
@@ -80,7 +96,8 @@
     </div>
 
     <!-- 2 · Installation -->
-    <section class="page frame" id="install" aria-labelledby="install-h">
+    <section class="page frame install" id="install" aria-labelledby="install-h">
+      <div class="columns" aria-hidden="true"></div>
       <header class="head">
         <p class="kicker reveal"><span>01</span> Installation</p>
         <h2 class="h2 reveal" id="install-h">Install Folio</h2>
@@ -173,10 +190,10 @@
     <div class="foot-cta frame">
       <div class="foot-logo" aria-hidden="true"></div>
       <p class="h2">Start <span class="accent">designing.</span></p>
-      <a class="btn btn-black" href="#install">Install Folio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></a>
+      <a class="btn btn-primary" href="#install">Install Folio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></a>
     </div>
     <div class="foot-row frame">
-      <span class="brand"><img src="assets/logo-black.png" alt="" width="16" height="18"><span>Folio</span></span>
+      <span class="brand"><img src="assets/logo-white.png" alt="" width="16" height="18"><span>Folio</span></span>
       <span class="mono">The New Era Of Design · Inter and Geist Mono under the SIL Open Font License · 3D by three.js (MIT)</span>
     </div>
   </footer>

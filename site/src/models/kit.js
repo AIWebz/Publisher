@@ -60,7 +60,7 @@ export function lines(g, x, y, w, n, gap, color, last = 0.6) {
 }
 
 export const mat = {
-  ink: () => new MeshStandardMaterial({ color: '#151515', roughness: 0.45, metalness: 0.2 }),
+  ink: () => new MeshStandardMaterial({ color: '#2b2b31', roughness: 0.35, metalness: 0.4 }),
   paper: () => new MeshStandardMaterial({ color: PAPER, roughness: 0.85 }),
   aluminium: () => new MeshStandardMaterial({ color: '#d4d4d8', metalness: 0.9, roughness: 0.3 }),
   graphite: () => new MeshStandardMaterial({ color: '#3a3a3f', metalness: 0.75, roughness: 0.35 }),
@@ -83,12 +83,16 @@ export function contactShadow(w = 2, d = 1.2, opacity = 0.22, y = -1) {
 }
 
 /** The standard studio lighting used by every view (the page is white, so keep it bright and soft). */
-export function studioLights(scene, { key = 2.4, rim = '#a5c8ff' } = {}) {
-  scene.add(new HemisphereLight('#ffffff', '#b8b8b8', 0.75));
+export function studioLights(scene, { key = 2.4, rim = CYAN } = {}) {
+  scene.add(new HemisphereLight('#ffffff', '#3a3a44', 0.8));
+  // a pink rim from the left so dark objects keep their silhouette on the black page
+  const r2 = new PointLight(PINK, 36, 30, 1.6);
+  r2.position.set(-5, 1, -4);
+  scene.add(r2);
   const k = new DirectionalLight('#ffffff', key);
   k.position.set(-4, 7, 6);
   scene.add(k);
-  const r = new PointLight(rim, 30, 30, 1.6);
+  const r = new PointLight(rim, 40, 30, 1.6);
   r.position.set(5, 2, -4);
   scene.add(r);
 }

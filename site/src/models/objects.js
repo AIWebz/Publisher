@@ -29,7 +29,7 @@ export async function createBook() {
   const board = new MeshStandardMaterial({ color: '#141414', roughness: 0.5, metalness: 0.2 });
   const cover = tex(canvasTexture(1024, 1434, (c, w, h) => {
     const bg = c.createLinearGradient(0, 0, w, h);
-    bg.addColorStop(0, '#202022'); bg.addColorStop(1, '#070707');
+    bg.addColorStop(0, '#303037'); bg.addColorStop(1, '#111115');
     c.fillStyle = bg; c.fillRect(0, 0, w, h);
     c.strokeStyle = 'rgba(255,255,255,.06)'; c.lineWidth = 2;
     for (let x = 64; x < w; x += 64) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); }
