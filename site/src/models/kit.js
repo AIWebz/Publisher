@@ -1,4 +1,4 @@
-// Shared palette, materials and helpers for the site's 3D models (light theme: black page, white liquid-glass type, monochrome accents).
+// Shared palette, materials and helpers for the site's 3D models (the site is paper and ink).
 //
 // Model contract — every model module exports factory functions returning
 //   { object: Object3D, update?(t, s) }
@@ -15,13 +15,12 @@ import {
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-// monochrome accents: white, silver and graphite (the site is black with liquid-glass type)
 export const WHITE = '#f4f4f5';
 export const GRAPHITE = '#52525b';
 export const SILVER = '#d4d4d8';
 export const INK = '#0a0a0a';
 export const PAPER = '#fbfbf7';
-export const SANS = '"Space Grotesk", system-ui, sans-serif';
+export const SANS = '"Public Sans", system-ui, sans-serif';
 export const MONO = '"Geist Mono", ui-monospace, monospace';
 
 export const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -82,10 +81,10 @@ export function contactShadow(w = 2, d = 1.2, opacity = 0.22, y = -1) {
   return m;
 }
 
-/** The standard studio lighting used by every view (the page is white, so keep it bright and soft). */
+/** The standard studio lighting used by every view: soft daylight, a key from the upper left, two rims. */
 export function studioLights(scene, { key = 2.4, rim = '#ffffff' } = {}) {
   scene.add(new HemisphereLight('#ffffff', '#3a3a44', 0.8));
-  // a second rim from the left so dark objects keep their silhouette on the black page
+  // a second rim from the left so dark objects keep their silhouette
   const r2 = new PointLight('#d4d4d8', 32, 30, 1.6);
   r2.position.set(-5, 1, -4);
   scene.add(r2);

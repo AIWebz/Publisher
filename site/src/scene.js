@@ -1,17 +1,18 @@
 // Folio site 3D. One WebGL canvas fixed over the page renders every model into the rectangle of its
-// host element (scissored views), so a dozen models cost one context. Views render only while on
+// host element (scissored views), so all the models share one context. Views render only while on
 // screen; under prefers-reduced-motion they render still frames on demand.
 // Bundled to site/assets/scene.js by `npm run build:site`.
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, PlaneGeometry, CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial,
-  TextureLoader, SRGBColorSpace, NeutralToneMapping, MathUtils, WebGLRenderTarget, HalfFloatType
+  TextureLoader, SRGBColorSpace, NeutralToneMapping, PCFSoftShadowMap, MathUtils, Box3, Vector3
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { studioLights, roomEnvironment, mat, contactShadow, damp, clamp01, easeOut, easeInOut, stagger } from './models/kit.js';
+import { studioLights, roomEnvironment, mat, contactShadow, damp, clamp01, easeOut } from './models/kit.js';
 import * as M from './models/objects.js';
 import Lenis from 'lenis';
 import { buildIntro, disposeScene } from './intro.js';
-import { buildGlassText, wrapWords } from './glasstext.js';
+import { buildPrintStage } from './printstage.js';
+import { drawTemplate, designFonts } from './models/designs.js';
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const root = document.documentElement;
@@ -20,7 +21,7 @@ addEventListener('pointermove', (e) => { pointer.x = e.clientX / innerWidth - 0.
 
 // smooth, inertial wheel scrolling (touch keeps native scrolling; off under reduced motion)
 if (!REDUCED) {
-  const lenis = new Lenis({ lerp: 0.085, anchors: { offset: -76 }, autoRaf: true });
+  const lenis = new Lenis({ lerp: 0.085, anchors: { offset: -72 }, autoRaf: true });
   window.folioLenis = lenis;
   if (root.classList.contains('intro-on')) lenis.stop();
 }
@@ -36,13 +37,18 @@ try {
   renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
 } catch {
   root.classList.add('no-3d');
+  // without 3D the hero shows one printed sample as a flat page
+  const stage = document.querySelector('.print-stage');
+  if (stage) designFonts().then(() => { const c = drawTemplate('poster', 640); c.className = 'print-fallback'; c.setAttribute('aria-hidden', 'true'); stage.appendChild(c); });
 }
 
 if (renderer) {
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = NeutralToneMapping;
   renderer.setClearColor(0x000000, 0);
-  renderer.autoClear = false; // views may overlap (the glass headline over the hero), so each clears only depth
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.autoClear = false; // views may overlap, so each clears only its depth
   const env = roomEnvironment(renderer);
   const canvas = renderer.domElement;
   const views = [];
@@ -68,12 +74,13 @@ if (renderer) {
     const introOn = root.classList.contains('intro-on');
     for (const v of views) {
       if (!v.visible || !v.update || !!v.isIntro !== introOn) continue;
+      if (v.manual && !v.el.classList.contains('on')) continue;
       const r = v.el.getBoundingClientRect();
       if (r.bottom < 0 || r.top > H || r.width < 2 || r.height < 2) continue;
       live = true;
       if (v.start == null) v.start = t;
       v.hover = REDUCED ? 0 : damp(v.hover, v.hoverTarget, 10, dt);
-      const enter = REDUCED ? 1 : easeInOut((t - v.start - v.delay) / v.intro);
+      const enter = REDUCED ? 1 : easeOut((t - v.start - v.delay) / v.intro);
       const scroll = MathUtils.clamp((r.top + r.height / 2 - H / 2) / (H / 2 + r.height / 2), -1, 1);
       v.update(t, { dt, hover: v.hover, enter, scroll }, r);
       v.camera.aspect = r.width / r.height;
@@ -82,7 +89,6 @@ if (renderer) {
       renderer.setScissor(r.left, H - r.bottom, r.width, r.height);
       renderer.clearDepth();
       renderer.render(v.scene, v.camera);
-      if (v.after) v.after(r);
       if (!REDUCED && enter < 1) live = true;
     }
     if (live && !REDUCED && !document.hidden) frame();
@@ -94,135 +100,107 @@ if (renderer) {
   }, { rootMargin: '80px 0px' });
 
   /** Register a view: build() adds models to the scene and returns update(t, s, rect). */
-  function view(el, { fov = 30, cam = [0, 0.6, 6.5], look = [0, 0, 0], hoverEl = el, intro = 1.6, delay = 0, lights } = {}, build) {
-    if (!el) return;
+  function view(el, { fov = 30, cam = [0, 0.6, 6.5], look = [0, 0, 0], hoverEl = el, intro = 1.6, delay = 0, lights, manual = false } = {}, build) {
+    if (!el) return null;
     const scene = new Scene();
     scene.environment = env;
     studioLights(scene, lights);
     const camera = new PerspectiveCamera(fov, 1, 0.1, 100);
     camera.position.set(...cam);
     camera.lookAt(...look);
-    const v = { el, scene, camera, visible: false, hover: 0, hoverTarget: 0, update: null, start: null, intro, delay };
+    const v = { el, scene, camera, visible: false, hover: 0, hoverTarget: 0, update: null, start: null, intro, delay, manual };
     views.push(v);
     io.observe(el);
     const on = () => { v.hoverTarget = 1; frame(); }, off = () => { v.hoverTarget = 0; frame(); };
-    hoverEl.addEventListener('pointerenter', on); hoverEl.addEventListener('pointerleave', off);
-    hoverEl.addEventListener('focusin', on); hoverEl.addEventListener('focusout', off);
+    if (hoverEl) {
+      hoverEl.addEventListener('pointerenter', on); hoverEl.addEventListener('pointerleave', off);
+      hoverEl.addEventListener('focusin', on); hoverEl.addEventListener('focusout', off);
+    }
     Promise.resolve(build(scene, camera, v)).then((update) => { v.update = update; frame(); });
+    return v;
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Hero: the book sits behind the glass headline with print pieces, a swatch fan and a pencil
-  // around it. The scene is also drawn into a texture that the headline's glass refracts.
+  // Hero: the print studio (see printstage.js); the sample chips choose what it prints
   // ---------------------------------------------------------------------------------------------
-  const heroEl = document.querySelector('.hero-3d');
-  const heroH1 = document.querySelector('.hero .display');
-  const behind = { texture: null, rect: null };
-  view(heroEl, { fov: 30, cam: [0, 0, 12], hoverEl: heroEl && heroEl.closest('.hero'), intro: 2.2, delay: 0.25 }, async (scene, camera, v) => {
-    const world = new Group();
-    scene.add(world);
-    // [make, [u, v] in half-sizes of the headline box from its centre, z, rotation, scale × book, depth]
-    const items = await Promise.all([
-      [M.createBook, [0.04, 0.02], -0.4, [0, 0, 0], 1, 0],
-      [M.createFlyer, [-0.8, 0.24], -1.6, [0.15, 0.5, -0.1], 0.78, 0.5],
-      [M.createBrochure, [0.84, -0.26], -1.3, [-0.2, -0.45, 0.06], 0.84, 0.6],
-      [M.createSwatchFan, [-1.25, 1.2], 0.4, [0.1, 0.4, 0.25], 0.58, 0.8],
-      [M.createCard, [1.22, -1.3], 0.8, [-0.25, -0.5, -0.18], 0.78, 0.9],
-      [M.createPencil, [-1.1, -1.32], 1.0, [0.4, 0.3, 0.95], 0.64, 1.2]
-    ].map(async ([make, uv, z, r, scale, depth], i) => {
-      const m = await make();
-      const holder = new Group();
-      holder.add(m.object);
-      world.add(holder);
-      return { m, holder, uv, z, r, scale, depth, i };
+  const stageEl = document.querySelector('.print-stage');
+  const chips = [...document.querySelectorAll('.prints [role="radio"]')];
+  view(stageEl, { fov: 30, hoverEl: null, intro: 2.4, delay: 0.3, lights: { key: 1.1 } }, (scene, camera) =>
+    buildPrintStage(scene, camera, {
+      stageEl, chips, reduced: REDUCED,
+      onChange: (i) => { chips.forEach((c, k) => { c.setAttribute('aria-checked', String(k === i)); c.tabIndex = k === i ? 0 : -1; }); frame(); }
     }));
-    const rt = new WebGLRenderTarget(2, 2, { type: HalfFloatType });
-    behind.texture = rt.texture;
-    v.after = (r) => {
-      const k = Math.min(1, devicePixelRatio) * 0.75;
-      const w = Math.max(2, Math.round(r.width * k)), h = Math.max(2, Math.round(r.height * k));
-      if (rt.width !== w || rt.height !== h) rt.setSize(w, h);
-      renderer.setRenderTarget(rt);
-      renderer.clear();
-      renderer.render(scene, camera);
-      renderer.setRenderTarget(null);
-      behind.rect = r;
-    };
-    const n = items.length, tan = Math.tan(MathUtils.degToRad(15));
-    let px = 0, py = 0;
-    return (t, s, rect) => {
-      px = damp(px, pointer.x, 4, s.dt); py = damp(py, pointer.y, 4, s.dt);
-      // world units per CSS px on the z = 0 plane, and the headline box in world units
-      const Z = camera.position.z, kpx = (2 * Z * tan) / rect.height;
-      const halfW = Z * tan * (rect.width / rect.height), halfH = Z * tan;
-      const h = heroH1 ? heroH1.getBoundingClientRect() : { left: rect.left + rect.width * 0.2, top: rect.top + rect.height * 0.3, width: rect.width * 0.6, height: rect.height * 0.3 };
-      const cx = (h.left + h.width / 2 - rect.left - rect.width / 2) * kpx, cy = -(h.top + h.height / 2 - rect.top - rect.height / 2) * kpx;
-      const hx = (h.width / 2) * kpx, hy = (h.height / 2) * kpx;
-      const book = Math.min((hy * 2 * 0.84) / 2.8, (hx * 2 * 0.36) / 2);
-      const out = Math.max(0, -s.scroll); // 0 at rest, grows as the hero scrolls away
-      for (const it of items) {
-        const e = it.i === 0 ? s.enter : stagger(s.enter, it.i, n, 0.55);
-        const k = easeOut(e);
-        // fly in from further out, drift apart while scrolling away, parallax by depth
-        const spread = 1 + (1 - k) * 0.9 + out * 0.9;
-        const x = MathUtils.clamp(cx + it.uv[0] * hx * spread, -halfW * 0.84, halfW * 0.84);
-        const y = MathUtils.clamp(cy + it.uv[1] * hy * spread, -halfH * 0.86, halfH * 0.7); // clear of the nav
-        it.holder.position.set(x + px * it.depth * 0.5, y - py * it.depth * 0.35 + (it.i ? Math.sin(t * 0.8 + it.i * 2) * 0.08 : 0), it.z - (1 - k) * 2);
-        it.holder.rotation.set(it.r[0] - py * 0.2 * it.depth, it.r[1] + px * 0.5 * (it.depth || 0.5) + (it.i ? Math.sin(t * 0.5 + it.i) * 0.12 : 0) + out * it.i * 0.3, it.r[2]);
-        it.holder.scale.setScalar(book * it.scale * (it.i ? k : 1));
-        it.holder.visible = it.i === 0 || k > 0.001;
-        if (it.m.update) it.m.update(t, { dt: s.dt, hover: it.i === 0 ? s.hover : 0, enter: e, scroll: s.scroll });
-      }
-      world.rotation.y = px * 0.08;
-    };
-  });
+  // arrow keys move between the sample chips (a radio group)
+  chips.forEach((c, i) => c.addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    const n = chips[(i + d + chips.length) % chips.length];
+    n.focus(); n.click();
+  }));
 
   // ---------------------------------------------------------------------------------------------
-  // Headings: real 3D glass letters over the (transparent) HTML headings (see glasstext.js)
+  // Contents: a floating card follows the pointer down the feature index and shows each row's object
   // ---------------------------------------------------------------------------------------------
-  const headings = [...document.querySelectorAll('.display, main .h2, .foot-cta .h2')];
-  if (headings.length) root.classList.add('glass3d');
-  headings.forEach((el, i) => {
-    wrapWords(el);
-    el.classList.add('gl-on');
-    const stageEl = document.createElement('div');
-    stageEl.className = 'glass-stage';
-    stageEl.setAttribute('aria-hidden', 'true');
-    el.appendChild(stageEl);
-    const hero = el.closest('.hero');
-    view(stageEl, { fov: 22, hoverEl: el, intro: hero ? 1.9 : 1.5, delay: hero ? 0.15 : 0.05 }, (scene, camera) => {
-      const glassText = buildGlassText(scene, camera, el, {
-        mobile: innerWidth < 700, area: hero || el.closest('.head, .foot-cta') || el.parentElement, grid: !!hero, behind: hero ? behind : null
-      });
-      document.fonts.ready.then(() => { glassText.rebuild(); frame(); });
-      return (t, s, rect) => glassText.update(t, { ...s, pointer }, rect);
+  const preview = document.querySelector('.index-preview');
+  const rows = [...document.querySelectorAll('.index-row[data-model]')];
+  if (preview && rows.length && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const makers = {
+      brochure: M.createBrochure, craft: M.createCraft, swatch: M.createSwatchFan, card: M.createCard,
+      languages: M.createLanguages, print: M.createPrintTrue, ownership: M.createOwnership, free: M.createFree
+    };
+    let active = null, since = 0;
+    const list = rows[0].parentElement;
+    rows.forEach((row) => row.addEventListener('pointerenter', () => {
+      preview.classList.add('on');
+      if (active !== row.dataset.model) { active = row.dataset.model; since = performance.now() / 1000; }
+      frame();
+    }));
+    list.addEventListener('pointerleave', () => preview.classList.remove('on'));
+    list.addEventListener('pointermove', (e) => {
+      preview.style.transform = `translate3d(${e.clientX + 26}px, ${e.clientY - 276}px, 0)`; // above and right of the pointer
+    }, { passive: true });
+    view(preview, { fov: 28, cam: [0, 0.7, 6.4], look: [0, -0.05, 0], hoverEl: null, manual: true, intro: 0.01 }, (scene) => {
+      const built = new Map();
+      const holder = new Group();
+      scene.add(holder, contactShadow(3, 3, 0.25, -1.25));
+      const get = (key) => {
+        if (!built.has(key) && makers[key]) {
+          built.set(key, null);
+          Promise.resolve(makers[key]()).then((m) => {
+            // fit each object to the card: measure it fully open, then centre and scale it
+            if (m.update) m.update(0, { dt: 1, hover: 1, enter: 1, scroll: 0 });
+            const box = new Box3().setFromObject(m.object), size = box.getSize(new Vector3()), c = box.getCenter(new Vector3());
+            const fit = new Group();
+            fit.add(m.object);
+            m.object.position.sub(c);
+            fit.scale.setScalar(2.3 / Math.max(size.x, size.y, size.z * 0.8, 0.01));
+            built.set(key, m); m.fit = fit; fit.visible = false; holder.add(fit); frame();
+          });
+        }
+        return built.get(key);
+      };
+      return (t, s) => {
+        const m = active && get(active);
+        for (const [k, b] of built) if (b) b.fit.visible = k === active;
+        if (!m) return;
+        const e = easeOut(clamp01((t - since) / 0.8));
+        holder.rotation.y = (1 - e) * -1.2 + Math.sin(t * 0.6) * 0.25;
+        holder.scale.setScalar(0.8 + e * 0.2);
+        if (m.update) m.update(t, { dt: s.dt, hover: 1, enter: e, scroll: 0 });
+      };
     });
-  });
+  }
 
   // ---------------------------------------------------------------------------------------------
-  // Install: a device in each card
+  // Install: a device on each ticket
   // ---------------------------------------------------------------------------------------------
   const devices = { win: M.createMonitor, macArm: M.createLaptopSilver, macIntel: M.createLaptopGraphite };
   document.querySelectorAll('.dl').forEach((card, i) => {
     const make = devices[card.dataset.file];
     view(card.querySelector('.dl-model'), { fov: 26, cam: [0, 1.1, 7.2], look: [0, 0.1, 0], hoverEl: card, delay: i * 0.18 }, async (scene) => {
       const m = await make();
-      scene.add(m.object);
-      return (t, s) => m.update && m.update(t, s);
-    });
-  });
-
-  // ---------------------------------------------------------------------------------------------
-  // Principles: an object in each bento card
-  // ---------------------------------------------------------------------------------------------
-  const icons = { craft: M.createCraft, print: M.createPrintTrue, languages: M.createLanguages, ownership: M.createOwnership, clarity: M.createClarity, free: M.createFree };
-  document.querySelectorAll('.bento article[data-model]').forEach((card, i) => {
-    const make = icons[card.dataset.model];
-    if (!make) return;
-    const big = card.classList.contains('b-big');
-    view(card.querySelector('.p-model'), { fov: 28, cam: big ? [0, 0.9, 5.4] : [0, 0.7, 6.2], look: [0, -0.1, 0], hoverEl: card, intro: 1.1, delay: (i % 3) * 0.12 }, async (scene) => {
-      const m = await make();
-      scene.add(m.object);
+      scene.add(m.object, contactShadow(3.4, 2.2, 0.2, -0.95));
       return (t, s) => m.update && m.update(t, s);
     });
   });
@@ -238,10 +216,10 @@ if (renderer) {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Presentation: a laptop that opens as the page scrolls; the editor's panels lift off the screen
+  // Tour: a laptop that opens as the page scrolls; the editor's panels lift off the screen
   // ---------------------------------------------------------------------------------------------
-  const track = document.querySelector('.pres-track'), presEl = document.querySelector('.presentation');
-  view(document.querySelector('.pres-3d'), { fov: 28, cam: [0, 0, 10] }, async (scene, camera) => {
+  const track = document.querySelector('.tour-track'), presEl = document.querySelector('.tour');
+  view(document.querySelector('.tour-3d'), { fov: 28, cam: [0, 0, 10] }, async (scene, camera) => {
     const loader = new TextureLoader();
     const load = (src) => new Promise((res) => loader.load(src, (tx) => { tx.colorSpace = SRGBColorSpace; tx.anisotropy = 8; res(tx); }, undefined, () => res(null)));
     const [dark, light] = await Promise.all([load('assets/editor-dark.webp'), load('assets/editor.webp')]);
@@ -301,6 +279,7 @@ if (renderer) {
       const lift = Math.max(...lifts);
       const step = p < 0.58 ? 0 : p < 0.7 ? 1 : p < 0.82 ? 2 : 3;
       if (presEl && presEl.dataset.step !== String(step)) presEl.dataset.step = String(step);
+      if (presEl) presEl.style.setProperty('--tp', p.toFixed(3));
       hinge.rotation.x = MathUtils.degToRad(MathUtils.lerp(86, -14, open));
       // once the panels lift, the laptop turns a little so their depth shows
       g.rotation.set(MathUtils.lerp(0.55, 0.24, open) - py * 0.06, MathUtils.lerp(-0.7, 0, open) - lift * 0.3 + px * 0.12 * (1 - lift * 0.5), 0);

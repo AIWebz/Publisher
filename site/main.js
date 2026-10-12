@@ -1,12 +1,27 @@
-// Folio site: scroll reveals, nav + progress, mobile menu, current section, the editor theme switch,
-// and the download buttons filled in from downloads/latest.json (written by the publish workflow).
+// Folio site: reveals, nav + progress, mobile menu, current section, the headline's ink plates, the
+// manifesto that inks in as you read, the live text-wrap demo, the editor theme switch, and the
+// download buttons filled in from downloads/latest.json (written by the publish workflow).
 // The 3D models live in src/scene.js (bundled to assets/scene.js).
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-// reveals
+// reveals: blocks rise in, headings print in; once in, hover motion runs without the stagger delay.
+// A heading that prints in is fully clipped until then, so its parent block is what gets watched.
+const revealed = new Map();
+document.querySelectorAll('.reveal').forEach((el) => revealed.set(el, [el]));
+document.querySelectorAll('.print-in').forEach((el) => revealed.set(el.parentElement, [...(revealed.get(el.parentElement) || []), el]));
 const io = new IntersectionObserver((entries) => {
-  for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    for (const el of revealed.get(e.target) || []) {
+      el.classList.add('in');
+      setTimeout(() => el.classList.add('settled'), 1400);
+    }
+    io.unobserve(e.target);
+  }
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+revealed.forEach((_, el) => io.observe(el));
 
 // nav state and progress bar (batched to one write per frame)
 const nav = document.querySelector('.nav'), bar = document.querySelector('.progress');
@@ -16,7 +31,7 @@ const onScroll = () => {
   ticking = true;
   requestAnimationFrame(() => {
     ticking = false;
-    nav.classList.toggle('scrolled', scrollY > 20);
+    nav.classList.toggle('scrolled', scrollY > 40);
     bar.style.setProperty('--p', String(scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight)));
   });
 };
@@ -45,8 +60,182 @@ const spy = new IntersectionObserver((entries) => {
 }, { rootMargin: '-45% 0px -50% 0px' });
 document.querySelectorAll('main section[id]').forEach((s) => spy.observe(s));
 
-// presentation: dark / light editor (the 3D laptop listens for folio:theme)
-document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListener('click', () => {
+// the headline's cyan, magenta and black plates drift slightly out of register with the pointer
+(() => {
+  const cover = document.querySelector('.cover'), title = document.querySelector('.cover-title');
+  if (!cover || !title || REDUCED || !FINE) return;
+  cover.addEventListener('pointermove', (e) => {
+    const r = cover.getBoundingClientRect();
+    title.style.setProperty('--mx', (((e.clientX - r.left) / r.width - 0.5) * 2).toFixed(3));
+    title.style.setProperty('--my', (((e.clientY - r.top) / r.height - 0.5) * 2).toFixed(3));
+  }, { passive: true });
+  cover.addEventListener('pointerleave', () => { title.style.setProperty('--mx', '0'); title.style.setProperty('--my', '0'); });
+})();
+
+// manifesto: split into words that ink in, in reading order, as the paragraph scrolls up
+(() => {
+  const el = document.querySelector('.read');
+  if (!el) return;
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) nodes.push(n);
+  for (const n of nodes) {
+    const frag = document.createDocumentFragment();
+    for (const part of n.data.split(/(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) frag.append(part);
+      else { const s = document.createElement('span'); s.className = 'wd'; s.textContent = part; frag.append(s); }
+    }
+    n.replaceWith(frag);
+  }
+  const words = [...el.querySelectorAll('.wd')];
+  if (REDUCED) { words.forEach((w) => w.classList.add('on')); return; }
+  let raf = 0, shown = -1;
+  const update = () => {
+    raf = 0;
+    const r = el.getBoundingClientRect();
+    const p = clamp((innerHeight * 0.82 - r.top) / (r.height + innerHeight * 0.3), 0, 1);
+    const n = Math.round(p * words.length);
+    if (n === shown) return;
+    shown = n;
+    words.forEach((w, i) => w.classList.toggle('on', i < n));
+  };
+  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+  update();
+})();
+
+// layout demo: a small text-wrap engine. The story flows line by line through two linked text boxes;
+// each line is cut where it meets the picture (a circle, its square, or nothing) and justified.
+(() => {
+  const page = document.getElementById('demo-page');
+  if (!page) return;
+  const flow = page.querySelector('.flow'), pic = page.querySelector('.pic'), over = page.querySelector('.overflow');
+  const link = page.querySelector('.link-line path'), status = document.getElementById('demo-status');
+  const frames = [...page.querySelectorAll('.frame-box')];
+  const all = page.querySelector('.story').textContent.trim().split(/\s+/);
+  let words = all, fitW = 0;
+  const title = document.createElement('p');
+  title.className = 'page-title';
+  title.setAttribute('aria-hidden', 'true');
+  title.innerHTML = 'The quiet art of a garden in fall<span>The Ledger · No. 12</span>';
+  page.prepend(title);
+  const ctx = document.createElement('canvas').getContext('2d');
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  let mode = 'tight';
+  const pos = { x: 0.48, y: 0.6 };
+  let R = 60, raf = 0;
+
+  const fitStory = () => {
+    const placed = layout(true);
+    if (placed < all.length) { words = all.slice(0, Math.max(30, placed - 12)); words[words.length - 1] = words[words.length - 1].replace(/[,.;:]?$/, '…'); }
+  };
+  const layout = (dry = false) => {
+    if (!dry) raf = 0;
+    const W = page.clientWidth, H = page.clientHeight;
+    if (!W || !H) return;
+    // small pages get a shortened story that fits at the start, so the overflow only shows once you crowd it
+    if (W !== fitW) { fitW = W; words = all; fitStory(); }
+    const cs = getComputedStyle(flow);
+    ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const lh = parseFloat(cs.lineHeight) || 22, space = ctx.measureText(' ').width;
+    R = clamp(Math.min(W, H) * 0.16, 48, 96);
+    pos.x = clamp(pos.x, R / W, 1 - R / W); pos.y = clamp(pos.y, R / H, 1 - R / H);
+    const cx = pos.x * W, cy = pos.y * H, gap = 12;
+    pic.style.width = pic.style.height = `${R * 2}px`;
+    pic.style.transform = `translate(${cx - R}px, ${cy - R}px)`;
+    page.style.setProperty('--hx', `${cx}px`); page.style.setProperty('--hy', `${cy + R + 22}px`);
+    // the stretch of a line [y0, y1] that the picture takes away
+    const cut = (y0, y1) => {
+      const rr = R + gap;
+      if (mode === 'none' || y1 < cy - rr || y0 > cy + rr) return null;
+      if (mode === 'square') return [cx - rr, cx + rr];
+      const ny = clamp(cy, y0, y1), dx = Math.sqrt(Math.max(0, rr * rr - (ny - cy) ** 2));
+      return [cx - dx, cx + dx];
+    };
+    const html = [];
+    let wi = 0;
+    const boxes = frames.map((f) => ({ x: f.offsetLeft, y: f.offsetTop, w: f.offsetWidth, h: f.offsetHeight }));
+    for (const b of boxes) {
+      for (let y = b.y + 8; y + lh <= b.y + b.h - 4 && wi < words.length; y += lh) {
+        const x0 = b.x + 10, x1 = b.x + b.w - 10, ex = cut(y, y + lh);
+        const segs = (ex ? [[x0, Math.min(x1, ex[0])], [Math.max(x0, ex[1]), x1]] : [[x0, x1]]).filter(([a, c]) => c - a > 40);
+        for (const [a, c] of segs) {
+          const width = c - a, line = [];
+          let lw = 0;
+          while (wi < words.length) {
+            const w = ctx.measureText(words[wi]).width, next = line.length ? lw + space + w : w;
+            if (next > width) break;
+            line.push(words[wi++]); lw = next;
+          }
+          if (!line.length) continue;
+          const extra = wi < words.length && line.length > 1 ? (width - lw) / (line.length - 1) : 0;
+          html.push(`<span class="ln" style="left:${a.toFixed(1)}px;top:${y.toFixed(1)}px;word-spacing:${(extra > space * 2.6 ? 0 : extra).toFixed(2)}px">${esc(line.join(' '))}</span>`);
+        }
+      }
+    }
+    if (dry) return wi;
+    flow.innerHTML = html.join('');
+    const overflow = wi < words.length;
+    over.classList.toggle('on', overflow);
+    const last = boxes[boxes.length - 1], first = boxes[0];
+    over.style.left = `${last.x + last.w - 9}px`; over.style.top = `${last.y + last.h - 9}px`;
+    status.textContent = overflow ? `Text overflows by ${words.length - wi} words — move the picture to make room` : '2 linked text boxes · the story fits';
+    status.classList.toggle('over', overflow);
+    // the thread from the first box's out-port to the second box's in-port
+    const ax = first.x + first.w, ay = first.y + first.h, bx = boxes[1].x, by = boxes[1].y;
+    link.setAttribute('d', `M${ax},${ay} C${ax + 60},${ay + 40} ${bx - 60},${by - 40} ${bx},${by}`);
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(() => layout()); };
+
+  // dragging (pointer) and nudging (arrow keys)
+  let drag = null;
+  pic.addEventListener('pointerdown', (e) => {
+    const r = page.getBoundingClientRect();
+    drag = { dx: e.clientX - (r.left + pos.x * r.width), dy: e.clientY - (r.top + pos.y * r.height) };
+    pic.setPointerCapture(e.pointerId);
+    pic.classList.add('drag'); page.classList.add('touched');
+  });
+  pic.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const r = page.getBoundingClientRect();
+    pos.x = (e.clientX - drag.dx - r.left) / r.width; pos.y = (e.clientY - drag.dy - r.top) / r.height;
+    queue();
+  });
+  const stop = () => { drag = null; pic.classList.remove('drag'); };
+  pic.addEventListener('pointerup', stop); pic.addEventListener('pointercancel', stop);
+  pic.addEventListener('keydown', (e) => {
+    const k = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (!k) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 0.08 : 0.025;
+    pos.x += k[0] * step; pos.y += k[1] * step;
+    page.classList.add('touched');
+    queue();
+  });
+  // wrap modes (a radio group: click, or arrow keys between the options)
+  const modes = [...document.querySelectorAll('[data-wrap]')];
+  const choose = (b) => {
+    mode = b.dataset.wrap;
+    modes.forEach((m) => { m.setAttribute('aria-checked', String(m === b)); m.tabIndex = m === b ? 0 : -1; });
+    queue();
+  };
+  modes.forEach((b, i) => {
+    b.addEventListener('click', () => choose(b));
+    b.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const n = modes[(i + d + modes.length) % modes.length];
+      n.focus(); choose(n);
+    });
+  });
+  new ResizeObserver(queue).observe(page);
+  document.fonts.ready.then(queue);
+  queue();
+})();
+
+// tour: dark / light editor (the 3D laptop listens for folio:theme)
+document.querySelectorAll('.tour .seg button').forEach((b, _, all) => b.addEventListener('click', () => {
   all.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   const theme = b.dataset.theme, src = theme === 'light' ? 'assets/editor.webp' : 'assets/editor-dark.webp';
   document.querySelectorAll('.shot, .shot-link').forEach((a) => { a.href = src; });
@@ -54,8 +243,8 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
   document.dispatchEvent(new CustomEvent('folio:theme', { detail: theme }));
 }));
 
-// downloads: the three install buttons, plus the hero and footer buttons that go straight to the
-// installer for the visitor's computer; a toast then says what to expect the first time
+// downloads: the three tickets, plus the cover and footer buttons that go straight to the installer
+// for the visitor's computer; a toast then says what to expect the first time
 (async () => {
   const MB = (n) => `${Math.round(n / 1048576)} MB`;
   const note = document.getElementById('downloads-note');
@@ -79,7 +268,8 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
     c.setAttribute('aria-label', `Download Folio ${latest.version} for ${c.querySelector('.dl-os').textContent} (${MB(f.size)})`);
   }
   note.textContent = `Free · version ${latest.version}. Pick your computer.`;
-  document.getElementById('pill-text').textContent = `Folio ${latest.version} for Windows & Mac`;
+  const issue = document.querySelector('.strip-issue .v');
+  if (issue) issue.textContent = latest.version;
   // the visitor's platform (iPhones and iPads also call themselves Mac; Apple silicon and Intel can
   // only be told apart in some browsers, so a Mac defaults to Apple silicon)
   const ua = navigator.userAgent;
@@ -100,7 +290,7 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
     b.setAttribute('aria-label', `Download Folio ${latest.version} for ${os} (${MB(f.size)})`);
   });
   const meta = document.getElementById('hero-meta');
-  if (meta) meta.textContent = `Free · version ${latest.version} · ${MB(f.size)} · No account`;
+  if (meta) meta.textContent = `Version ${latest.version} · ${MB(f.size)} · ${pick === 'win' ? 'Windows 11 or 10' : 'macOS 13+'}`;
 })();
 
 (() => {
@@ -129,35 +319,6 @@ document.querySelectorAll('.seg button').forEach((b, _, all) => b.addEventListen
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && !toast.hidden) hide(); });
 })();
 
-// highlights: count up the number, scramble the words into place when they scroll in
-(() => {
-  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (REDUCED) return;
-  const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const run = (el) => {
-    const final = el.textContent, start = performance.now();
-    const count = el.dataset.count != null ? Number(el.dataset.count) : null;
-    const step = (now) => {
-      const p = Math.min(1, (now - start) / 1100);
-      if (count != null) el.textContent = String(Math.round(count * (1 - Math.pow(1 - p, 3))));
-      else el.textContent = [...final].map((ch, i) => (p * final.length > i + 0.5 ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0])).join('');
-      if (p < 1) requestAnimationFrame(step); else el.textContent = final;
-    };
-    requestAnimationFrame(step);
-  };
-  const seen = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.isIntersecting) { run(e.target); seen.unobserve(e.target); }
-  }, { threshold: 0.6 });
-  document.querySelectorAll('[data-count], [data-scramble]').forEach((el) => seen.observe(el));
-})();
-
-// cards: a soft spotlight follows the pointer
-document.querySelectorAll('.dl, .bento article').forEach((card) => card.addEventListener('pointermove', (e) => {
-  const r = card.getBoundingClientRect();
-  card.style.setProperty('--mx', `${e.clientX - r.left}px`);
-  card.style.setProperty('--my', `${e.clientY - r.top}px`);
-}, { passive: true }));
-
 // first-visit intro: scene.js plays it; this ends it (also when 3D is unavailable or it stalls)
 (() => {
   const root = document.documentElement;
@@ -172,7 +333,7 @@ document.querySelectorAll('.dl, .bento article').forEach((card) => card.addEvent
       root.classList.remove('intro-on', 'intro-out', 'intro-title-in');
       if (window.folioLenis) window.folioLenis.start();
       document.dispatchEvent(new CustomEvent('folio:intro-done'));
-    }, 850);
+    }, 900);
   };
   const skip = () => { document.dispatchEvent(new CustomEvent('folio:intro-skip')); end(); };
   document.addEventListener('folio:intro-end', end);
@@ -180,145 +341,4 @@ document.querySelectorAll('.dl, .bento article').forEach((card) => card.addEvent
   addEventListener('keydown', (e) => { if (!done && (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ')) skip(); });
   if (root.classList.contains('no-3d')) end();
   setTimeout(end, 14000);
-})();
-
-// buttons lean toward the pointer
-if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(pointer: fine)').matches) {
-  document.querySelectorAll('.cta .btn, .foot-card .btn, .nav-end .btn').forEach((b) => {
-    b.addEventListener('pointermove', (e) => {
-      const r = b.getBoundingClientRect();
-      b.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.16}px ${(e.clientY - r.top - r.height / 2) * 0.28}px`;
-    });
-    b.addEventListener('pointerleave', () => { b.style.translate = ''; });
-  });
-}
-
-// the marquee leans with the scroll speed; the hero copy drifts up and fades as it scrolls away
-(() => {
-  const marquee = document.querySelector('.marquee'), hero = document.querySelector('.hero');
-  let skew = 0, lastY = scrollY, raf = 0;
-  const loop = () => {
-    const v = scrollY - lastY;
-    lastY = scrollY;
-    skew += (Math.max(-12, Math.min(12, v * 0.35)) - skew) * 0.15;
-    if (marquee) marquee.style.setProperty('--skew', skew.toFixed(2));
-    if (hero) hero.style.setProperty('--hs', Math.min(1, Math.max(0, scrollY / hero.offsetHeight)).toFixed(3));
-    raf = Math.abs(skew) > 0.02 || v !== 0 ? requestAnimationFrame(loop) : 0;
-  };
-  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(loop); }, { passive: true });
-})();
-
-// ideas adapted from 21st.dev components: a glow that follows the pointer, click ripples, drifting
-// particles in the hero, light beams running down the install columns, and the pointer position
-// (--gx / --gy) that the liquid-glass headings use for their highlight
-(() => {
-  const root = document.documentElement;
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const glow = document.querySelector('.cursor-glow');
-  let tx = innerWidth / 2, ty = innerHeight / 3, x = tx, y = ty, raf = 0;
-  const step = () => {
-    x += (tx - x) * 0.14; y += (ty - y) * 0.14;
-    if (glow) glow.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-    root.style.setProperty('--gx', `${x}px`); root.style.setProperty('--gy', `${y}px`);
-    raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(step) : 0;
-  };
-  addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    tx = e.clientX; ty = e.clientY;
-    if (glow) glow.classList.add('on');
-    if (!raf) raf = requestAnimationFrame(step);
-  }, { passive: true });
-  document.addEventListener('pointerleave', () => glow && glow.classList.remove('on'));
-  if (still) return;
-  addEventListener('pointerdown', (e) => {
-    const r = document.createElement('span');
-    r.className = 'ripple';
-    r.style.left = `${e.clientX}px`; r.style.top = `${e.clientY}px`;
-    document.body.appendChild(r);
-    r.addEventListener('animationend', () => r.remove());
-  }, { passive: true });
-  const hero = document.querySelector('.hero');
-  for (let i = 0; i < 14 && hero; i++) {
-    const p = document.createElement('span');
-    p.className = 'particle';
-    p.setAttribute('aria-hidden', 'true');
-    p.style.cssText = `left:${(i * 37) % 97 + 1}%;top:${(i * 53) % 90 + 5}%;--pd:${6 + (i % 5)}s;--pdl:${(i * 0.45).toFixed(2)}s`;
-    hero.appendChild(p);
-  }
-  const cols = document.querySelector('.columns');
-  const tints = ['#ffffff', '#d4d4d8', '#a1a1aa'];
-  for (let i = 0; i < 7 && cols; i++) {
-    const b = document.createElement('span');
-    b.className = 'beam';
-    b.style.cssText = `--col:${((i * 5 + 2) % 15) - 7};--c:${tints[i % 3]};--bd:${5 + (i % 4) * 1.3}s;--bdl:${(i * 0.9).toFixed(1)}s`;
-    cols.appendChild(b);
-  }
-})();
-
-// liquid glass headings: give each heading a frosted, see-through layer clipped to its letters (an SVG
-// clip path rebuilt from the measured words whenever the layout changes); the CSS draws the rim
-(() => {
-  const els = [...document.querySelectorAll('.display, .h2, .intro-title span')];
-  const ok = CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
-  if (!els.length || !ok) return;
-  const NS = 'http://www.w3.org/2000/svg';
-  const defs = document.createElementNS(NS, 'svg');
-  defs.setAttribute('width', '0'); defs.setAttribute('height', '0'); defs.setAttribute('aria-hidden', 'true');
-  defs.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
-  document.body.appendChild(defs);
-  const ctx = document.createElement('canvas').getContext('2d');
-  const items = els.map((el, i) => {
-    el.classList.add('lg');
-    const layer = document.createElement('span');
-    layer.className = 'lg-layer';
-    layer.setAttribute('aria-hidden', 'true');
-    el.prepend(layer);
-    const clip = document.createElementNS(NS, 'clipPath');
-    clip.id = `lg-${i}`;
-    clip.setAttribute('clipPathUnits', 'userSpaceOnUse');
-    defs.appendChild(clip);
-    layer.style.clipPath = layer.style.webkitClipPath = `url(#lg-${i})`;
-    return { el, layer, clip };
-  });
-  // word boxes: the hero headline's words sit in .w boxes (their text slides in, the boxes don't move)
-  const words = (el) => {
-    const boxes = el.querySelectorAll('.w');
-    if (boxes.length) return [...boxes].map((w) => ({ text: w.textContent.trim(), rect: w.getBoundingClientRect(), line: true }));
-    const out = [];
-    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
-      for (const m of n.data.matchAll(/\S+/g)) {
-        const r = document.createRange();
-        r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
-        const rect = r.getClientRects()[0];
-        if (rect) out.push({ text: m[0], rect, line: false });
-      }
-    }
-    return out;
-  };
-  const build = ({ el, layer, clip }) => {
-    const cs = getComputedStyle(el);
-    const size = parseFloat(cs.fontSize);
-    ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
-    const m = ctx.measureText('H');
-    const asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
-    const lh = parseFloat(cs.lineHeight) || size * 1.2;
-    const o = layer.getBoundingClientRect();
-    const upper = cs.textTransform === 'uppercase';
-    const style = `font-family:${cs.fontFamily.replace(/"/g, "'")};font-weight:${cs.fontWeight};font-stretch:${cs.fontStretch};font-size:${size}px;letter-spacing:${cs.letterSpacing === 'normal' ? 0 : cs.letterSpacing}`;
-    clip.replaceChildren(...words(el).filter((w) => w.text).map((w) => {
-      const t = document.createElementNS(NS, 'text');
-      const base = w.line ? w.rect.top + (lh - (asc + desc)) / 2 + asc : w.rect.top + asc;
-      t.setAttribute('x', (w.rect.left - o.left).toFixed(2));
-      t.setAttribute('y', (base - o.top).toFixed(2));
-      t.setAttribute('style', style);
-      t.textContent = upper ? w.text.toUpperCase() : w.text;
-      return t;
-    }));
-  };
-  const all = () => items.forEach(build);
-  document.fonts.ready.then(all);
-  const ro = new ResizeObserver(() => requestAnimationFrame(all));
-  items.forEach((it) => ro.observe(it.el));
-  document.addEventListener('folio:intro-done', all);
 })();

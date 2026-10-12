@@ -209,8 +209,9 @@ export function createBrochure() {
   };
 }
 
-export function createSwatchFan() {
-  const colors = ['#0a0a0a', '#1f1f23', '#2f2f35', '#45454d', '#5d5d66', '#7a7a84', '#9a9aa3', '#b9b9c1', '#d4d4d9', '#e8e8ec', '#f6f6f8', '#ffffff'];
+// print-room swatches: inks and paper tones (cyan and magenta families, warm greys)
+const SWATCHES = ['#141413', '#45433e', '#8a867c', '#d9d3c7', '#f4f2ec', '#bfe8fb', '#009fe3', '#00679a', '#ffd1e6', '#ff5fa8', '#e5007d', '#9a0052'];
+export function createSwatchFan(colors = SWATCHES) {
   const g = new Group();
   const stripGeo = new ExtrudeGeometry(rounded(0.3, 1.95, 0.05), { depth: 0.008, bevelEnabled: false });
   stripGeo.translate(0, 0.9, 0);
