@@ -166,6 +166,22 @@ Every push to the release branch publishes (or run the *Build desktop apps* work
 with the installers to GitHub Pages (`downloads/latest.json` tells the page which files to offer), and removes any
 installers left in GitHub Releases. GitHub Pages must use **GitHub Actions** as its source (Settings → Pages).
 
+### Signing the Windows installer
+
+Windows shows *"Windows protected your PC"* (SmartScreen) for unsigned installers. The build signs the installer
+automatically once a code-signing identity is added under **Settings → Secrets and variables → Actions** — no code
+changes needed:
+
+- **Azure Trusted Signing** (recommended, about $10/month): secrets `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`,
+  `AZURE_CLIENT_SECRET` (an app registration with the *Trusted Signing Certificate Profile Signer* role) and
+  variables `AZURE_SIGN_ENDPOINT` (e.g. `https://eus.codesigning.azure.net`), `AZURE_SIGN_ACCOUNT`,
+  `AZURE_SIGN_PROFILE` and `AZURE_SIGN_PUBLISHER` (the certificate's subject name).
+- **A code-signing certificate file** from a certificate authority: secrets `WIN_CSC_LINK` (the `.pfx`, base64) and
+  `WIN_CSC_KEY_PASSWORD`.
+
+A signed installer names its publisher instead of "Unknown publisher". SmartScreen can still warn about a new
+publisher until enough people have downloaded the signed installer for it to build a reputation.
+
 ## Licences
 
 The bundled typefaces are licensed under the SIL Open Font License (`app/fonts/OFL.txt`). The English
