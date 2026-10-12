@@ -118,3 +118,53 @@ document.querySelectorAll('.dl, .grid article').forEach((card) => card.addEventL
   card.style.setProperty('--mx', `${e.clientX - r.left}px`);
   card.style.setProperty('--my', `${e.clientY - r.top}px`);
 }, { passive: true }));
+
+// first-visit intro: scene.js plays it; this ends it (also when 3D is unavailable or it stalls)
+(() => {
+  const root = document.documentElement;
+  if (!root.classList.contains('intro-on')) return;
+  let done = false;
+  const end = () => {
+    if (done) return;
+    done = true;
+    try { localStorage.setItem('folio-intro', '1'); } catch { /* private mode */ }
+    root.classList.add('intro-out');
+    setTimeout(() => {
+      root.classList.remove('intro-on', 'intro-out', 'intro-title-in');
+      if (window.folioLenis) window.folioLenis.start();
+      document.dispatchEvent(new CustomEvent('folio:intro-done'));
+    }, 850);
+  };
+  const skip = () => { document.dispatchEvent(new CustomEvent('folio:intro-skip')); end(); };
+  document.addEventListener('folio:intro-end', end);
+  document.querySelector('.intro-skip').addEventListener('click', skip);
+  addEventListener('keydown', (e) => { if (!done && (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ')) skip(); });
+  if (root.classList.contains('no-3d')) end();
+  setTimeout(end, 14000);
+})();
+
+// buttons lean toward the pointer
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(pointer: fine)').matches) {
+  document.querySelectorAll('.cta .btn, .foot-cta .btn, .nav-end .btn').forEach((b) => {
+    b.addEventListener('pointermove', (e) => {
+      const r = b.getBoundingClientRect();
+      b.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.16}px ${(e.clientY - r.top - r.height / 2) * 0.28}px`;
+    });
+    b.addEventListener('pointerleave', () => { b.style.translate = ''; });
+  });
+}
+
+// the marquee leans with the scroll speed; the hero copy drifts up and fades as it scrolls away
+(() => {
+  const marquee = document.querySelector('.marquee'), hero = document.querySelector('.hero');
+  let skew = 0, lastY = scrollY, raf = 0;
+  const loop = () => {
+    const v = scrollY - lastY;
+    lastY = scrollY;
+    skew += (Math.max(-12, Math.min(12, v * 0.35)) - skew) * 0.15;
+    if (marquee) marquee.style.setProperty('--skew', skew.toFixed(2));
+    if (hero) hero.style.setProperty('--hs', Math.min(1, Math.max(0, scrollY / hero.offsetHeight)).toFixed(3));
+    raf = Math.abs(skew) > 0.02 || v !== 0 ? requestAnimationFrame(loop) : 0;
+  };
+  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(loop); }, { passive: true });
+})();

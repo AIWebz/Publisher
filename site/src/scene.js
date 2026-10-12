@@ -9,11 +9,20 @@ import {
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { studioLights, roomEnvironment, canvasTexture, mat, contactShadow, damp, clamp01, easeOut, easeInOut, stagger } from './models/kit.js';
 import * as M from './models/objects.js';
+import Lenis from 'lenis';
+import { buildIntro, disposeScene } from './intro.js';
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const root = document.documentElement;
 const pointer = { x: 0, y: 0 };
 addEventListener('pointermove', (e) => { pointer.x = e.clientX / innerWidth - 0.5; pointer.y = e.clientY / innerHeight - 0.5; }, { passive: true });
+
+// smooth, inertial wheel scrolling (touch keeps native scrolling; off under reduced motion)
+if (!REDUCED) {
+  const lenis = new Lenis({ lerp: 0.085, anchors: { offset: -76 }, autoRaf: true });
+  window.folioLenis = lenis;
+  if (root.classList.contains('intro-on')) lenis.stop();
+}
 
 let renderer;
 try {
@@ -54,8 +63,9 @@ if (renderer) {
     renderer.clear();
     renderer.setScissorTest(true);
     let live = false;
+    const introOn = root.classList.contains('intro-on');
     for (const v of views) {
-      if (!v.visible || !v.update) continue;
+      if (!v.visible || !v.update || !!v.isIntro !== introOn) continue;
       const r = v.el.getBoundingClientRect();
       if (r.bottom < 0 || r.top > H || r.width < 2 || r.height < 2) continue;
       live = true;
@@ -265,6 +275,26 @@ if (renderer) {
       camera.lookAt(0, 0.4, 0);
     };
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // First visit: the cutscene plays in a full-screen view above the page (see intro.js)
+  // ---------------------------------------------------------------------------------------------
+  if (root.classList.contains('intro-on')) {
+    const signal = { skip: false, progress: 0, timeScale: 1 };
+    window.__folioIntro = signal;
+    const bar = document.querySelector('.intro-bar');
+    view(document.querySelector('.intro-3d'), { fov: 34, lights: { key: 2.6 } }, async (scene, camera, v) => {
+      v.isIntro = true;
+      const update = await buildIntro(scene, camera, signal);
+      return (t, s) => { update(t, s); if (bar) bar.style.setProperty('--ip', String(signal.progress)); };
+    });
+    document.addEventListener('folio:intro-skip', () => { signal.skip = true; frame(); });
+    document.addEventListener('folio:intro-done', () => {
+      const i = views.findIndex((x) => x.isIntro);
+      if (i >= 0) { disposeScene(views[i].scene); io.unobserve(views[i].el); views.splice(i, 1); }
+      frame();
+    });
+  }
 
   resize();
   new ResizeObserver(() => { resize(); frame(); }).observe(canvas);

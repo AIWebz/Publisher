@@ -11,10 +11,18 @@
   <link rel="preload" href="assets/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
+  <script>try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches && (!localStorage.getItem('folio-intro') || /[?&]intro\b/.test(location.search))) document.documentElement.classList.add('intro-on'); } catch (e) {}</script>
   <script type="module" src="assets/scene.js"></script>
   <script src="main.js" defer></script>
 </head>
 <body>
+  <div class="intro-bg" aria-hidden="true"><div class="intro-glow"></div></div>
+  <div class="intro-3d" aria-hidden="true"></div>
+  <div class="intro-ui">
+    <p class="intro-title" aria-hidden="true"><span>Folio</span><em>The New Era Of Design</em></p>
+    <button class="intro-skip" type="button">Skip intro</button>
+    <div class="intro-bar" aria-hidden="true"></div>
+  </div>
   <a class="skip" href="#top">Skip to content</a>
   <div class="progress" aria-hidden="true"></div>
 
