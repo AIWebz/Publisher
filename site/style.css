@@ -546,3 +546,101 @@ html::after { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), inset 0 0 26
 .cover, .cover .kicker, .cover .lead, .cover .meta, .cover .reg { color: #fff !important; }
 .cover-title, .cover .kicker, .cover .lead, .cover .meta { text-shadow: 0 0 18px rgba(255, 255, 255, .5), 0 0 46px rgba(255, 255, 255, .3), 0 2px 12px rgba(0, 0, 0, .55); }
 .cover .btn-line { color: #fff; background: rgba(0, 0, 0, .25) !important; border: 1.5px solid rgba(255, 255, 255, .75) !important; }
+
+/* ---------- hero: a living classical painting ---------- */
+/* The painting (or a looping video, see main.js) fills the window edge to edge in a 16:9 stage; the
+   figure sits right of centre, the quiet sky on the left carries the type over a soft dark fade. */
+.nav { position: fixed !important; inset: 0 0 auto; height: 76px; background: transparent !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none; transition: background .4s var(--ease), height .4s var(--ease); }
+.nav-in { display: flex !important; align-items: center; justify-content: space-between; height: 100%; padding-inline: clamp(24px, 6vw, 112px); }
+.nav .brand { color: #f6f0e4; font: 500 23px/1 var(--sans); letter-spacing: -.02em; gap: 11px; }
+.nav #site-nav { display: flex; gap: clamp(18px, 2.6vw, 40px); }
+.nav #site-nav a { color: rgba(246, 240, 228, .78); font: 400 14.5px/1 var(--sans); letter-spacing: .02em; text-decoration: none; transition: color .25s; }
+.nav #site-nav a:hover, .nav #site-nav a[aria-current] { color: #fff; }
+.nav #site-nav a::after { display: none; }
+.logo-on-light { display: none; }
+.nav.scrolled { height: 64px; background: rgba(255, 255, 255, .78) !important; -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); box-shadow: 0 1px 0 rgba(11, 13, 18, .08) !important; }
+.nav.scrolled .brand { color: var(--ink); }
+.nav.scrolled #site-nav a { color: var(--ink-2); }
+.nav.scrolled #site-nav a:hover, .nav.scrolled #site-nav a[aria-current] { color: var(--ink); }
+.nav.scrolled .logo-on-dark { display: none; } .nav.scrolled .logo-on-light { display: block; }
+.nav .menu span { background: currentColor; }
+.nav .menu { color: #f6f0e4; } .nav.scrolled .menu { color: var(--ink); }
+
+.hero { --h: max(100svh, 640px); position: relative; height: var(--h); overflow: hidden; background: #1c160e; color: #f6f0e4; isolation: isolate; }
+.hero-media { position: absolute; inset: 0; overflow: hidden; }
+.hero-stage { position: absolute; left: 50%; top: 50%; width: max(100%, calc(var(--h) * 16 / 9)); aspect-ratio: 16 / 9; transform: translate(-50%, -50%) scale(1.02);
+  animation: hero-drift 34s ease-in-out infinite alternate; will-change: transform; }
+@keyframes hero-drift { to { transform: translate(-50.6%, -50.3%) scale(1.045); } }
+.hero-paint { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; transform: scaleX(-1); filter: saturate(1.06) contrast(1.02); }
+/* Mediterranean sun moving slowly across the stone */
+.hero-sun { position: absolute; inset: 0; mix-blend-mode: soft-light; pointer-events: none;
+  background: radial-gradient(38% 46% at 72% 30%, rgba(255, 214, 140, .75), transparent 70%), radial-gradient(30% 30% at 60% 82%, rgba(255, 196, 120, .5), transparent 70%);
+  animation: hero-sun 19s ease-in-out infinite alternate; }
+@keyframes hero-sun { from { opacity: .55; transform: translate(-1.2%, 0); } to { opacity: 1; transform: translate(1.4%, .8%); } }
+/* the page taking shape on the parchment: heading, picture, two columns, a pull quote, a border */
+.hero-doc { position: absolute; left: 44.6%; top: 76.4%; width: 13.4%; height: 8.6%; mix-blend-mode: multiply; opacity: .9;
+  transform: perspective(500px) rotateX(48deg) rotateZ(-2.2deg); transform-origin: 50% 100%; overflow: visible; }
+.hero-doc * { transform-box: fill-box; transform-origin: 0 50%; animation: 14s cubic-bezier(.45, 0, .2, 1) infinite both; }
+.d-border rect { fill: none; stroke: rgba(70, 40, 18, .7); stroke-width: 2; stroke-dasharray: 1200; stroke-dashoffset: 1200; animation-name: d-draw; }
+.d-border rect + rect { stroke-width: .8; stroke: rgba(150, 70, 30, .7); }
+.d-head { fill: rgba(40, 24, 12, .85); animation-name: d-head; }
+.d-rule { fill: rgba(150, 70, 30, .8); animation-name: d-grow; animation-delay: .4s; }
+.d-img { fill: rgba(165, 83, 46, .5); stroke: rgba(70, 40, 18, .6); stroke-width: 1.2; animation-name: d-img; transform-origin: 0 0; }
+.d-sun { fill: rgba(44, 79, 140, .55); animation-name: d-pop; transform-origin: 50% 50%; }
+.d-col rect { fill: rgba(40, 24, 12, .6); animation-name: d-col; }
+.d-col2 rect { animation-name: d-col2; }
+.d-pull { fill: rgba(44, 79, 140, .28); stroke: rgba(44, 79, 140, .6); stroke-width: 1; animation-name: d-pull; }
+.d-foot rect { fill: rgba(40, 24, 12, .5); animation-name: d-foot; }
+.d-orn { fill: none; stroke: rgba(150, 70, 30, .85); stroke-width: 2; stroke-dasharray: 80; stroke-dashoffset: 80; animation-name: d-orn; }
+@keyframes d-draw { 0%, 4% { stroke-dashoffset: 1200; opacity: 1; } 16%, 90% { stroke-dashoffset: 0; opacity: 1; } 98%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes d-head { 0%, 10% { transform: scaleX(0); opacity: 0; } 18% { transform: scaleX(1.25); opacity: 1; } 44% { transform: scaleX(1.25); } 50%, 90% { transform: scaleX(1); opacity: 1; } 98%, 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes d-grow { 0%, 16% { transform: scaleX(0); opacity: 0; } 24%, 90% { transform: scaleX(1); opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes d-img { 0%, 20% { transform: scale(.4); opacity: 0; } 27% { transform: scale(.7); opacity: 1; } 52% { transform: scale(.7) translate(40%, 6%); } 60%, 90% { transform: none; opacity: 1; } 98%, 100% { transform: none; opacity: 0; } }
+@keyframes d-pop { 0%, 58% { transform: scale(0); opacity: 0; } 64% { transform: scale(1.15); opacity: 1; } 68%, 90% { transform: scale(1); opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes d-col { 0%, 30% { transform: scaleX(0); opacity: 0; } 40%, 90% { transform: scaleX(1); opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes d-col2 { 0%, 38% { transform: scaleX(0); opacity: 0; } 48%, 90% { transform: scaleX(1); opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes d-pull { 0%, 64% { transform: translateY(30%) scaleX(.5); opacity: 0; } 72% { transform: translateY(0) scaleX(.5); opacity: 1; } 78%, 90% { transform: none; opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes d-foot { 0%, 70% { transform: scaleX(0); opacity: 0; } 80%, 90% { transform: scaleX(1); opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes d-orn { 0%, 80% { stroke-dashoffset: 80; opacity: 1; } 86%, 90% { stroke-dashoffset: 0; opacity: 1; } 98%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+.d-col rect:nth-child(2) { animation-delay: .15s; } .d-col rect:nth-child(3) { animation-delay: .3s; } .d-col rect:nth-child(4) { animation-delay: .45s; } .d-col rect:nth-child(5) { animation-delay: .6s; } .d-col rect:nth-child(6) { animation-delay: .75s; }
+/* the looping film, when there is one, fades in over the painting */
+.hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s var(--ease); }
+.hero.has-video .hero-video { opacity: 1; }
+.hero.has-video .hero-doc, .hero.has-video .hero-sun { display: none; }
+
+.hero-shade { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, rgba(10, 8, 5, .8) 0%, rgba(10, 8, 5, .62) 26%, rgba(10, 8, 5, .28) 48%, rgba(10, 8, 5, 0) 66%),
+    linear-gradient(180deg, rgba(10, 8, 5, .45) 0%, rgba(10, 8, 5, 0) 18%, rgba(10, 8, 5, 0) 78%, rgba(10, 8, 5, .4) 100%); }
+.hero-copy { position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: center; height: 100%;
+  max-width: min(660px, 100%); padding: 96px clamp(24px, 6vw, 112px) 64px; }
+.hero-kicker { display: flex; align-items: center; gap: 14px; margin: 0 0 28px; font: 500 12px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: rgba(246, 240, 228, .72); }
+.hero-kicker::before { content: ""; width: 34px; height: 1px; background: linear-gradient(90deg, rgba(246, 240, 228, .9), rgba(246, 240, 228, 0)); }
+.hero h1 { margin: 0; font: 400 clamp(42px, 5.3vw, 80px)/1.03 var(--sans); letter-spacing: -.035em; color: #f8f3e8; text-wrap: balance;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, .35); }
+.hero-sub { margin: 28px 0 0; max-width: 31em; font: 400 clamp(17px, 1.35vw, 20px)/1.6 var(--sans); color: rgba(246, 240, 228, .84); text-shadow: 0 1px 14px rgba(0, 0, 0, .4); }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 42px; }
+.glass { display: inline-flex; align-items: center; height: 52px; padding: 0 28px; border-radius: 999px; font: 500 15.5px/1 var(--sans); letter-spacing: .01em; text-decoration: none;
+  color: #f8f3e8; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 10px 30px -14px rgba(0, 0, 0, .6);
+  transition: background .3s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease); }
+.glass:hover { background: rgba(255, 255, 255, .16); transform: translateY(-1px); }
+.glass-primary { color: #1b140b; background: rgba(248, 243, 232, .92); border-color: rgba(255, 255, 255, .7); }
+.glass-primary:hover { background: #fff; box-shadow: inset 0 1px 0 #fff, 0 14px 38px -14px rgba(255, 214, 140, .55); }
+.glass:focus-visible { outline: 2px solid #f8f3e8; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .hero-stage { left: 35%; }
+  .hero-shade { background: linear-gradient(180deg, rgba(10, 8, 5, .55), rgba(10, 8, 5, .7) 60%, rgba(10, 8, 5, .8)); }
+  .hero-copy { justify-content: flex-end; padding-bottom: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-stage, .hero-sun, .hero-doc * { animation: none !important; }
+  .hero-doc * { opacity: 1; stroke-dashoffset: 0; }
+}
+html::after { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35), inset 0 0 22px rgba(255, 255, 255, .22), inset 0 0 110px rgba(255, 255, 255, .12); }
+.nav #site-nav { margin-left: auto; }
+.hero-copy { max-width: min(820px, 100%); }
+.hero h1 { font-size: clamp(40px, 4.7vw, 74px); max-width: 13em; }
+.hero-doc { top: 75.6%; height: 9.6%; transform: perspective(520px) rotateX(42deg) rotateZ(-2deg); opacity: 1; }
+.nav #site-nav { margin: 0 0 0 auto; }
+.nav #site-nav a { background: none; padding-inline: 2px; }
+.hero-doc { left: 45.8%; width: 12.8%; top: 76%; height: 8.4%; }

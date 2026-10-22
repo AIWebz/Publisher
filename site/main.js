@@ -342,3 +342,12 @@ document.querySelectorAll('.tour .seg button').forEach((b, _, all) => b.addEvent
   if (root.classList.contains('no-3d')) end();
   setTimeout(end, 14000);
 })();
+
+// hero: a looping film over the painting, when the page names one (data-src on .hero-video)
+(() => {
+  const v = document.querySelector('.hero-video');
+  if (!v || !v.dataset.src || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  v.src = v.dataset.src;
+  v.addEventListener('playing', () => v.closest('.hero').classList.add('has-video'), { once: true });
+  v.play().catch(() => {});
+})();

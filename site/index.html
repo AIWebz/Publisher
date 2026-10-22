@@ -17,56 +17,49 @@
   <a class="skip" href="#top">Skip to content</a>
   <div class="progress" aria-hidden="true"></div>
 
-  <div class="strip" aria-hidden="true">
-    <div class="wrap strip-in"><span>Desktop publishing</span><span class="strip-issue">No. <b class="v">2</b></span><span>For Windows &amp; Mac</span></div>
-  </div>
   <header class="nav">
-    <div class="wrap nav-in">
-      <a class="brand" href="#top" aria-label="Folio — back to top"><img src="assets/logo-black.png" alt="" width="22" height="25"><span>Folio</span></a>
+    <div class="nav-in">
+      <a class="brand" href="#top" aria-label="Folio — back to top"><img class="logo-on-dark" src="assets/logo-white.png" alt="" width="22" height="25"><img class="logo-on-light" src="assets/logo-black.png" alt="" width="22" height="25"><span>Folio</span></a>
       <nav id="site-nav" aria-label="Sections">
-        <a href="#layout">Layout</a>
-        <a href="#tour">Tour</a>
+        <a href="#tour">Editor</a>
         <a href="#contents">Features</a>
         <a href="#install">Install</a>
         <a href="#faq">Q&amp;A</a>
       </nav>
-      <div class="nav-end">
-        <a class="btn btn-ink btn-sm" href="#install">Download</a>
-        <button class="menu" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span></span><span></span></button>
-      </div>
+      <button class="menu" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span></span><span></span></button>
     </div>
   </header>
 
   <main id="top" tabindex="-1">
-    <!-- Cover -->
-    <section class="cover wrap" aria-labelledby="cover-h">
-      <p class="kicker cover-kicker rise" style="--d:0"><span class="reg" aria-hidden="true"></span>Desktop publishing for Windows &amp; Mac</p>
-      <h1 class="cover-title" id="cover-h" aria-label="The New Era Of Design.">
-        <span class="plate plate-c" aria-hidden="true">The New Era<br>Of <i>Design.</i></span>
-        <span class="plate plate-m" aria-hidden="true">The New Era<br>Of <i>Design.</i></span>
-        <span class="plate plate-k" aria-hidden="true">The New Era<br>Of <i>Design.</i></span>
-      </h1>
-      <div class="cover-grid">
-        <div class="cover-copy">
-          <p class="lead rise" style="--d:3">Folio lays out flyers, newsletters, brochures, menus and invitations on a real page — and prints them exactly as you see them. Offline, no account.</p>
-          <div class="cta rise" style="--d:4">
-            <a class="btn btn-ink" href="#install" data-dl><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg><span class="dl-label">Download Folio</span></a>
-            <a class="btn btn-line" href="#tour">Take the tour</a>
-          </div>
-          <p class="meta rise" style="--d:5" id="hero-meta">Windows 11 · macOS 13+ · Apple silicon &amp; Intel</p>
-          <div class="prints rise" style="--d:6">
-            <span class="prints-label" id="prints-label">Print a sample</span>
-            <span class="prints-row" role="radiogroup" aria-labelledby="prints-label">
-              <button type="button" role="radio" aria-checked="true">Poster</button>
-              <button type="button" role="radio" aria-checked="false" tabindex="-1">Flyer</button>
-              <button type="button" role="radio" aria-checked="false" tabindex="-1">Newsletter</button>
-              <button type="button" role="radio" aria-checked="false" tabindex="-1">Menu</button>
-              <button type="button" role="radio" aria-checked="false" tabindex="-1">Invitation</button>
-            </span>
-          </div>
+    <!-- Hero: a living classical painting (a looping video when assets/hero.mp4 is set in data-src) -->
+    <section class="hero" aria-labelledby="hero-h">
+      <div class="hero-media" aria-hidden="true">
+        <div class="hero-stage">
+          <img class="hero-paint" src="assets/hero-bg.webp" alt="" width="1672" height="941" fetchpriority="high">
+          <div class="hero-sun"></div>
+          <svg class="hero-doc" viewBox="0 0 400 220" preserveAspectRatio="none">
+            <g class="d-border"><rect x="6" y="6" width="388" height="208"/><rect x="12" y="12" width="376" height="196"/></g>
+            <rect class="d-head" x="24" y="22" width="200" height="16"/>
+            <rect class="d-rule" x="24" y="44" width="352" height="2.5"/>
+            <rect class="d-img" x="24" y="54" width="150" height="96"/>
+            <circle class="d-sun" cx="99" cy="102" r="20"/>
+            <g class="d-col d-col1"><rect x="186" y="56" width="88" height="4"/><rect x="186" y="66" width="82" height="4"/><rect x="186" y="76" width="88" height="4"/><rect x="186" y="86" width="70" height="4"/><rect x="186" y="96" width="88" height="4"/><rect x="186" y="106" width="84" height="4"/></g>
+            <g class="d-col d-col2"><rect x="288" y="56" width="88" height="4"/><rect x="288" y="66" width="86" height="4"/><rect x="288" y="76" width="80" height="4"/><rect x="288" y="86" width="88" height="4"/><rect x="288" y="96" width="76" height="4"/><rect x="288" y="106" width="88" height="4"/></g>
+            <rect class="d-pull" x="186" y="122" width="190" height="28"/>
+            <g class="d-foot"><rect x="24" y="166" width="352" height="4"/><rect x="24" y="176" width="300" height="4"/><rect x="24" y="186" width="330" height="4"/></g>
+            <path class="d-orn" d="M170 200 q15 -10 30 0 q15 10 30 0"/>
+          </svg>
+          <video class="hero-video" muted loop playsinline preload="none" data-src=""></video>
         </div>
-        <div class="cover-stage">
-          <div class="print-stage" aria-hidden="true"></div>
+      </div>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="hero-kicker">Folio · Desktop publishing for Windows &amp; Mac</p>
+        <h1 id="hero-h">Where timeless creativity meets modern publishing.</h1>
+        <p class="hero-sub">Create beautiful documents, brochures, flyers, and layouts with a new kind of creative workspace.</p>
+        <div class="hero-cta">
+          <a class="glass glass-primary" href="#install">Start Creating</a>
+          <a class="glass" href="#tour">Explore the Editor</a>
         </div>
       </div>
     </section>
