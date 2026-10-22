@@ -299,11 +299,22 @@ function fontControls() {
       };
       fill();
       fonts.addEventListener('mousedown', () => fill());
-      fonts.addEventListener('change', () => app.exec('text.font', fonts.value));
+      fonts.addEventListener('change', () => { restoreRange(); app.exec('text.font', fonts.value); });
       const size = h('input', { class: 'field rb-sizein', list: 'folio-sizes', 'aria-label': 'Font size', inputmode: 'decimal' });
       const dl = h('datalist', { id: 'folio-sizes' }, ...SIZES.map((s) => h('option', { value: String(s) })));
-      size.addEventListener('change', () => { const v = parseFloat(size.value); if (v > 0) app.exec('text.size', v); });
-      size.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); size.dispatchEvent(new Event('change')); } });
+      // apply a size once: on Enter, on leaving the box, or as soon as one is picked from the list
+      let applied = null;
+      const apply = () => {
+        const v = parseFloat(size.value);
+        if (!(v > 0) || v === applied) return;
+        applied = v;
+        restoreRange();
+        app.exec('text.size', v);
+      };
+      size.addEventListener('focus', () => { applied = parseFloat(size.value) || null; });
+      size.addEventListener('change', apply);
+      size.addEventListener('input', (e) => { if (!e.inputType || e.inputType === 'insertReplacementText') apply(); });
+      size.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
       setTip(fonts, 'Font'); setTip(size, 'Font size (pt)');
       // keep the text selection when using these controls while editing
       for (const c of [fonts, size]) c.addEventListener('pointerdown', () => saveRange());
@@ -324,7 +335,16 @@ function fontControls() {
   };
 }
 let savedRange = null;
-function saveRange() { const s = getSelection(); if (editing() && s.rangeCount) savedRange = s.getRangeAt(0).cloneRange(); }
+function saveRange() {
+  const s = getSelection();
+  if (editing() && s.rangeCount && app.editing.root.contains(s.getRangeAt(0).commonAncestorContainer)) savedRange = s.getRangeAt(0).cloneRange();
+}
+/** Put the text selection back (the ribbon's font and size boxes take focus from the text being edited). */
+function restoreRange() {
+  if (!editing() || !savedRange) return;
+  app.editing.root.focus({ preventScroll: true });
+  const s = getSelection(); s.removeAllRanges(); s.addRange(savedRange);
+}
 
 function colorButton(id, label, ic, getDefault) {
   return {
@@ -345,9 +365,6 @@ function colorButton(id, label, ic, getDefault) {
       return { update(ctx) { main.disabled = caret.disabled = !textSel(ctx); paint(); } };
     }
   };
-}
-function restoreRange() {
-  if (editing() && savedRange) { app.editing.root.focus(); const s = getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
 }
 
 // Ribbon buttons must not steal focus from the text being edited.
