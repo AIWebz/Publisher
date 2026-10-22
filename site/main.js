@@ -267,7 +267,7 @@ document.querySelectorAll('.tour .seg button').forEach((b, _, all) => b.addEvent
     c.querySelector('.size').textContent = `${MB(f.size)} · ${f.name}`;
     c.setAttribute('aria-label', `Download Folio ${latest.version} for ${c.querySelector('.dl-os').textContent} (${MB(f.size)})`);
   }
-  note.textContent = `Free · version ${latest.version}. Pick your computer.`;
+  note.textContent = `Version ${latest.version}. Pick your computer.`;
   const issue = document.querySelector('.strip-issue .v');
   if (issue) issue.textContent = latest.version;
   // the visitor's platform (iPhones and iPads also call themselves Mac; Apple silicon and Intel can

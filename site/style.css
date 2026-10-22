@@ -1,4 +1,4 @@
-/* Folio site — "paper and ink": a print-shop editorial design. Warm paper, ink-black type set in
+/* Folio site — black, with blue gradient outlines (theme block at the end); built on "paper and ink": a print-shop editorial design. Warm paper, ink-black type set in
    Libre Bodoni and Public Sans, process magenta and cyan as the only colours, sharp corners, rules
    and crop marks. The 3D models (scene.js) are drawn by one canvas fixed over the page. */
 @font-face { font-family: "Libre Bodoni"; src: url("assets/fonts/LibreBodoni-Variable.woff2") format("woff2"); font-weight: 400 700; font-style: normal; font-display: swap; }
@@ -220,13 +220,7 @@ main:focus { outline: none; }
 .shot-link:hover { color: var(--on-night); }
 .tour-3d { position: relative; }
 .shot { display: block; border: 1px solid var(--night-rule); }
-.has-3d .tour-track { height: 320vh; }
-.has-3d .tour-sticky { position: sticky; top: 0; height: 100svh; padding-block: calc(var(--nav) + 24px) 32px; }
 .has-3d .tour-3d { height: 100%; min-height: 0; }
-.has-3d .shot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); border: 0; }
-.has-3d .tour-steps li { opacity: .38; }
-.has-3d .tour[data-step="0"] li[data-step="0"], .has-3d .tour[data-step="1"] li[data-step="1"],
-.has-3d .tour[data-step="2"] li[data-step="2"], .has-3d .tour[data-step="3"] li[data-step="3"] { opacity: 1; }
 
 /* ---------- 03 features: an index with a floating 3D preview ---------- */
 .index { margin: 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
@@ -252,7 +246,6 @@ main:focus { outline: none; }
 .dl-model::before, .dl-model::after { content: ""; position: absolute; bottom: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); border: 1.5px solid var(--ink); }
 .dl-model::before { left: -11px; clip-path: inset(0 0 0 50%); } .dl-model::after { right: -11px; clip-path: inset(0 50% 0 0); }
 .dl-icon { width: 42px; height: 42px; fill: none; stroke: var(--ink-2); stroke-width: 1.4; stroke-linejoin: round; }
-.has-3d .dl-model svg { visibility: hidden; }
 .dl-body { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 24px; }
 .dl-os { font: 600 clamp(26px, 2.4vw, 32px)/1.08 var(--serif); letter-spacing: -.02em; }
 .dl-info { color: var(--ink-2); font-size: 15px; }
@@ -426,3 +419,49 @@ html.lenis, html.lenis body { height: auto; }
 @media (prefers-reduced-transparency: reduce) {
   .nav { background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* ---------- black & blue: the site's theme (overrides the paper-and-ink tokens above) ---------- */
+:root {
+  --paper: #000; --paper-hi: #06070b; --paper-2: #0c0e15;
+  --ink: #f3f5fa; --ink-2: #c4c9d6; --ink-3: #8c92a4; --ink-4: #343a4c;
+  --rule: rgba(110, 145, 255, .16); --rule-2: rgba(110, 145, 255, .36);
+  --mag: #2f6bff; --mag-ink: #79a2ff; --cyan: #00c2ff;
+  --night: #000; --on-night: #f3f5fa; --on-night-2: #98a0b4; --night-rule: rgba(110, 145, 255, .18);
+  --blue: #2f6bff;
+  --edge: linear-gradient(135deg, #00c2ff 0%, #2f6bff 38%, rgba(47, 107, 255, .35) 70%, rgba(47, 107, 255, .06) 100%);
+  --edge-strong: linear-gradient(135deg, #00c2ff, #2f6bff 55%, #5b3bff);
+  color-scheme: dark;
+}
+body { background: #000; }
+body::before { opacity: 1; background: radial-gradient(900px 520px at 85% -8%, rgba(47, 107, 255, .22), transparent 62%), radial-gradient(700px 480px at -10% 40%, rgba(0, 194, 255, .08), transparent 60%); }
+::selection { background: var(--blue); color: #fff; }
+:focus-visible { outline-color: var(--cyan); }
+.plate, .pic span { mix-blend-mode: screen; }
+.progress { background: var(--edge-strong); }
+.nav { background: rgba(0, 0, 0, .78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.nav.scrolled { box-shadow: none; border-bottom: 1px solid transparent; border-image: var(--edge-strong) 1; }
+/* a blue gradient that fades along the outline: the panels, tickets, the demo page, questions */
+.dl, .page, .first-run, .faq-list details, .shot, .btn-line, .seg, code, .toast {
+  border: 1.5px solid transparent !important;
+  background: linear-gradient(var(--paper-hi), var(--paper-hi)) padding-box, var(--edge) border-box !important;
+}
+.page { box-shadow: 0 40px 90px -40px rgba(47, 107, 255, .45); }
+.first-run { padding: 26px 28px; }
+.faq-list details { padding: 4px 20px; margin-bottom: 10px; }
+.dl { color: var(--ink); transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.dl:hover { transform: translateY(-4px); box-shadow: 0 24px 60px -30px rgba(0, 194, 255, .55); }
+.dl-model { border-bottom-color: var(--rule-2); }
+.dl-model::before, .dl-model::after { background: #000; border-color: var(--rule-2); }
+.dl-icon { width: 64px; height: 64px; stroke: var(--cyan); }
+.btn-ink, .btn-paper { background: var(--edge-strong); color: #fff; border-color: transparent; }
+.btn-ink:hover, .btn-paper:hover { filter: brightness(1.12); background: var(--edge-strong); color: #fff; }
+.btn-line { color: var(--ink); }
+.btn-line:hover { background: linear-gradient(#0b1020, #0b1020) padding-box, var(--edge-strong) border-box !important; }
+.tour, .foot { background: #000; border-top: 1px solid transparent; border-image: var(--edge-strong) 1; }
+.seg-dark button[aria-pressed="true"] { background: var(--edge-strong); color: #fff; }
+.index-row:hover { background: linear-gradient(90deg, rgba(47, 107, 255, .14), transparent 70%); }
+.marks::before { --c: var(--cyan); opacity: .55; }
+.foot-cta { grid-template-columns: 1fr; }
+.head { border-image: var(--edge-strong) 1; }
+.dl-cta { background: var(--edge-strong) !important; color: #fff !important; border-color: transparent !important; }
+.dl-model { height: 150px; }
