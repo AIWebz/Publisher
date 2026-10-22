@@ -476,3 +476,73 @@ h1, h2, .h2, .cover-title, .foot-title { font-weight: 600; letter-spacing: -.035
 /* a blue glow that fades in from the edges of the window, with a fine gradient line on the very edge */
 html::after { content: ""; position: fixed; inset: 0; z-index: 45; pointer-events: none;
   box-shadow: inset 0 0 0 1px rgba(47, 107, 255, .35), inset 0 0 28px rgba(0, 194, 255, .22), inset 0 0 140px rgba(47, 107, 255, .28), inset 0 0 320px rgba(47, 107, 255, .12); }
+
+/* ---------- white pages, a photo cover ---------- */
+/* everything below the cover sits on white with dark type; blue accents and fading outlines stay */
+:root {
+  --paper: #fff; --paper-hi: #fff; --paper-2: #f3f5fa;
+  --ink: #0b0d12; --ink-2: #353a47; --ink-3: #5c6273; --ink-4: #c9cedb;
+  --rule: rgba(11, 13, 18, .12); --rule-2: rgba(11, 13, 18, .3);
+  --night: #fff; --on-night: #0b0d12; --on-night-2: #5c6273; --night-rule: rgba(11, 13, 18, .12);
+  color-scheme: light;
+}
+body { background: #fff; }
+body::before { display: none; }
+.nav { background: rgba(255, 255, 255, .9); }
+.dl-model::before, .dl-model::after { background: #fff; }
+.tour, .foot { background: #fff; color: var(--ink); }
+.page { box-shadow: 0 30px 70px -40px rgba(47, 107, 255, .35); }
+/* the window edge glows white (seen over the cover photo) */
+html::after { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), inset 0 0 26px rgba(255, 255, 255, .35), inset 0 0 130px rgba(255, 255, 255, .22); }
+
+/* the cover: a full-width photo (assets/hero-bg.jpg) behind centred white type with a soft glow */
+.cover { display: grid; place-items: center; min-height: calc(100svh - var(--nav) - 34px); padding-block: clamp(48px, 8vh, 96px); text-align: center; isolation: isolate; }
+.cover::before { content: ""; position: absolute; inset: 0 calc(50% - 50vw); z-index: -1;
+  background: linear-gradient(rgba(0, 0, 0, .45), rgba(0, 0, 0, .55)), url("assets/hero-bg.jpg") center / cover no-repeat, radial-gradient(120% 90% at 50% 0%, #1b2a55, #05070d 70%); }
+.cover-kicker { justify-content: center; }
+.cover-title { justify-items: center; }
+.plate-c, .plate-m { display: none; }
+.plate-k, .plate-k i { color: #fff !important; }
+.cover-grid { display: block; margin-top: 0; }
+.cover-copy { margin: clamp(24px, 4vh, 40px) auto 0; max-width: 640px; }
+.cover-stage, .prints { display: none; }
+.cover .lead { max-width: 600px; margin-inline: auto; }
+.cover .cta { justify-content: center; }
+.cover, .cover .kicker, .cover .lead, .cover .meta, .cover .reg { color: #fff !important; }
+.cover-title, .cover .kicker, .cover .lead, .cover .meta { text-shadow: 0 0 18px rgba(255, 255, 255, .45), 0 0 46px rgba(170, 200, 255, .35); }
+.cover .btn-line { color: #fff; background: rgba(255, 255, 255, .06) !important; border: 1.5px solid rgba(255, 255, 255, .7) !important; }
+
+/* ---------- white pages, a painted cover ---------- */
+/* everything below the cover sits on white with dark type; blue accents and fading outlines stay */
+:root {
+  --paper: #fff; --paper-hi: #fff; --paper-2: #f3f5fa;
+  --ink: #0b0d12; --ink-2: #353a47; --ink-3: #5c6273; --ink-4: #c9cedb;
+  --rule: rgba(11, 13, 18, .12); --rule-2: rgba(11, 13, 18, .3);
+  --night: #fff; --on-night: #0b0d12; --on-night-2: #5c6273; --night-rule: rgba(11, 13, 18, .12);
+  color-scheme: light;
+}
+body { background: #fff; }
+body::before { display: none; }
+.nav { background: rgba(255, 255, 255, .9); }
+.dl-model::before, .dl-model::after { background: #fff; }
+.tour, .foot { background: #fff; color: var(--ink); }
+.page { box-shadow: 0 30px 70px -40px rgba(47, 107, 255, .35); }
+/* the window edge glows white */
+html::after { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), inset 0 0 26px rgba(255, 255, 255, .4), inset 0 0 130px rgba(255, 255, 255, .25); }
+
+/* the cover: the painting (assets/hero-bg.webp) full width behind centred white type with a soft glow */
+.cover { display: grid; place-items: center; min-height: calc(100svh - var(--nav) - 34px); padding-block: clamp(48px, 8vh, 96px); text-align: center; isolation: isolate; }
+.cover::before { content: ""; position: absolute; inset: 0 calc(50% - 50vw); z-index: -1;
+  background: radial-gradient(70% 60% at 50% 50%, rgba(0, 0, 0, .55), rgba(0, 0, 0, .3)), url("assets/hero-bg.webp") center / cover no-repeat #2b2418; }
+.cover-kicker { justify-content: center; }
+.cover-title { justify-items: center; }
+.plate-c, .plate-m { display: none; }
+.plate-k, .plate-k i { color: #fff !important; }
+.cover-grid { display: block; margin-top: 0; }
+.cover-copy { margin: clamp(24px, 4vh, 40px) auto 0; max-width: 640px; }
+.cover-stage, .prints { display: none; }
+.cover .lead { max-width: 600px; margin-inline: auto; }
+.cover .cta { justify-content: center; }
+.cover, .cover .kicker, .cover .lead, .cover .meta, .cover .reg { color: #fff !important; }
+.cover-title, .cover .kicker, .cover .lead, .cover .meta { text-shadow: 0 0 18px rgba(255, 255, 255, .5), 0 0 46px rgba(255, 255, 255, .3), 0 2px 12px rgba(0, 0, 0, .55); }
+.cover .btn-line { color: #fff; background: rgba(0, 0, 0, .25) !important; border: 1.5px solid rgba(255, 255, 255, .75) !important; }
