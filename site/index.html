@@ -3,255 +3,172 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Folio — The New Era Of Design</title>
+  <title>Folio — The product for the greatest designers</title>
   <meta name="description" content="Folio is a desktop publishing app for Windows and Mac. Lay out flyers, newsletters, brochures, menus and invitations, and print them exactly as you see them.">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#000000">
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preload" href="assets/fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="assets/scene.js"></script>
   <script src="main.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#top">Skip to content</a>
-  <div class="progress" aria-hidden="true"></div>
+
+  <!-- the scroll position, drawn as a ruler down the right edge -->
+  <nav class="ruler" aria-label="Page sections">
+    <div class="ruler-scale" aria-hidden="true"></div>
+    <a class="ruler-mark" href="#top" data-for="top"><span>01</span><b>Product</b></a>
+    <a class="ruler-mark" href="#world" data-for="world"><span>02</span><b>World</b></a>
+    <a class="ruler-mark" href="#templates" data-for="templates"><span>03</span><b>Templates</b></a>
+    <a class="ruler-mark" href="#install" data-for="install"><span>04</span><b>Install</b></a>
+    <a class="ruler-mark" href="#faq" data-for="faq"><span>05</span><b>Q&amp;A</b></a>
+    <div class="ruler-needle" aria-hidden="true"><i></i></div>
+  </nav>
 
   <header class="nav">
     <div class="nav-in">
-      <a class="brand" href="#top" aria-label="Folio — back to top"><img class="logo-on-dark" src="assets/logo-white.png" alt="" width="22" height="25"><img class="logo-on-light" src="assets/logo-black.png" alt="" width="22" height="25"><span>Folio</span></a>
-      <nav id="site-nav" aria-label="Sections">
-        <a href="#tour">Editor</a>
-        <a href="#contents">Features</a>
+      <a class="brand" href="#top" aria-label="Folio — back to top"><img src="assets/logo-white.png" alt="" width="20" height="23"><span>Folio</span></a>
+      <nav class="links" aria-label="Sections">
+        <a href="#world">World</a>
+        <a href="#templates">Templates</a>
         <a href="#install">Install</a>
         <a href="#faq">Q&amp;A</a>
       </nav>
-      <button class="menu" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span></span><span></span></button>
+      <a class="btn btn-light btn-sm" href="#install">Get Folio</a>
     </div>
   </header>
 
   <main id="top" tabindex="-1">
-    <!-- Hero: a living classical painting (a looping video when assets/hero.mp4 is set in data-src) -->
+    <!-- 01 · Product -->
     <section class="hero" aria-labelledby="hero-h">
-      <div class="hero-media" aria-hidden="true">
-        <div class="hero-stage">
-          <img class="hero-paint" src="assets/hero-bg.webp" alt="" width="1672" height="941" fetchpriority="high">
-          <div class="hero-sun"></div>
-          <svg class="hero-doc" viewBox="0 0 400 220" preserveAspectRatio="none">
-            <g class="d-border"><rect x="6" y="6" width="388" height="208"/><rect x="12" y="12" width="376" height="196"/></g>
-            <rect class="d-head" x="24" y="22" width="200" height="16"/>
-            <rect class="d-rule" x="24" y="44" width="352" height="2.5"/>
-            <rect class="d-img" x="24" y="54" width="150" height="96"/>
-            <circle class="d-sun" cx="99" cy="102" r="20"/>
-            <g class="d-col d-col1"><rect x="186" y="56" width="88" height="4"/><rect x="186" y="66" width="82" height="4"/><rect x="186" y="76" width="88" height="4"/><rect x="186" y="86" width="70" height="4"/><rect x="186" y="96" width="88" height="4"/><rect x="186" y="106" width="84" height="4"/></g>
-            <g class="d-col d-col2"><rect x="288" y="56" width="88" height="4"/><rect x="288" y="66" width="86" height="4"/><rect x="288" y="76" width="80" height="4"/><rect x="288" y="86" width="88" height="4"/><rect x="288" y="96" width="76" height="4"/><rect x="288" y="106" width="88" height="4"/></g>
-            <rect class="d-pull" x="186" y="122" width="190" height="28"/>
-            <g class="d-foot"><rect x="24" y="166" width="352" height="4"/><rect x="24" y="176" width="300" height="4"/><rect x="24" y="186" width="330" height="4"/></g>
-            <path class="d-orn" d="M170 200 q15 -10 30 0 q15 10 30 0"/>
-          </svg>
-          <video class="hero-video" muted loop playsinline preload="none" data-src=""></video>
-        </div>
+      <div class="glow glow-hero" aria-hidden="true"></div>
+      <p class="eyebrow" data-reveal>Desktop publishing for Windows &amp; Mac</p>
+      <h1 class="title" id="hero-h" data-reveal style="--d:1">The product for the greatest designers.</h1>
+      <p class="lede" data-reveal style="--d:2">Flyers, newsletters, brochures, menus and invitations — laid out on a real page and printed exactly as you see them.</p>
+      <div class="cta" data-reveal style="--d:3">
+        <a class="btn btn-light" href="#install">Get a copy</a>
+        <a class="btn btn-ghost" href="#templates">See the templates</a>
       </div>
-      <div class="hero-shade" aria-hidden="true"></div>
-      <div class="hero-copy">
-        <p class="hero-kicker">Folio · Desktop publishing for Windows &amp; Mac</p>
-        <h1 id="hero-h">Where timeless creativity meets modern publishing.</h1>
-        <p class="hero-sub">Create beautiful documents, brochures, flyers, and layouts with a new kind of creative workspace.</p>
-        <div class="hero-cta">
-          <a class="glass glass-primary" href="#install">Start Creating</a>
-          <a class="glass" href="#tour">Explore the Editor</a>
+      <figure class="shot" data-reveal="zoom" style="--d:4">
+        <div class="shot-frame">
+          <img src="assets/editor-dark.webp" alt="The Folio editor with a four-page newsletter open: the ribbon, page thumbnails, the page and the format panel" width="1440" height="900">
         </div>
-      </div>
+      </figure>
     </section>
 
-    <div class="ticker" aria-label="What you can make with Folio">
-      <div class="ticker-track">
-        <ul><li>Flyers</li><li>Newsletters</li><li>Brochures</li><li>Menus</li><li>Invitations</li><li>Posters</li><li>Business cards</li><li>Calendars</li><li>Postcards</li><li>Certificates</li></ul>
-        <ul aria-hidden="true"><li>Flyers</li><li>Newsletters</li><li>Brochures</li><li>Menus</li><li>Invitations</li><li>Posters</li><li>Business cards</li><li>Calendars</li><li>Postcards</li><li>Certificates</li></ul>
-      </div>
-    </div>
-
-    <!-- Manifesto: the words ink in as you read down -->
-    <section class="manifesto wrap" aria-label="About Folio">
-      <p class="read">Folio is for everyone who makes things to be printed: the bake-sale flyer, the club newsletter, the café menu, the wedding invitation. Lay it out on a real page with real typography, and it prints <i>exactly</i> as you see it.</p>
-    </section>
-
-    <!-- 01 · Layout: a live text-wrap and linked-text-box demo -->
-    <section class="section wrap layout" id="layout" aria-labelledby="layout-h">
+    <!-- 02 · World -->
+    <section class="section world" id="world" aria-labelledby="world-h">
+      <div class="glow glow-world" aria-hidden="true"></div>
       <header class="head">
-        <p class="kicker"><span class="num">01</span>Layout</p>
-        <h2 class="h2 print-in" id="layout-h">Text that flows <i>around</i> things.</h2>
-        <p class="sub">Drag the picture. The story wraps around it and runs on from one linked text box into the next — the way it does in Folio.</p>
+        <p class="eyebrow" data-reveal>02 — Everywhere</p>
+        <h2 class="title" id="world-h" data-reveal style="--d:1">For designers across the world</h2>
+        <p class="lede" data-reveal style="--d:2">Folio installs on any computer running Microsoft Windows or Apple’s macOS — in every country, in 15 languages, and it works offline.</p>
       </header>
-      <div class="demo">
-        <div class="demo-tools">
-          <div class="seg" role="radiogroup" aria-label="Text wrap">
-            <span class="seg-label" aria-hidden="true">Wrap</span>
-            <button type="button" role="radio" aria-checked="true" data-wrap="tight">Tight</button>
-            <button type="button" role="radio" aria-checked="false" data-wrap="square" tabindex="-1">Square</button>
-            <button type="button" role="radio" aria-checked="false" data-wrap="none" tabindex="-1">None</button>
-          </div>
-          <p class="demo-hint mono" aria-live="polite" id="demo-status">2 linked text boxes · text fits</p>
+      <div class="map" data-reveal="tilt" style="--d:2">
+        <div class="map-plane">
+          <img class="map-dots" src="assets/world-dots.svg" alt="" width="1000" height="372">
+          <span class="pin" style="--x:29.4;--y:27.8;--k:0">New York</span>
+          <span class="pin" style="--x:22.5;--y:43.7;--k:5">Mexico City</span>
+          <span class="pin" style="--x:37.1;--y:75.7;--k:2">São Paulo</span>
+          <span class="pin" style="--x:50.0;--y:19.8;--k:1">London</span>
+          <span class="pin" style="--x:50.9;--y:53.4;--k:7">Lagos</span>
+          <span class="pin" style="--x:58.7;--y:35.8;--k:4">Cairo</span>
+          <span class="pin" style="--x:60.4;--y:16.6;--k:8">Moscow</span>
+          <span class="pin" style="--x:70.3;--y:43.9;--k:3">Mumbai</span>
+          <span class="pin" style="--x:82.3;--y:28.4;--k:6">Beijing</span>
+          <span class="pin" style="--x:88.8;--y:31.6;--k:9">Tokyo</span>
+          <span class="pin" style="--x:79.7;--y:62.8;--k:10">Jakarta</span>
+          <span class="pin" style="--x:92.0;--y:83.5;--k:11">Sydney</span>
         </div>
-        <div class="page marks" id="demo-page">
-          <div class="frame-box" data-frame="0" aria-hidden="true"></div>
-          <div class="frame-box" data-frame="1" aria-hidden="true"></div>
-          <svg class="link-line" aria-hidden="true"><path d=""/></svg>
-          <div class="flow" aria-hidden="true"></div>
-          <button class="pic" type="button" aria-label="Picture. Drag it, or use the arrow keys, to move it around the page."><span></span></button>
-          <span class="overflow" aria-hidden="true" title="More text than fits">+</span>
-          <div class="sr-only">
-            <h3>The quiet art of a garden in fall</h3>
-            <p class="story">Autumn is when a garden shows its bones. The borders thin out, the light comes in low and gold, and every shape you planted in spring suddenly matters. This is the season to plant bulbs for May, to lift and divide the tired perennials, and to leave the seed heads standing for the birds. Mulch the beds before the first frost, sow sweet peas in deep pots, and move the tender plants under glass. Above all, take notes: what grew too tall, what never flowered, which corner stayed wet. A garden is a long conversation, and autumn is when it listens. Rake the leaves into the borders rather than the bin; by spring the worms will have pulled them into the soil. Cut the dahlias back once the first frost blackens them, lift the tubers, and store them dry in a box of sawdust. Plant tulips last of all, in November, a hand’s depth down, in groups of seven or nine rather than in rows. Order bare-root roses now: they cost less than potted ones and settle in faster. The cold does useful work too. It breaks up heavy clay, thins out the pests, and tells the fruit trees it is time to rest. Leave one corner wild, with a log pile and a heap of hollow stems, and there will be hedgehogs by March. Clean the pots, oil the tools, and empty the water butts before the pipes can freeze. Then sit down with a cup of tea and the seed catalogues, and plan the year you would like to have. Next issue: winter pruning, the case for a pond, and the best apple trees for small gardens.</p>
-          </div>
-        </div>
+      </div>
+      <div class="platforms" data-reveal style="--d:3">
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h11.377v11.372H0zm12.623 0H24v11.372H12.623zM0 12.623h11.377V24H0zm12.623 0H24V24H12.623z"/></svg>Windows 11 &amp; 10</span>
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>macOS 13 or later</span>
+        <span>15 languages · 85 spelling dictionaries</span>
       </div>
     </section>
 
-    <!-- 02 · Tour (dark): the laptop opens and the editor's panels lift off the screen -->
-    <section class="tour" id="tour" aria-labelledby="tour-h" data-step="0">
-      <div class="tour-track">
-        <div class="tour-sticky wrap">
-          <div class="tour-copy">
-            <header class="head">
-              <p class="kicker"><span class="num">02</span>Tour</p>
-              <h2 class="h2 print-in" id="tour-h">This is <i>Folio.</i></h2>
-            </header>
-            <ol class="tour-steps">
-              <li data-step="0"><b>Open it up</b><span>A calm workspace: the ribbon above, your pages on the left, formatting on the right.</span></li>
-              <li data-step="1"><b>Pages</b><span>Every page of the publication, one click away.</span></li>
-              <li data-step="2"><b>The page</b><span>Text, pictures, shapes and tables, exactly as they print.</span></li>
-              <li data-step="3"><b>Format</b><span>Fonts, colour, wrap and spacing for whatever you select.</span></li>
-            </ol>
-            <div class="tour-tools">
-              <div class="seg seg-dark" role="group" aria-label="Editor theme">
-                <button type="button" aria-pressed="true" data-theme="dark">Dark</button>
-                <button type="button" aria-pressed="false" data-theme="light">Light</button>
-              </div>
-              <a class="shot-link" href="assets/editor-dark.webp">Full-size screenshot</a>
-            </div>
-          </div>
-          <div class="tour-3d">
-            <a class="shot" href="assets/editor-dark.webp">
-              <img src="assets/editor-dark.webp" alt="The Folio editor with a four-page newsletter open: ribbon, page thumbnails, the page and the format panel" width="1440" height="900" loading="lazy">
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 03 · Features: the index -->
-    <section class="section wrap contents" id="contents" aria-labelledby="contents-h">
-      <header class="head head-split">
-        <div>
-          <p class="kicker"><span class="num">03</span>Features</p>
-          <h2 class="h2 print-in" id="contents-h">Everything a page <i>needs.</i></h2>
-        </div>
-        <p class="sub">The tools of a print shop, arranged so you never have to hunt for them.</p>
+    <!-- 03 · Templates -->
+    <section class="section templates" id="templates" aria-labelledby="templates-h">
+      <header class="head">
+        <p class="eyebrow" data-reveal>03 — Ready to go</p>
+        <h2 class="title" id="templates-h" data-reveal style="--d:1">Pre-made templates for you</h2>
+        <p class="lede" data-reveal style="--d:2">Start from a finished design and make it yours. Every template is fully editable — text, pictures, colours and fonts.</p>
       </header>
-      <ol class="index">
-        <li class="index-row reveal" data-model="brochure"><span class="i-num">01</span><b>Ready-made templates</b><span class="i-text">Flyers, newsletters, brochures, menus, cards — all fully editable.</span><span class="i-page" aria-hidden="true">p. 04</span></li>
-        <li class="index-row reveal" data-model="craft"><span class="i-num">02</span><b>Linked text boxes &amp; wrap</b><span class="i-text">Stories run on from box to box and flow around pictures.</span><span class="i-page" aria-hidden="true">p. 07</span></li>
-        <li class="index-row reveal" data-model="swatch"><span class="i-num">03</span><b>Master pages &amp; styles</b><span class="i-text">Set it once; every page and paragraph follows.</span><span class="i-page" aria-hidden="true">p. 11</span></li>
-        <li class="index-row reveal" data-model="card"><span class="i-num">04</span><b>Tables &amp; mail merge</b><span class="i-text">Price lists, timetables, and a personal copy for everyone on your list.</span><span class="i-page" aria-hidden="true">p. 15</span></li>
-        <li class="index-row reveal" data-model="languages"><span class="i-num">05</span><b>Spell check in 85 languages</b><span class="i-text">With right-to-left text and real typography.</span><span class="i-page" aria-hidden="true">p. 19</span></li>
-        <li class="index-row reveal" data-model="print"><span class="i-num">06</span><b>Print-true PDF</b><span class="i-text">Vector PDF, embedded fonts, 600 dpi images, bleed and crop marks.</span><span class="i-page" aria-hidden="true">p. 23</span></li>
-        <li class="index-row reveal" data-model="ownership"><span class="i-num">07</span><b>Yours, offline</b><span class="i-text">No account and no cloud. Your files stay on your computer.</span><span class="i-page" aria-hidden="true">p. 26</span></li>
-        <li class="index-row reveal"><span class="i-num">08</span><b>Opens Publisher files</b><span class="i-text">Bring in the text and pictures of Microsoft Publisher (.pub) files.</span><span class="i-page" aria-hidden="true">p. 28</span></li>
-      </ol>
+      <div class="deck" data-reveal="deck">
+        <figure class="card" style="--i:0"><img src="assets/templates/t0.jpg" alt="Event flyer: An Evening of Jazz" width="342" height="442" loading="lazy"><figcaption>Event Flyer</figcaption></figure>
+        <figure class="card" style="--i:1"><img src="assets/templates/t1.jpg" alt="Lecture poster: Ideas Worth Keeping" width="342" height="442" loading="lazy"><figcaption>Lecture Poster</figcaption></figure>
+        <figure class="card" style="--i:2"><img src="assets/templates/t3.jpg" alt="Newsletter: The Garden Ledger" width="342" height="442" loading="lazy"><figcaption>Newsletter</figcaption></figure>
+        <figure class="card" style="--i:3"><img src="assets/templates/t6.jpg" alt="Wedding invitation: Isabel and Thomas" width="342" height="442" loading="lazy"><figcaption>Invitation</figcaption></figure>
+        <figure class="card" style="--i:4"><img src="assets/templates/t5.jpg" alt="Thank-you card: With Gratitude" width="342" height="442" loading="lazy"><figcaption>Greeting Card</figcaption></figure>
+      </div>
+      <ul class="tags" data-reveal style="--d:2">
+        <li>Flyers</li><li>Posters</li><li>Brochures</li><li>Newsletters</li><li>Business cards</li><li>Invitations</li><li>Postcards</li><li>Calendars</li><li>Menus</li><li>Certificates</li><li>Labels</li><li>Envelopes</li>
+      </ul>
     </section>
 
-    <!-- 04 · Install: three tickets and the first-run steps -->
+    <!-- 04 · Install -->
     <section class="section install" id="install" aria-labelledby="install-h">
-      <div class="wrap">
-        <header class="head head-split">
-          <div>
-            <p class="kicker"><span class="num">04</span>Install</p>
-            <h2 class="h2 print-in" id="install-h">Get your <i>copy.</i></h2>
-          </div>
-          <p class="sub" id="downloads-note" aria-live="polite">Pick your computer.</p>
-        </header>
-        <div class="tickets">
-          <a class="dl reveal" style="--d:0" data-file="win" href="#install">
-            <span class="stamp" aria-hidden="true">Your computer</span>
-            <span class="dl-model" aria-hidden="true"><svg class="dl-icon" viewBox="0 0 32 32"><rect x="3" y="5" width="26" height="17" rx="1.5"/><path d="M11 27h10M16 22v5"/></svg></span>
-            <span class="dl-body">
-              <span class="dl-os">Windows</span>
-              <span class="dl-info">Windows 11 or 10 · 64-bit</span>
-              <em class="size"></em>
-              <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
-            </span>
-          </a>
-          <a class="dl reveal" style="--d:1" data-file="macArm" href="#install">
-            <span class="stamp" aria-hidden="true">Your computer</span>
-            <span class="dl-model" aria-hidden="true"><svg class="dl-icon" viewBox="0 0 32 32"><rect x="5" y="6" width="22" height="15" rx="1.5"/><path d="M2 25h28l-2 2H4z"/></svg></span>
-            <span class="dl-body">
-              <span class="dl-os">Mac · Apple silicon</span>
-              <span class="dl-info">M1 or later · macOS 13+</span>
-              <em class="size"></em>
-              <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
-            </span>
-          </a>
-          <a class="dl reveal" style="--d:2" data-file="macIntel" href="#install">
-            <span class="stamp" aria-hidden="true">Your computer</span>
-            <span class="dl-model" aria-hidden="true"><svg class="dl-icon" viewBox="0 0 32 32"><rect x="5" y="6" width="22" height="15" rx="1.5"/><path d="M2 25h28l-2 2H4z"/><rect x="13" y="10" width="6" height="6"/></svg></span>
-            <span class="dl-body">
-              <span class="dl-os">Mac · Intel</span>
-              <span class="dl-info">Intel processor · macOS 13+</span>
-              <em class="size"></em>
-              <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
-            </span>
-          </a>
-        </div>
-        <div class="first-run reveal">
-          <div class="fr-head">
-            <h3>Opening Folio the first time</h3>
-            <p>The installers aren’t code-signed yet, so your computer asks you once to confirm.</p>
-          </div>
-          <div class="fr" data-os="win">
-            <h4>On Windows</h4>
-            <ol><li>Open the installer you downloaded.</li><li>If “Windows protected your PC” appears, choose <b>More info</b>.</li><li>Choose <b>Run anyway</b>.</li></ol>
-          </div>
-          <div class="fr" data-os="mac">
-            <h4>On a Mac</h4>
-            <ol><li>Open the .dmg and drag Folio into Applications.</li><li>Open Folio. If macOS stops it, open <b>System Settings → Privacy &amp; Security</b>.</li><li>Choose <b>Open Anyway</b>.</li></ol>
-          </div>
-          <p class="fine" id="version-line">Check a download against its <a href="downloads/SHA256SUMS.txt">SHA-256 checksum</a>.</p>
-        </div>
+      <div class="glow glow-install" aria-hidden="true"></div>
+      <header class="head">
+        <p class="eyebrow" data-reveal>04 — Install</p>
+        <h2 class="title" id="install-h" data-reveal style="--d:1">Get a copy for yourself</h2>
+        <p class="lede" id="downloads-note" aria-live="polite" data-reveal style="--d:2">Pick your computer.</p>
+      </header>
+      <div class="tickets">
+        <a class="dl" data-reveal style="--d:0" data-file="win" href="#install">
+          <span class="dl-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M0 0h11.377v11.372H0zm12.623 0H24v11.372H12.623zM0 12.623h11.377V24H0zm12.623 0H24V24H12.623z"/></svg></span>
+          <span class="dl-os">Windows</span>
+          <span class="dl-info">Windows 11 or 10 · 64-bit</span>
+          <em class="size"></em>
+          <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
+        </a>
+        <a class="dl" data-reveal style="--d:1" data-file="macArm" href="#install">
+          <span class="dl-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg></span>
+          <span class="dl-os">Mac · Apple silicon</span>
+          <span class="dl-info">M1 or later · macOS 13+</span>
+          <em class="size"></em>
+          <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
+        </a>
+        <a class="dl" data-reveal style="--d:2" data-file="macIntel" href="#install">
+          <span class="dl-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg></span>
+          <span class="dl-os">Mac · Intel</span>
+          <span class="dl-info">Intel processor · macOS 13+</span>
+          <em class="size"></em>
+          <span class="dl-cta">Download<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg></span>
+        </a>
       </div>
+      <div class="first-run" data-reveal>
+        <div><h3>Your serial number</h3><p>The first time Folio opens, it asks for your serial number. Paste it in and choose <b>Activate</b>.</p></div>
+        <div class="fr" data-os="win"><h3>On Windows</h3><p>If “Windows protected your PC” appears, choose <b>More info</b>, then <b>Run anyway</b>.</p></div>
+        <div class="fr" data-os="mac"><h3>On a Mac</h3><p>Drag Folio into Applications. If macOS stops it, choose <b>Open Anyway</b> in System Settings → Privacy &amp; Security.</p></div>
+      </div>
+      <p class="fine" data-reveal>Check a download against its <a href="downloads/SHA256SUMS.txt">SHA-256 checksum</a>.</p>
     </section>
 
-    <!-- 05 · Questions and answers -->
-    <section class="section wrap faq" id="faq" aria-labelledby="faq-h">
+    <!-- 05 · Q&A -->
+    <section class="section faq" id="faq" aria-labelledby="faq-h">
       <header class="head">
-        <p class="kicker"><span class="num">05</span>Q&amp;A</p>
-        <h2 class="h2 print-in" id="faq-h">Questions, <i>answered.</i></h2>
+        <p class="eyebrow" data-reveal>05 — Q&amp;A</p>
+        <h2 class="title" id="faq-h" data-reveal style="--d:1">Questions, answered</h2>
       </header>
       <div class="faq-list">
-        <details name="faq"><summary>How do I activate Folio?</summary><p>The first time Folio starts, it asks for your serial number. Paste it in and choose <b>Activate</b> — you only do this once on each computer.</p></details>
-        <details name="faq"><summary>Can it open Microsoft Publisher files?</summary><p>Yes. Open a <code>.pub</code> file and Folio brings in its text and pictures, ready to lay out again. Publisher’s exact layout isn’t kept, and your work is saved as a <code>.folio</code> file.</p></details>
-        <details name="faq"><summary>Which computers does it run on?</summary><p>Windows 11 and 10 (64-bit), and macOS 13 or later on both Apple silicon and Intel Macs.</p></details>
-        <details name="faq"><summary>Does it work offline?</summary><p>Completely. Templates, fonts and all 85 spelling dictionaries are installed with the app.</p></details>
-        <details name="faq"><summary>Why does my computer warn me when I install it?</summary><p>The installers aren’t code-signed yet. Follow the steps under the download tickets — you only need to allow it once.</p></details>
-        <details name="faq"><summary>How do I share my work?</summary><p>Export a print-ready PDF or PNG/JPEG images, or print directly. Publications are saved as <code>.folio</code> files.</p></details>
-        <details name="faq"><summary>How do I update?</summary><p>Download the latest installer from this page and run it — your publications and settings are kept.</p></details>
+        <details name="faq" data-reveal><summary>How do I activate Folio?</summary><p>The first time Folio starts, it asks for your serial number. Paste it in and choose Activate — you only do this once on each computer.</p></details>
+        <details name="faq" data-reveal style="--d:1"><summary>Which computers does it run on?</summary><p>Windows 11 and 10 (64-bit), and macOS 13 or later on both Apple silicon and Intel Macs.</p></details>
+        <details name="faq" data-reveal style="--d:2"><summary>Can it open Microsoft Publisher files?</summary><p>Yes. Open a <code>.pub</code> file and Folio brings in its text and pictures, ready to lay out again. Publisher’s exact layout isn’t kept, and your work is saved as a <code>.folio</code> file.</p></details>
+        <details name="faq" data-reveal style="--d:3"><summary>Does it work offline?</summary><p>Completely. Templates, fonts and all 85 spelling dictionaries are installed with the app.</p></details>
+        <details name="faq" data-reveal style="--d:4"><summary>Why does my computer warn me when I install it?</summary><p>The installers aren’t code-signed yet. Follow the steps under the downloads — you only need to allow it once.</p></details>
+        <details name="faq" data-reveal style="--d:5"><summary>How do I share my work?</summary><p>Export a print-ready PDF or PNG/JPEG images, or print directly. Publications are saved as <code>.folio</code> files.</p></details>
+        <details name="faq" data-reveal style="--d:6"><summary>How do I update?</summary><p>Download the latest installer from this page and run it — your publications and settings are kept.</p></details>
       </div>
     </section>
   </main>
 
   <footer class="foot">
-    <div class="wrap foot-cta">
-      <div class="foot-copy">
-        <p class="kicker"><span class="reg" aria-hidden="true"></span>For Windows &amp; Mac</p>
-        <p class="foot-title">Start <i>designing.</i></p>
-        <a class="btn btn-paper" href="#install" data-dl><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M3.5 7.5 8 12l4.5-4.5M3 14h10"/></svg><span class="dl-label">Download Folio</span></a>
-      </div>
-    </div>
-    <div class="wrap foot-row">
-      <span class="brand"><img src="assets/logo-black.png" alt="" width="18" height="20"><span>Folio</span></span>
-      <nav class="foot-links" aria-label="Footer"><a href="#layout">Layout</a><a href="#tour">Tour</a><a href="#contents">Features</a><a href="#install">Install</a><a href="#faq">Q&amp;A</a><a href="downloads/SHA256SUMS.txt">Checksums</a></nav>
-      <p class="colophon">Colophon — set in Space Grotesk and Geist Mono (SIL OFL). 3D by three.js (MIT).</p>
-    </div>
+    <span class="brand"><img src="assets/logo-white.png" alt="" width="16" height="18"><span>Folio</span></span>
+    <nav aria-label="Footer"><a href="#world">World</a><a href="#templates">Templates</a><a href="#install">Install</a><a href="#faq">Q&amp;A</a><a href="downloads/SHA256SUMS.txt">Checksums</a></nav>
+    <p>Set in Space Grotesk and Geist Mono (SIL OFL). Map data: Natural Earth.</p>
   </footer>
 
   <div class="toast" role="status" aria-live="polite" hidden>
