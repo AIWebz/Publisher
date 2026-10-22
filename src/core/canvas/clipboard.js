@@ -177,7 +177,7 @@ export function installCanvasClipboard(cv) {
     e.stopPropagation();
     const files = [...e.dataTransfer.files];
     const images = files.filter((f) => /^image\//.test(f.type));
-    const pubs = files.filter((f) => /\.(folio|json)$/i.test(f.name));
+    const pubs = files.filter((f) => /\.(folio|json|pub)$/i.test(f.name));
     if (images.length) {
       const p = cv.clientToPage(e.clientX, e.clientY);
       if (p.slot && !app.isMasterMode && p.slot.index !== app.pageIndex) app.goToPage(p.slot.index);

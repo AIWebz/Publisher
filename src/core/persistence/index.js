@@ -16,7 +16,7 @@ import './persistence.css';
 const INSTANCE = `w${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 const ALIVE_KEY = 'folio:alive:';
 const ALIVE_MS = 5000;
-const DOC_FILE = /\.(folio|json)$/i;
+const DOC_FILE = /\.(folio|json|pub)$/i;
 
 let installed = null;
 

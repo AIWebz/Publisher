@@ -6,6 +6,9 @@ import { readPublication, saveSnapshot, suggestedName, formatWhen, OpenError } f
 import { recoverableEntries } from './recovery.js';
 import { esc } from '../ui/dom.js';
 import { plural } from '../i18n.js';
+import { importPub } from '../../engines/import/pub.js';
+
+const PUB_PREFIX = 'folio-import:pub;base64,';
 
 /** File-flow controller installed as `app.files`. */
 export class FilesController {
@@ -67,6 +70,7 @@ export class FilesController {
         return already;
       }
     }
+    if (typeof text === 'string' && text.startsWith(PUB_PREFIX)) return this.openPub(text.slice(PUB_PREFIX.length), fileName || 'Publication.pub');
     let doc;
     try {
       doc = readPublication(text, fileName || 'This file');
@@ -80,6 +84,30 @@ export class FilesController {
     if (blank && blank !== session) app.removeSession(blank);
     if (recent) this._addRecent(session);
     this._showDocument();
+    return session;
+  }
+
+  /**
+   * Open a Microsoft Publisher file: its text and pictures become a new, unsaved Folio publication
+   * (Publisher's layout is not kept, and saving writes a .folio file, never over the .pub).
+   */
+  async openPub(base64, fileName) {
+    const app = this.app;
+    let res;
+    try {
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      res = importPub(bytes, fileName.replace(/\.pub$/i, ''));
+    } catch (err) {
+      await this._alert('Can’t open publication', esc(`“${fileName}” could not be read as a Microsoft Publisher file. ${err && err.message ? err.message : ''}`));
+      return null;
+    }
+    const blank = app.session && this.isUntouchedBlank(app.session) ? app.session : null;
+    const session = app.addSession(res.doc, { fileName: fileName.replace(/\.pub$/i, ''), dirty: true });
+    if (blank && blank !== session) app.removeSession(blank);
+    this._showDocument();
+    this.ui.toast(`Imported the text and pictures of “${fileName}”. Publisher’s layout is not kept; save it as a Folio publication.`);
     return session;
   }
 

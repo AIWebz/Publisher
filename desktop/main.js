@@ -15,10 +15,11 @@ const IS_ELECTRON = typeof electron === 'object' && !!process.versions.electron;
 
 const APP_ID = 'com.folio.publisher';
 const ROOT = path.join(__dirname, '..');
-const DOC_EXT = /\.(folio|json)$/i;
+const DOC_EXT = /\.(folio|json|pub)$/i;
 const TITLEBAR = { color: '#1f43ad', symbolColor: '#ffffff', height: 40 }; // = #titlebar height in src/styles/app.css
 const CLOSE_ACK_TIMEOUT = 8000;
 const KNOWN_PATHS_MAX = 500;
+const PUB_PREFIX = 'folio-import:pub;base64,'; // = src/core/persistence/files.js
 
 // ------------------------------------------------------------------------------------------------
 // Pure helpers (exported for unit tests)
@@ -694,11 +695,13 @@ function startApp() {
   });
 
   // ---------- File IPC ----------
-  const DOC_FILTERS = () => [{ name: tr('Folio publications'), extensions: ['folio'] }, { name: 'JSON', extensions: ['json'] }, { name: tr('All files'), extensions: ['*'] }];
+  const DOC_FILTERS = () => [{ name: tr('Publications'), extensions: ['folio', 'pub'] }, { name: tr('Folio publications'), extensions: ['folio'] }, { name: tr('Microsoft Publisher files'), extensions: ['pub'] }, { name: 'JSON', extensions: ['json'] }, { name: tr('All files'), extensions: ['*'] }];
 
   async function readDoc(file) {
     const st = await fsp.stat(file);
     if (!st.isFile()) throw new Error('Not a file');
+    // Microsoft Publisher files are binary: handed to the renderer's importer as base64
+    if (/\.pub$/i.test(file)) return PUB_PREFIX + (await fsp.readFile(file)).toString('base64');
     return fsp.readFile(file, 'utf8');
   }
 

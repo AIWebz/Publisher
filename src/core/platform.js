@@ -3,7 +3,15 @@
 // File System Access API when available, else <input type=file> and downloads, and IndexedDB
 // (database 'folio', stores 'recovery' and 'kv'). See ARCHITECTURE.md ("Platform").
 
-const DOC_TYPES = [{ description: 'Folio publication', accept: { 'application/json': ['.folio', '.json'] } }];
+const DOC_TYPES = [{ description: 'Folio publication', accept: { 'application/json': ['.folio', '.json'] } }, { description: 'Microsoft Publisher file', accept: { 'application/x-mspublisher': ['.pub'] } }];
+/** A picked file's contents: text, or base64 behind a marker for binary Microsoft Publisher files. */
+async function fileContents(file) {
+  if (!/\.pub$/i.test(file.name)) return file.text();
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return 'folio-import:pub;base64,' + btoa(bin);
+}
 
 /** Make a file-name-safe base name. */
 export function safeFileName(s, fallback = 'Publication') {
@@ -181,14 +189,14 @@ export function createPlatform(env = globalThis) {
           const [handle] = await env.showOpenFilePicker({ types: DOC_TYPES, excludeAcceptAllOption: false, multiple: false });
           if (!handle) return null;
           const file = await handle.getFile();
-          return { name: file.name, handle, text: await file.text() };
+          return { name: file.name, handle, text: await fileContents(file) };
         } catch (err) {
           if (isAbort(err)) return null;
           throw err;
         }
       }
-      const file = await pickFileWithInput(env, '.folio,.json,application/json');
-      return file ? { name: file.name, text: await file.text() } : null;
+      const file = await pickFileWithInput(env, '.folio,.json,.pub,application/json');
+      return file ? { name: file.name, text: await fileContents(file) } : null;
     },
 
     /**
@@ -215,7 +223,7 @@ export function createPlatform(env = globalThis) {
      * @param {File} file
      */
     async readFile(file) {
-      return { name: file.name, path: platform.pathForFile(file) || undefined, text: await file.text() };
+      return { name: file.name, path: platform.pathForFile(file) || undefined, text: await fileContents(file) };
     },
 
     /**
