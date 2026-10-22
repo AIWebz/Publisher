@@ -199,6 +199,10 @@ body.hide-pages #pages-panel, body.hide-right #right-panel { display: none; }
 .scroller { position: relative; }
 .spread { position: absolute; transform-origin: 0 0; }
 .page-slot { position: absolute; top: 0; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 10px 30px -10px rgba(0,0,0,.35); background: #fff; }
+.neighbor { position: absolute; transform-origin: 0 0; cursor: pointer; }
+.neighbor[hidden] { display: none; }
+.neighbor-page { position: absolute; top: 0; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 10px 30px -10px rgba(0,0,0,.35); }
+.neighbor-page > * { position: relative; }
 .page-slot .page-render { position: relative; overflow: hidden; }
 .guides-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .margin-guide { position: absolute; border: calc(1px / var(--z, 1)) solid rgba(214, 64, 168, .55); }

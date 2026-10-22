@@ -16,7 +16,6 @@ import { isTextTarget } from '../shortcuts.js';
 import { buildObject, insertLabel, DEFAULT_SIZES } from '../insert.js';
 import { pickImageFiles } from '../images.js';
 import { fillPicture } from '../insert.js';
-import { spreadOf } from '../pages.js';
 
 const DRAG_THRESHOLD = 3;   // screen px before a press becomes a drag
 const SNAP_PX = 6;          // snapping distance in screen px
@@ -523,34 +522,9 @@ function onWheel(cv, e) {
     const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
     const factor = Math.exp(-Math.max(-300, Math.min(300, dy)) * 0.0022);
     cv.zoomTo(cv.zoom * factor, { x: e.clientX, y: e.clientY });
-    return;
   }
-  flipOnWheel(cv, e);
 }
 
-// Continuous scrolling: scrolling on past the bottom of a page (or spread) moves to the next one, shown
-// from its top; scrolling back past the top moves to the previous one, shown from its bottom.
-let wheelPush = 0, wheelTimer = 0, wheelLock = 0;
-function flipOnWheel(cv, e) {
-  if (app.isMasterMode || e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-  const doc = app.doc;
-  const vp = cv.viewport;
-  const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-  const atBottom = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 2;
-  const atTop = vp.scrollTop <= 1;
-  const spread = spreadOf(doc, app.pageIndex);
-  const next = dy > 0 && atBottom ? spread[spread.length - 1] + 1 : dy < 0 && atTop ? spread[0] - 1 : -1;
-  if (next < 0 || next >= doc.pages.length || performance.now() < wheelLock) { wheelPush = 0; return; }
-  e.preventDefault();
-  wheelPush += Math.abs(dy);
-  clearTimeout(wheelTimer);
-  wheelTimer = setTimeout(() => { wheelPush = 0; }, 250);
-  if (wheelPush < 120) return;
-  wheelPush = 0;
-  wheelLock = performance.now() + 350;
-  cv._pendingScroll = { x: vp.scrollLeft, y: dy > 0 ? 0 : 1e9 };
-  app.goToPage(next);
-}
 
 // ------------------------------------------------------------------------------------- double click & menu
 

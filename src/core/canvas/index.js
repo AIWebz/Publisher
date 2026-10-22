@@ -5,7 +5,7 @@
 import { app } from '../app.js';
 import { prefs } from '../prefs.js';
 import { renderPage, renderElement } from '../render/index.js';
-import { spreadOf } from '../pages.js';
+import { spreadOf, spreads } from '../pages.js';
 import { findElement } from '../model.js';
 import { h, onFrame } from '../ui/dom.js';
 import { clampZoom, stepZoom, fitZoom, spreadLayout, contentGeometry, anchoredScroll } from './viewport.js';
@@ -17,6 +17,7 @@ import { TextEditor } from './textedit.js';
 import { installCanvasClipboard } from './clipboard.js';
 
 const PAD = 56;   // screen px of workspace around the spread
+const GAP = 36;   // screen px between the current spread and the neighbouring ones (continuous scrolling)
 
 /** The canvas controller. */
 export class Canvas {
@@ -46,7 +47,18 @@ export class Canvas {
     this.corner = h('div', { class: 'ruler-corner', title: 'Rulers' });
     this.spread = h('div', { class: 'spread' });
     this.overlayEl = h('div', { class: 'overlay' });
-    this.scroller = h('div', { class: 'scroller' }, this.spread, this.overlayEl);
+    // the spreads before and after the current one, drawn as previews so the pages scroll continuously
+    this.prevEl = h('div', { class: 'neighbor', 'aria-hidden': 'true' });
+    this.nextEl = h('div', { class: 'neighbor', 'aria-hidden': 'true' });
+    for (const el of [this.prevEl, this.nextEl]) {
+      el.addEventListener('pointerdown', (e) => {
+        const nb = el === this.prevEl ? this.nb && this.nb.prev : this.nb && this.nb.next;
+        if (!nb || e.button !== 0) return;
+        e.preventDefault(); e.stopPropagation();
+        this.flipTo(nb, el === this.prevEl ? this.prevTop : this.nextTop);
+      });
+    }
+    this.scroller = h('div', { class: 'scroller' }, this.prevEl, this.nextEl, this.spread, this.overlayEl);
     this.viewport = h('div', { class: 'viewport', tabindex: '-1', 'aria-label': 'Page canvas' }, this.scroller);
     this.empty = h('div', { class: 'canvas-empty', hidden: true });
     this.mount.classList.add('canvas-area');
@@ -73,6 +85,7 @@ export class Canvas {
       this.rulers.draw();
       const s = app.session;
       if (s && !this._restoring) s.view.scroll = { x: this.viewport.scrollLeft, y: this.viewport.scrollTop };
+      if (!this._restoring) this.maybeFlip();
     }, { passive: true });
     if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', soon);
   }
@@ -121,7 +134,23 @@ export class Canvas {
     const vw = this.viewport.clientWidth, vh = this.viewport.clientHeight;
     if (s.view.fit && vw > 0 && vh > 0) this.zoom = fitZoom(sl.width, sl.height, vw, vh, 28, s.view.fit);
     s.view.zoom = this.zoom;
-    this.geo = contentGeometry(sl.width * this.zoom, sl.height * this.zoom, vw, vh, PAD);
+    const z = this.zoom;
+    this.nb = this.neighbors();
+    const size = (nb) => (nb ? spreadLayout(W, H, nb.pages.length) : null);
+    const ps = size(this.nb.prev), ns = size(this.nb.next);
+    const above = ps ? ps.height * z + GAP : 0, below = ns ? ns.height * z + GAP : 0;
+    const maxW = Math.max(sl.width, ps ? ps.width : 0, ns ? ns.width : 0) * z;
+    const base = contentGeometry(maxW, sl.height * z + above + below, vw, vh, PAD);
+    this.geo = { width: base.width, height: base.height, ox: (base.width - sl.width * z) / 2, oy: base.oy + above };
+    this.prevTop = this.geo.oy - above;
+    this.nextTop = this.geo.oy + sl.height * z + GAP;
+    const place = (el, nb, sz, top) => {
+      el.hidden = !nb;
+      if (!nb) return;
+      Object.assign(el.style, { left: `${(base.width - sz.width * z) / 2}px`, top: `${top}px`, width: `${sz.width}px`, height: `${sz.height}px`, transform: `scale(${z})` });
+    };
+    place(this.prevEl, this.nb.prev, ps, this.prevTop);
+    place(this.nextEl, this.nb.next, ns, this.nextTop);
     this.scroller.style.width = `${this.geo.width}px`;
     this.scroller.style.height = `${this.geo.height}px`;
     Object.assign(this.spread.style, {
@@ -147,8 +176,57 @@ export class Canvas {
   }
 
   centerSpread() {
-    this.viewport.scrollLeft = (this.geo.width - this.viewport.clientWidth) / 2;
-    this.viewport.scrollTop = (this.geo.height - this.viewport.clientHeight) / 2;
+    this._restoring = true;
+    this.viewport.scrollLeft = this.geo.ox + (this.spreadW * this.zoom - this.viewport.clientWidth) / 2;
+    this.viewport.scrollTop = this.geo.oy + (this.spreadH * this.zoom - this.viewport.clientHeight) / 2;
+    this._restoring = false;
+  }
+
+  // ---------------------------------------------------------------- continuous scrolling
+
+  /** The spreads before and after the one shown ({ pages: [index…] } or null); none in master mode. */
+  neighbors() {
+    const doc = app.doc;
+    if (!doc || app.isMasterMode) return { prev: null, next: null };
+    const all = spreads(doc);
+    const k = all.findIndex((sp) => sp.includes(app.pageIndex));
+    return { prev: k > 0 ? { pages: all[k - 1] } : null, next: k >= 0 && k < all.length - 1 ? { pages: all[k + 1] } : null };
+  }
+
+  /** When the middle of the window scrolls past the gap into a neighbouring spread, make it the current one. */
+  maybeFlip() {
+    if (!this.nb || this._anchor || !app.session) return;
+    const vp = this.viewport;
+    const c = vp.scrollTop + vp.clientHeight / 2;
+    const top = this.geo.oy, bottom = top + this.spreadH * this.zoom;
+    if (this.nb.next && c > bottom + GAP / 2) this.flipTo(this.nb.next, this.nextTop);
+    else if (this.nb.prev && c < top - GAP / 2) this.flipTo(this.nb.prev, this.prevTop);
+  }
+
+  /** Go to a neighbouring spread, keeping it where it is on screen (no jump). */
+  flipTo(nb, top) {
+    this._anchor = { inView: top - this.viewport.scrollTop, left: this.viewport.scrollLeft };
+    app.goToPage(nb.pages[0]);
+    if (!this._anchor) return;
+    setTimeout(() => { this._anchor = null; }, 500); // the page did not change
+  }
+
+  /** Draw the neighbouring spreads (debounced: they are previews). */
+  renderNeighborsSoon() {
+    clearTimeout(this._nbTimer);
+    this._nbTimer = setTimeout(() => {
+      const doc = app.doc;
+      if (!doc || !this.nb) return;
+      const W = doc.setup.width;
+      for (const [el, nb] of [[this.prevEl, this.nb.prev], [this.nextEl, this.nb.next]]) {
+        if (!nb) { el.replaceChildren(); continue; }
+        el.replaceChildren(...nb.pages.map((i, k) => {
+          const box = h('div', { class: 'neighbor-page', style: { left: `${k * W}px` } });
+          try { renderPage(box, doc, doc.pages[i], { mode: 'export', pageIndex: i, showHidden: !!prefs.get('showHidden') }); } catch { /* preview only */ }
+          return box;
+        }));
+      }
+    }, 90);
   }
 
   // ---------------------------------------------------------------- rendering
@@ -189,7 +267,16 @@ export class Canvas {
     const first = this._needsInitialPosition !== false;
     this.layout();
     for (const slot of this.slots) this.renderSlot(slot);
-    if (this._pendingScroll) {
+    this.renderNeighborsSoon();
+    if (this._anchor) {
+      // continuous scrolling moved to a neighbouring spread: keep it exactly where it was on screen
+      this._restoring = true;
+      this.viewport.scrollTop = this.geo.oy - this._anchor.inView;
+      this.viewport.scrollLeft = this._anchor.left;
+      this._restoring = false;
+      this._anchor = null;
+      this._pendingScroll = null;
+    } else if (this._pendingScroll) {
       this._restoring = true;
       this.viewport.scrollLeft = this._pendingScroll.x;
       this.viewport.scrollTop = this._pendingScroll.y;
