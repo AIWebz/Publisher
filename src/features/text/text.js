@@ -328,11 +328,17 @@ function fontControls() {
           const fam = state ? state.fontRef || state.font : f ? f.style.font : '';
           if (fam && ![...fonts.options].some((o) => o.value === fam)) fonts.append(h('option', { value: fam, text: fam }));
           fonts.value = fam || '';
-          size.value = state && state.size ? String(state.size) : f ? String(f.style.size) : '';
+          size.value = state && state.size ? String(state.size) : f ? String(storySize(f)) : '';
         }
       };
     }
   };
+}
+/** The size a selected (not edited) text box shows: its text's own size when that is set, else the box's. */
+function storySize(frame) {
+  const story = app.doc && app.doc.stories[frame.storyId];
+  const sizes = story ? [...String(story.html).matchAll(/font-size:\s*([\d.]+)pt/g)].map((m) => +m[1]) : [];
+  return sizes.length && sizes.every((v) => v === sizes[0]) ? sizes[0] : frame.style.size;
 }
 let savedRange = null;
 function saveRange() {
