@@ -228,6 +228,17 @@ function withRuns(root, fn, opts = {}) {
   if (!range) return false;
   const doc = root.ownerDocument;
   let caret = null;
+  if (range.collapsed && opts.collapsedWord) {
+    // a caret in (or touching) a word styles that word, like a word processor; elsewhere, the paragraph
+    const word = wordAround(range);
+    if (word) {
+      const saved = saveSelection(root, range);
+      const res = runRange(root, word, fn);
+      restoreSelection(root, saved);
+      return res;
+    }
+    return withRuns(root, fn, { collapsedBlock: true });
+  }
   if (range.collapsed && !opts.collapsedBlock) {
     caret = doc.createTextNode(ZWSP);
     range.insertNode(caret);
@@ -248,6 +259,24 @@ function withRuns(root, fn, opts = {}) {
   const r = restoreSelection(root, saved);
   if (caret) { r.collapse(false); setRange(root, r); }
   return res;
+}
+
+const WORD_CHAR = /[\p{L}\p{N}\p{M}'’_-]/u;
+/** The word the collapsed range sits in or touches (a Range in one text node), or null. */
+function wordAround(range) {
+  let node = range.startContainer, off = range.startOffset;
+  if (node.nodeType !== 3) {
+    const before = node.childNodes[off - 1], after = node.childNodes[off];
+    if (after && after.nodeType === 3) { node = after; off = 0; } else if (before && before.nodeType === 3) { node = before; off = before.data.length; } else return null;
+  }
+  const t = node.data;
+  let a = off, b = off;
+  while (a > 0 && WORD_CHAR.test(t[a - 1])) a--;
+  while (b < t.length && WORD_CHAR.test(t[b])) b++;
+  if (a === b) return null;
+  const r = node.ownerDocument.createRange();
+  r.setStart(node, a); r.setEnd(node, b);
+  return r;
 }
 
 function runRange(root, range, fn) {
@@ -500,7 +529,7 @@ export function applyInlineStyle(root, prop, value) {
     const s = doc.createElement('span');
     s.style.setProperty(prop, canon);
     return s;
-  } : null));
+  } : null), { collapsedWord: true });
 }
 
 function themeRef(v, kind) {
