@@ -51,7 +51,21 @@ fmt('text.sup', 'Superscript', 'superscript', rt.toggleSuper, 'Mod+Shift+=');
 fmt('text.sub', 'Subscript', 'subscript', rt.toggleSub, 'Mod+=');
 registry.command({ id: 'text.clear', label: 'Clear Formatting', icon: 'clear-format', allowInText: true, enabled: textSel, run: () => withText(rt.clearFormatting) });
 registry.command({ id: 'text.font', label: 'Font', allowInText: true, enabled: textSel, run: (ctx, fam) => withText((r) => rt.setFontFamily(r, fam)) });
-registry.command({ id: 'text.size', label: 'Font Size', allowInText: true, enabled: textSel, run: (ctx, pt) => withText((r) => rt.setFontSize(r, Math.max(1, Math.min(999, +pt)))) });
+registry.command({
+  id: 'text.size', label: 'Font Size', allowInText: true, enabled: textSel,
+  run: (ctx, pt) => {
+    const v = Math.max(1, Math.min(999, +pt));
+    // whole text boxes (selected, not being edited): one size for all their text, the same as Base size
+    if (!editing()) return onFrames('Font Size', (el, doc) => sizeWholeFrame(el, doc, v));
+    return withText((r) => rt.setFontSize(r, v));
+  }
+});
+/** Give a text box's story one size: the box's base size, with sizes set on parts of the text removed. */
+function sizeWholeFrame(el, doc, pt) {
+  el.style = { ...el.style, size: pt };
+  const story = doc.stories[el.storyId];
+  if (story) story.html = String(story.html).replace(/font-size:\s*[\d.]+pt;?\s*/g, '').replace(/\s+style="\s*"/g, '');
+}
 const step = (dir) => (r) => {
   const cur = (rt.getSelectionState(r) || {}).size || 12;
   const next = dir > 0 ? SIZES.find((s) => s > cur) || cur + 12 : [...SIZES].reverse().find((s) => s < cur) || Math.max(1, cur - 1);
@@ -437,7 +451,7 @@ registry.inspector({
     const va = segmented({ options: [{ value: 'top', text: 'Top', label: 'Top' }, { value: 'middle', text: 'Middle', label: 'Middle' }, { value: 'bottom', text: 'Bottom', label: 'Bottom' }], onChange: (v) => onFrames('Vertical Alignment', (el) => { el.valign = v; }) });
     const pad = lengthField({ unit, min: 0, onChange: (v) => onFrames('Text Box Margins', (el) => { el.padding = { top: v, right: v, bottom: v, left: v }; }) });
     const cols = numberField({ min: 1, max: 8, integer: true, onChange: (v) => onFrames('Columns', (el) => { el.columns = v; }) });
-    const size = numberField({ suffix: 'pt', min: 1, max: 999, onChange: (v) => onFrames('Font Size', (el) => { el.style = { ...el.style, size: v }; }) });
+    const size = numberField({ suffix: 'pt', min: 1, max: 999, onChange: (v) => onFrames('Font Size', (el, doc) => sizeWholeFrame(el, doc, v)) });
     const color = colorField({ title: 'Default text colour', allowNone: false, onChange: (v) => onFrames('Text Colour', (el) => { el.style = { ...el.style, color: v }; }) });
     const link = h('div', { class: 'ins-hint' });
     body.append(row('Fit', fit.el), row('Vertical', va.el), row('Margins', pad.el), row('Columns', cols.el), row('Base size', size.el), row('Base colour', color.el), link);
@@ -445,7 +459,7 @@ registry.inspector({
       update(ctx) {
         const f = ctx.selection[0];
         fit.set(f.autofit || 'none'); va.set(f.valign || 'top'); pad.set(f.padding ? f.padding.top : 4); cols.set(f.columns || 1);
-        size.set(f.style.size); color.set(f.style.color);
+        size.set(storySize(f)); color.set(f.style.color);
         const ch = getChain(ctx.doc, f.id);
         link.textContent = ch.length > 1 ? `Linked story: box ${ch.findIndex((x) => x.id === f.id) + 1} of ${ch.length}.` : 'Double-click to edit text. Use Create Link to continue the story in another box.';
       }
