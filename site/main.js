@@ -133,3 +133,52 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   toast.querySelector('.toast-x').addEventListener('click', hide);
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && !toast.hidden) hide(); });
 })();
+
+// landing: a sky of slowly drifting clouds (fbm noise in a fragment shader); still when motion is reduced
+(() => {
+  const canvas = document.querySelector('.sky-gl');
+  const gl = canvas && canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
+  if (!gl) return;
+  const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const fs = `precision highp float;uniform vec2 r;uniform float t;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);for(int i=0;i<6;i++){v+=a*n(p);p=m*p;a*=.5;}return v;}
+void main(){vec2 uv=gl_FragCoord.xy/r;vec2 p=uv*vec2(r.x/r.y,1.)*2.4;
+vec3 sky=mix(vec3(.72,.85,.98),vec3(.17,.42,.82),pow(uv.y,.8));
+vec2 w=vec2(t*.018,t*.004);
+float q=fbm(p*.9+w);
+float c=fbm(p*1.4+vec2(q*1.6)+w*1.8);
+float d=fbm(p*3.2+vec2(c)+w*2.6);
+float cl=smoothstep(.42,.82,c*.8+d*.3);
+float shade=smoothstep(.25,.9,d);
+vec3 cloud=mix(vec3(.80,.86,.95),vec3(1.),shade);
+vec3 col=mix(sky,cloud,cl*.94);
+col+=vec3(1.,.97,.9)*pow(max(0.,1.-length((uv-vec2(.78,.92))*vec2(1.6,1.))),3.)*.35;
+gl_FragColor=vec4(col,1.);}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const uR = gl.getUniformLocation(prog, 'r'), uT = gl.getUniformLocation(prog, 't');
+  const scale = Math.min(1, (devicePixelRatio || 1) * 0.6);
+  const size = () => { canvas.width = Math.max(1, Math.round(canvas.clientWidth * scale)); canvas.height = Math.max(1, Math.round(canvas.clientHeight * scale)); gl.viewport(0, 0, canvas.width, canvas.height); };
+  let visible = true, raf = 0;
+  const t0 = performance.now() - 40000;
+  const draw = (now) => {
+    raf = 0;
+    gl.uniform2f(uR, canvas.width, canvas.height); gl.uniform1f(uT, (now - t0) / 1000);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (visible && !REDUCED && !document.hidden) raf = requestAnimationFrame(draw);
+  };
+  const start = () => { if (!raf) raf = requestAnimationFrame(draw); };
+  size(); start();
+  new ResizeObserver(() => { size(); start(); }).observe(canvas);
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) start(); }).observe(canvas);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
+})();

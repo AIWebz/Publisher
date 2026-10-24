@@ -8,8 +8,7 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="preload" href="assets/fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
   <script src="main.js" defer></script>
 </head>
 <body>
@@ -42,14 +41,15 @@
   <main id="top" tabindex="-1">
     <!-- 01 · Product -->
     <section class="hero" aria-labelledby="hero-h">
-      <div class="scene" aria-hidden="true"><div class="scene-img"></div><div class="pollen"></div></div>
-      <p class="eyebrow" data-reveal>Desktop publishing for Windows &amp; Mac</p>
-      <h1 class="title" id="hero-h" data-reveal style="--d:1">The product for the greatest designers.</h1>
-      <p class="lede" data-reveal style="--d:2">Flyers, newsletters, brochures, menus and invitations — laid out on a real page and printed exactly as you see them.</p>
-      <div class="cta" data-reveal style="--d:3">
-        <a class="btn btn-light" href="#install">Get a copy</a>
-        <a class="btn btn-ghost" href="#templates">See the templates</a>
+      <div class="sky" aria-hidden="true"><canvas class="sky-gl"></canvas></div>
+      <div class="hero-in">
+        <h1 class="glow-title" id="hero-h" data-reveal style="--d:1"><span>Authors? Typesetter? Paginator?</span> Any Type Of Designer Will Love This Product.</h1>
+        <div class="cta" data-reveal style="--d:3">
+          <a class="btn btn-light" href="#install">Get a copy</a>
+          <a class="btn btn-ghost" href="#templates">See the templates</a>
+        </div>
       </div>
+      <p class="hero-note" data-reveal style="--d:2">Folio — desktop publishing for Windows &amp; Mac</p>
       <figure class="shot" data-reveal="zoom" style="--d:4">
         <div class="shot-frame">
           <img src="assets/editor-dark.webp" alt="The Folio editor with a four-page newsletter open: the ribbon, page thumbnails, the page and the format panel" width="1440" height="900">
@@ -168,7 +168,7 @@
   <footer class="foot">
     <span class="brand"><img src="assets/logo-white.png" alt="" width="16" height="18"><span>Folio</span></span>
     <nav aria-label="Footer"><a href="#world">World</a><a href="#templates">Templates</a><a href="#install">Install</a><a href="#faq">Q&amp;A</a><a href="downloads/SHA256SUMS.txt">Checksums</a></nav>
-    <p>Set in Space Grotesk and Geist Mono (SIL OFL). Map data: Natural Earth.</p>
+    <p>Map data: Natural Earth.</p>
   </footer>
 
   <div class="toast" role="status" aria-live="polite" hidden>
