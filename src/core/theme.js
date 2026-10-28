@@ -23,12 +23,24 @@ export const FONT_SCHEMES = {
   didone:    { name: 'Didone',    heading: 'Bodoni Moda',        body: 'Libre Baskerville' },
   display:   { name: 'Display',   heading: 'DM Serif Display',   body: 'Spectral' },
   clean:     { name: 'Clean',     heading: 'Inter',              body: 'Inter' },
-  mixed:     { name: 'Contemporary', heading: 'Playfair Display', body: 'Inter' }
+  mixed:     { name: 'Contemporary', heading: 'Playfair Display', body: 'Inter' },
+  bold:      { name: 'Bold',      heading: 'Montserrat',         body: 'Work Sans' },
+  poster:    { name: 'Poster',    heading: 'Bebas Neue',         body: 'Montserrat' },
+  news:      { name: 'News',      heading: 'Oswald',             body: 'Lora' },
+  slab:      { name: 'Slab',      heading: 'Roboto Slab',        body: 'Nunito' },
+  geometric: { name: 'Geometric', heading: 'Josefin Sans',       body: 'Raleway' },
+  fashion:   { name: 'Fashion',   heading: 'Abril Fatface',      body: 'Raleway' },
+  impact:    { name: 'Impact',    heading: 'Archivo Black',      body: 'Work Sans' },
+  script:    { name: 'Script',    heading: 'Great Vibes',        body: 'Josefin Sans' },
+  romantic:  { name: 'Romantic',  heading: 'Dancing Script',     body: 'Lora' },
+  playful:   { name: 'Playful',   heading: 'Pacifico',           body: 'Nunito' },
+  handwritten: { name: 'Handwritten', heading: 'Caveat',         body: 'Work Sans' }
 };
 
 // Font families bundled with the app (app/fonts). Keep in sync with app/fonts/fonts.css.
-export const FONTS = ['Bodoni Moda', 'Cormorant Garamond', 'Crimson Pro', 'DM Serif Display', 'EB Garamond', 'Fraunces',
-  'Inter', 'Libre Baskerville', 'Lora', 'Playfair Display', 'Spectral'];
+export const FONTS = ['Abril Fatface', 'Archivo Black', 'Bebas Neue', 'Bodoni Moda', 'Caveat', 'Cormorant Garamond', 'Crimson Pro',
+  'Dancing Script', 'DM Serif Display', 'EB Garamond', 'Fraunces', 'Great Vibes', 'Inter', 'Josefin Sans', 'Libre Baskerville', 'Lora',
+  'Montserrat', 'Nunito', 'Oswald', 'Pacifico', 'Playfair Display', 'Raleway', 'Roboto Slab', 'Spectral', 'Work Sans'];
 
 export const STANDARD_COLORS = ['#ffffff', '#f5f0e6', '#e6dcc8', '#c8bba0', '#8a8270', '#4a4740', '#2a2824', '#000000',
   '#7a2e2e', '#c0392b', '#d9822b', '#c9a046', '#5b7a4a', '#2f5d57', '#2563a6', '#2c4a6e', '#5a3e6b', '#b5677d'];

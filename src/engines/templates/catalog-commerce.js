@@ -52,7 +52,7 @@ function restaurantMenu() {
 }
 
 function cafeMenuBoard() {
-  const doc = newDoc({ title: 'Harbour Coffee House Menu Board', size: 'tabloid', orientation: 'landscape', schemeId: 'lagoon', fontSchemeId: 'display', margins: 72, category: 'menus' });
+  const doc = newDoc({ title: 'Harbour Coffee House Menu Board', size: 'tabloid', orientation: 'landscape', schemeId: 'lagoon', fontSchemeId: 'slab', margins: 72, category: 'menus' });
   const colX = [72, 588, 1104], W = 456;
   const board = (i, title, rows) => [
     text(doc, colX[i], 232, W, 54, p(title), { font: '@heading', size: 30, color: '@accent2' }, { name: `${title} heading` }),
@@ -101,7 +101,7 @@ function productGrid(doc, products) {
 }
 
 function productCatalog() {
-  const doc = newDoc({ title: 'Fieldstone Ceramics Catalog', size: 'letter', schemeId: 'midnight', fontSchemeId: 'editorial', margins: 56, category: 'catalogs' });
+  const doc = newDoc({ title: 'Fieldstone Ceramics Catalog', size: 'letter', schemeId: 'midnight', fontSchemeId: 'mixed', margins: 56, category: 'catalogs' });
   doc.masters[0].elements.push(
     hline(56, 1000, 704, '@muted', 0.5, { name: 'Footer rule' }),
     text(doc, 56, 1010, 500, 16, p('Fieldstone Ceramics · Autumn / Winter 2026'), { size: 8.5, caps: true, letterSpacing: 2, color: '@muted' }, { name: 'Running footer' }),
@@ -151,7 +151,7 @@ function productCatalog() {
 }
 
 function productSheet() {
-  const doc = newDoc({ title: 'Aero Standing Desk Product Sheet', size: 'letter', schemeId: 'harbor', fontSchemeId: 'modern', margins: 56, category: 'catalogs' });
+  const doc = newDoc({ title: 'Aero Standing Desk Product Sheet', size: 'letter', schemeId: 'harbor', fontSchemeId: 'clean', margins: 56, category: 'catalogs' });
   return setPages(doc, [[[
     rect(0, 0, 816, 8, '@accent', { name: 'Top rule' }),
     text(doc, 56, 48, 400, 18, p('Northwind Furniture · Workspace'), { size: 9, caps: true, letterSpacing: 3, color: '@accent' }, { name: 'Kicker' }),
@@ -185,7 +185,7 @@ function productSheet() {
 // ---------------------------------------------------------------------------------------------
 
 function printPriceList() {
-  const doc = newDoc({ title: 'Harbor Print Co. Price List', size: 'letter', schemeId: 'midnight', fontSchemeId: 'modern', margins: 56, category: 'priceLists' });
+  const doc = newDoc({ title: 'Harbor Print Co. Price List', size: 'letter', schemeId: 'midnight', fontSchemeId: 'bold', margins: 56, category: 'priceLists' });
   const rows = [
     ['Business cards', '3.5 × 2 in', '$29', '$45', '$62', '$89'], ['Flyers', '5.5 × 8.5 in', '$39', '$62', '$88', '$135'], ['Flyers', '8.5 × 11 in', '$55', '$89', '$129', '$198'],
     ['Postcards', '6 × 4 in', '$42', '$68', '$95', '$149'], ['Tri-fold brochures', '11 × 8.5 in', '$95', '$165', '$245', '$389'], ['Booklets, 8 pages', '5.5 × 8.5 in', '$180', '$310', '$480', '$790'],
@@ -214,7 +214,7 @@ function printPriceList() {
 }
 
 function servicePriceList() {
-  const doc = newDoc({ title: 'Willow & Thread Salon Services', size: 'letter', schemeId: 'rosewood', fontSchemeId: 'display', margins: 64, category: 'priceLists' });
+  const doc = newDoc({ title: 'Willow & Thread Salon Services', size: 'letter', schemeId: 'rosewood', fontSchemeId: 'fashion', margins: 64, category: 'priceLists' });
   const els = [];
   const section = (x, y, title, rows) => {
     els.push(text(doc, x, y, 320, 34, p(title), { font: '@heading', size: 21, color: '@accent' }, { name: `${title} heading` }));

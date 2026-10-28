@@ -23,7 +23,7 @@ function sheetGuides(g) {
 }
 
 function addressLabels() {
-  const doc = newDoc({ title: 'Address Labels', size: 'letter', schemeId: 'harbor', fontSchemeId: 'modern',
+  const doc = newDoc({ title: 'Address Labels', size: 'letter', schemeId: 'harbor', fontSchemeId: 'clean',
     margins: { top: 48, right: 18, bottom: 48, left: 18 }, category: 'labels' });
   const { groups, repeat } = slotGrid(ADDRESS_LABELS, (i, x, y) => [
     rect(x, y, ADDRESS_LABELS.w, ADDRESS_LABELS.h, '@paper', { name: 'Label background' }),
@@ -34,7 +34,7 @@ function addressLabels() {
 }
 
 function shippingLabels() {
-  const doc = newDoc({ title: 'Shipping Labels', size: 'letter', schemeId: 'citrus', fontSchemeId: 'modern',
+  const doc = newDoc({ title: 'Shipping Labels', size: 'letter', schemeId: 'citrus', fontSchemeId: 'impact',
     margins: { top: 48, right: 15, bottom: 48, left: 15 }, category: 'labels' });
   const W = SHIPPING_LABELS.w;
   const { groups, repeat } = slotGrid(SHIPPING_LABELS, (i, x, y) => [

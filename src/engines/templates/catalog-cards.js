@@ -28,7 +28,7 @@ function cardClassic() {
 }
 
 function cardModern() {
-  const doc = newDoc({ title: 'Solberg Studio Business Card', size: 'businessCard', schemeId: 'harbor', fontSchemeId: 'modern', margins: 18, category: 'businessCards' });
+  const doc = newDoc({ title: 'Solberg Studio Business Card', size: 'businessCard', schemeId: 'harbor', fontSchemeId: 'geometric', margins: 18, category: 'businessCards' });
   const logo = logoMark(doc, 24, 60, 72, 'NS', '@paper', '@accent');
   return setPages(doc, [
     [[
@@ -50,7 +50,7 @@ function cardModern() {
 export const CARD_SHEET = { cols: 2, rows: 5, x: 0.75 * IN, y: 0.5 * IN, w: 3.5 * IN, h: 2 * IN, gapX: 0, gapY: 0 };
 
 function cardSheet() {
-  const doc = newDoc({ title: 'Business Cards Sheet', size: 'letter', schemeId: 'midnight', fontSchemeId: 'editorial', margins: { top: 48, right: 72, bottom: 48, left: 72 }, category: 'businessCards' });
+  const doc = newDoc({ title: 'Business Cards Sheet', size: 'letter', schemeId: 'midnight', fontSchemeId: 'bold', margins: { top: 48, right: 72, bottom: 48, left: 72 }, category: 'businessCards' });
   const { groups, repeat } = slotGrid(CARD_SHEET, (i, x, y) => [
     rect(x, y, 336, 192, '@paper', { name: 'Card background' }),
     rect(x, y, 8, 192, '@accent', { name: 'Accent bar' }),
@@ -69,7 +69,7 @@ function cardSheet() {
 // ---------------------------------------------------------------------------------------------
 
 function thankYouCard() {
-  const doc = newDoc({ title: 'Thank You Card', size: 'card5x7', schemeId: 'rosewood', fontSchemeId: 'display', margins: 36, category: 'greetingCards' });
+  const doc = newDoc({ title: 'Thank You Card', size: 'card5x7', schemeId: 'rosewood', fontSchemeId: 'romantic', margins: 36, category: 'greetingCards' });
   return setPages(doc, [
     [[
       outline(24, 24, 432, 624, '@accent2', 1, { name: 'Border' }),
@@ -89,7 +89,7 @@ function thankYouCard() {
 }
 
 function birthdayCard() {
-  const doc = newDoc({ title: 'Birthday Card', size: 'card5x7', schemeId: 'citrus', fontSchemeId: 'display', margins: 36, category: 'greetingCards' });
+  const doc = newDoc({ title: 'Birthday Card', size: 'card5x7', schemeId: 'citrus', fontSchemeId: 'playful', margins: 36, category: 'greetingCards' });
   const confetti = [
     ['ellipse', 64, 70, 18, '@accent'], ['star', 380, 56, 26, '@accent2'], ['triangle', 120, 150, 16, '@accent2'], ['ellipse', 330, 140, 12, '@accent'],
     ['diamond', 410, 210, 16, '@accent'], ['star', 52, 250, 20, '@accent'], ['ellipse', 250, 92, 10, '@accent2'], ['triangle', 400, 470, 18, '@accent'],
@@ -117,7 +117,7 @@ function birthdayCard() {
 // ---------------------------------------------------------------------------------------------
 
 function weddingInvitation() {
-  const doc = newDoc({ title: 'Wedding Invitation', size: 'card5x7', schemeId: 'midnight', fontSchemeId: 'classic', margins: 40, category: 'invitations' });
+  const doc = newDoc({ title: 'Wedding Invitation', size: 'card5x7', schemeId: 'midnight', fontSchemeId: 'script', margins: 40, category: 'invitations' });
   const frame = () => [outline(26, 26, 428, 620, '@accent2', 1.25, { name: 'Outer border' }), outline(34, 34, 412, 604, '@accent2', 0.5, { name: 'Inner border' })];
   return setPages(doc, [
     [[
@@ -147,7 +147,7 @@ function weddingInvitation() {
 }
 
 function partyInvitation() {
-  const doc = newDoc({ title: 'Party Invitation', size: 'card5x7', schemeId: 'plum', fontSchemeId: 'display', margins: 36, category: 'invitations' });
+  const doc = newDoc({ title: 'Party Invitation', size: 'card5x7', schemeId: 'plum', fontSchemeId: 'fashion', margins: 36, category: 'invitations' });
   const balloon = (x, y, d, c, i) => [
     shape('ellipse', x, y, d, d * 1.2, c, { name: `Balloon ${i}` }),
     vline(x + d / 2, y + d * 1.2, 90, '@paper', 0.75, { name: `Balloon string ${i}`, opacity: 0.7 })
@@ -193,7 +193,7 @@ function addressSide(doc, message, signature) {
 }
 
 function coastalPostcard() {
-  const doc = newDoc({ title: 'Greetings from the Coast', size: 'postcard', schemeId: 'sage', fontSchemeId: 'editorial', margins: 24, category: 'postcards' });
+  const doc = newDoc({ title: 'Greetings from the Coast', size: 'postcard', schemeId: 'sage', fontSchemeId: 'handwritten', margins: 24, category: 'postcards' });
   return setPages(doc, [
     [[
       picture(0, 0, 576, 384, { name: 'Coastline photo' }),
@@ -207,7 +207,7 @@ function coastalPostcard() {
 }
 
 function openStudioPostcard() {
-  const doc = newDoc({ title: 'Open Studio Postcard', size: 'postcard', schemeId: 'lagoon', fontSchemeId: 'modern', margins: 24, category: 'postcards' });
+  const doc = newDoc({ title: 'Open Studio Postcard', size: 'postcard', schemeId: 'lagoon', fontSchemeId: 'impact', margins: 24, category: 'postcards' });
   return setPages(doc, [
     [[
       rect(0, 0, 288, 384, '@accent', { name: 'Colour panel' }),

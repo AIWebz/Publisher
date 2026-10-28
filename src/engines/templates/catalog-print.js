@@ -32,7 +32,7 @@ function eventFlyer() {
 }
 
 function saleFlyer() {
-  const doc = newDoc({ title: 'Autumn Clearance', size: 'letter', schemeId: 'citrus', fontSchemeId: 'display', margins: 56, category: 'flyers' });
+  const doc = newDoc({ title: 'Autumn Clearance', size: 'letter', schemeId: 'citrus', fontSchemeId: 'poster', margins: 56, category: 'flyers' });
   const feature = (x, head, body) => text(doc, x, 772, 220, 84,
     p(span(head, `${css.heading}; font-size: 17pt; ${css.accent}`), 'margin-bottom: 4px') + p(body), { size: 10.5, lineHeight: 1.45 }, { name: head });
   return setPages(doc, [[[
@@ -126,7 +126,7 @@ function concertPoster() {
 // ---------------------------------------------------------------------------------------------
 
 function trifoldBrochure() {
-  const doc = newDoc({ title: 'Fernhill Botanical Garden', size: 'letter', orientation: 'landscape', schemeId: 'sage', fontSchemeId: 'editorial',
+  const doc = newDoc({ title: 'Fernhill Botanical Garden', size: 'letter', orientation: 'landscape', schemeId: 'sage', fontSchemeId: 'geometric',
     margins: 48, columns: { count: 3, gutter: 96 }, category: 'brochures' });
   const X = [48, 400, 752], PW = 256;
   const kicker = (x, y, t) => text(doc, x, y, PW, 18, p(t), { size: 9, caps: true, letterSpacing: 3, color: '@accent' }, { name: 'Kicker' });
@@ -214,7 +214,7 @@ const PAMPHLET_ARTICLE = [
 ];
 
 function pamphletBooklet() {
-  const doc = newDoc({ title: 'The Old Mill Trail', size: 'halfLetter', schemeId: 'rosewood', fontSchemeId: 'classic',
+  const doc = newDoc({ title: 'The Old Mill Trail', size: 'halfLetter', schemeId: 'rosewood', fontSchemeId: 'slab',
     margins: { top: 72, right: 48, bottom: 64, left: 48 }, category: 'brochures' });
   const master = doc.masters[0];
   master.name = 'A';
@@ -432,7 +432,7 @@ function newsletter4() {
 }
 
 function bulletin() {
-  const doc = newDoc({ title: 'Northgate School Bulletin', size: 'letter', schemeId: 'harbor', fontSchemeId: 'modern',
+  const doc = newDoc({ title: 'Northgate School Bulletin', size: 'letter', schemeId: 'harbor', fontSchemeId: 'news',
     margins: 56, columns: { count: 2, gutter: 24 }, category: 'newsletters' });
   const sec = (x, y, w, kick, head) => [
     text(doc, x, y, w, 16, p(kick), { size: 8.5, caps: true, letterSpacing: 2.5, color: '@accent' }, { name: 'Kicker' }),
